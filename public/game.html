@@ -82,6 +82,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+// Handle browser back button
+history.pushState(null, null, location.href);
+
+window.addEventListener("popstate", async function () {
+
+    if (confirm("Cancel game and lose all points?")) {
+
+        await fetch('/api/games/ongoing', {
+            method: 'DELETE'
+        });
+
+        window.location.href = "index.html";
+
+    } else {
+        history.pushState(null, null, location.href);
+    }
+
+});
+
+
 </script>
 
 </body>

@@ -463,16 +463,24 @@ function showWinner() {
 }
 
 async function cancelGame() {
-    if (!confirm('Discard this game? No points or data will be saved.')) return;
+
+    if (!confirm("Cancel game and lose all points?")) return;
 
     try {
+        const res = await fetch('/api/games/ongoing', {
+            method: 'DELETE'
+        });
+
         if (!res.ok) {
             const err = await res.json();
             alert(err.error);
             return;
         }
-        window.location.href = 'index.html';
+
+        window.location.href = "index.html";
+
     } catch (err) {
-        alert('Error cancelling game: ' + err.message);
+        alert("Error cancelling game: " + err.message);
     }
 }
+
