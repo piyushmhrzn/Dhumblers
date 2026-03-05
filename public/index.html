@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dhumblers Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
+    <div class="container">
+        <span class="navbar-brand">Dhumblers</span>
+        <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#newGameModal">
+            Start New Game
+        </button>
+    </div>
+</nav>
+
+<div class="container" id="homeContent">
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Leaderboard</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Points</th>
+                            <th>Games</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody"></tbody>
+                </table>
+            </div>
+            <p class="mt-3">
+                <strong>Weekly Winner:</strong> 
+                <span id="weeklyWinner">Loading...</span>
+            </p>
+            <p class="mt-4"><strong>Monthly Winners:</strong></p>
+            <div id="monthlyWinners"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <h5>Recent Games</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>S.N.</th>
+                            <th>Date</th>
+                            <th>Winner</th>
+                            <th>Players & Points</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentGamesBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination controls -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button id="prevPage" class="btn btn-outline-secondary" onclick="changePage(-1)" disabled>Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" class="btn btn-outline-secondary" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay (shown when starting game) -->
+<div id="loadingOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 bg-white bg-opacity-75 d-flex align-items-center justify-content-center" style="z-index: 9999;">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5>Starting game...</h5>
+    </div>
+</div>
+
+<!-- New Game Modal -->
+<div class="modal fade" id="newGameModal" tabindex="-1" aria-labelledby="newGameModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newGameModalLabel">Start New Game</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- 🔐 Passcode -->
+                <div class="mb-3">
+                    <label class="form-label">Passcode</label>
+                    <input type="password" id="gamePasscode" class="form-control" placeholder="Enter passcode">
+                </div>
+
+                <!-- Elimination Score -->
+                <div class="mb-3">
+                    <label class="form-label">Elimination Score</label>
+                    <input type="number" id="elimScoreModal" class="form-control" value="100" min="1">
+                </div>
+
+                <label class="form-label">Select Players (at least 2)</label>
+                <div id="playerSelectModal" class="mb-3"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="startGameFromModal()">Start Game</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="script.js"></script>
+
+<script>
+// Home page init + modal handling
+document.addEventListener('DOMContentLoaded', async () => {
+  await fetchUsers();
+  await fetchGames();
+  renderPlayerCheckboxes(document.getElementById('playerSelectModal'));
+  renderRecentGames(document.getElementById('recentGamesBody'));
+  renderLeaderboard(document.getElementById('leaderboardBody'));
+  renderWeeklyWinner(document.getElementById('weeklyWinner'));
+  renderMonthlyWinners(document.getElementById('monthlyWinners'));
+});
+
+function startGameFromModal() {
+  const passcode = document.getElementById('gamePasscode').value.trim();
+  const elim = parseInt(document.getElementById('elimScoreModal').value);
+  const selected = Array.from(document.querySelectorAll('#playerSelectModal input:checked')).map(el => parseInt(el.value));
+
+  document.getElementById('loadingOverlay').classList.remove('d-none');
+  document.getElementById('homeContent').classList.add('d-none');
+
+  startNewGame(elim, selected, passcode);
+}
+</script>
+
+</body>
+</html>

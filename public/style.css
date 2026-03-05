@@ -1,0 +1,84 @@
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-size: 0.90rem;
+    /* slightly smaller base font */
+    line-height: 1.5;
+    background-color: #f8f9fa;
+    padding: 12px;
+    /* less padding on mobile */
+}
+
+.container {
+    max-width: 1100px;
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.6rem;
+}
+
+.table th {
+    background-color: #e9ecef;
+    text-align: center;
+}
+
+.table td {
+    text-align: center;
+}
+
+.winner-banner {
+    background-color: #d4edda;
+    color: #155724;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 1.25rem;
+    font-weight: bold;
+}
+
+#gameHistory td {
+    vertical-align: middle;
+}
+
+#gameHistory input {
+    max-width: 80px;
+}
+
+#loadingOverlay {
+    transition: opacity 0.3s ease;
+}
+
+.score-input::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+.score-input {
+    text-align: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 576px) {
+    .table-responsive {
+        font-size: 0.85rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.5rem 0.4rem;
+    }
+
+    h2 {
+        font-size: 1.4rem;
+    }
+
+    .btn {
+        width: 22%;
+        margin-bottom: 0.5rem;
+        font-size: small;
+    }
+
+    .btn.me-3 {
+        margin-right: 0 !important;
+    }
+}
