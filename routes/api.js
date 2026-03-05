@@ -145,12 +145,23 @@ router.put('/games/ongoing/round', async (req, res) => {
             }
 
             for (let i = 0; i < rankings.length; i++) {
-                const p = rankings[i];
                 const awarded = pointsArr[i] || 0;
-                p.points = awarded;
+
+                // Update the game document player
+                let playerInGame;
+                if (rankings[i].id === winner?.id) {
+                    playerInGame = winner;
+                } else {
+                    playerInGame = game.players.find(p => p.id === rankings[i].id) ||
+                        game.eliminated.find(p => p.id === rankings[i].id);
+                }
+
+                if (playerInGame) {
+                    playerInGame.points = awarded;
+                }
 
                 // Update user stats
-                const user = await User.findOne({ id: p.id });
+                const user = await User.findOne({ id: rankings[i].id });
                 if (user) {
                     user.totalPoints += awarded;
                     user.gamesPlayed += 1;
@@ -158,6 +169,10 @@ router.put('/games/ongoing/round', async (req, res) => {
                     await user.save();
                 }
             }
+
+            // Tell Mongoose the arrays changed
+            game.markModified('players');
+            game.markModified('eliminated');
 
             game.status = 'completed';
         }
