@@ -119,7 +119,13 @@ router.put('/games/ongoing/round', async (req, res) => {
                 if (p.total >= game.elimScore) {
                     p.status = 'eliminated';
                     p.elimOrder = game.eliminated.length + 1;
-                    game.eliminated.push(p);  // Note: This pushes reference, but okay for now
+                    game.eliminated.push({
+                        id: p.id,
+                        total: p.total,
+                        status: p.status,
+                        elimOrder: p.elimOrder,
+                        points: 0
+                    });
                 }
             }
         });
@@ -129,12 +135,26 @@ router.put('/games/ongoing/round', async (req, res) => {
         // Check if game over
         const active = game.players.filter(p => p.status === 'active');
         if (active.length <= 1) {
-            // Award points and complete game
-            let winner = active[0] || game.eliminated.pop();
+            let winner;
+
+            if (active.length === 1) {
+                winner = active[0];
+            } else {
+                // If no active left, winner is last eliminated
+                winner = game.eliminated[game.eliminated.length - 1];
+            }
+
             if (winner) winner.elimOrder = -1;
 
+            // Build rankings without mutating eliminated array
             let rankings = winner ? [winner] : [];
-            rankings.push(...[...game.eliminated].reverse());
+
+            // Add eliminated players except winner
+            rankings.push(
+                ...game.eliminated
+                    .filter(p => p.id !== winner?.id)
+                    .reverse()
+            );
 
             const n = game.players.length;
             let pointsArr = [];

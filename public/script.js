@@ -35,6 +35,21 @@ function getUserById(id) {
     return users.find(u => u.id === id);
 }
 
+function getAllGamePlayers(game) {
+    // Return all players, whether active/winner or eliminated
+    const all = [...game.players];
+
+    // Add eliminated players (they may have been removed from players array)
+    game.eliminated.forEach(elim => {
+        // Avoid duplicates if someone is in both (shouldn't happen, but safe)
+        if (!all.some(p => p.id === elim.id)) {
+            all.push(elim);
+        }
+    });
+
+    return all;
+}
+
 function formatDate(dateStr) {
     const d = new Date(dateStr);
     const options = {
@@ -175,9 +190,6 @@ function renderLeaderboard(tbody) {
 
 // Weekly Winner logic (client-side computation)
 function renderWeeklyWinner(el) {
-    // ... (keep the same as original, but use 'games' array)
-    // Note: This is long, but copy from your original script.js and replace localStorage with 'games'
-    // For brevity, assuming you copy the function body here, replacing games access.
     if (!el) return;
 
     // Get Monday of current week
@@ -217,9 +229,9 @@ function renderWeeklyWinner(el) {
 
     const weeklyStats = {};
 
-    // Only count games where player scored > 0
+    // Count points from ALL players (players + eliminated)
     weeklyGames.forEach(g => {
-        g.players.forEach(p => {
+        getAllGamePlayers(g).forEach(p => {
             const pts = p.points || 0;
             if (pts > 0) {
                 if (!weeklyStats[p.id]) {
@@ -232,11 +244,11 @@ function renderWeeklyWinner(el) {
     });
 
     if (Object.keys(weeklyStats).length === 0) {
-        el.innerHTML = `<br><strong>Current Week:</strong> (Ends ${endFormatted})<br>Winner: None (0 points)`;
+        el.innerHTML = `<br><strong>Current Week:</strong> No games with points awarded yet (Ends ${endFormatted})<br>`;
         return;
     }
 
-    // Find best score
+    // Find best performer (highest points, tiebreaker = fewer games)
     let maxPoints = -1;
     let minGames = Infinity;
 
@@ -249,7 +261,7 @@ function renderWeeklyWinner(el) {
         }
     });
 
-    // Collect all winners
+    // Collect all winners (can be multiple if perfect tie)
     const winners = [];
     Object.entries(weeklyStats).forEach(([id, stats]) => {
         if (stats.points === maxPoints && stats.games === minGames) {
@@ -265,12 +277,12 @@ function renderWeeklyWinner(el) {
         const joined = winners.length === 2
             ? winners.join(' & ')
             : winners.slice(0, -1).join(', ') + ' & ' + winners[winners.length - 1];
-
         winnerText = `${joined} (${maxPoints} points)`;
     }
 
     el.innerHTML = `
-        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> ${winnerText} <small><em>(Ends ${endFormatted})</em></small><br>
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> ${winnerText} 
+        <small><em>(Ends ${endFormatted})</em></small><br>
     `;
 }
 
@@ -288,7 +300,8 @@ function renderMonthlyWinners(container) {
             monthlyStats[monthKey] = {};
         }
 
-        game.players.forEach(p => {
+        // Count points from ALL players (players + eliminated)
+        getAllGamePlayers(game).forEach(p => {
             const pts = p.points || 0;
             if (pts > 0) {
                 if (!monthlyStats[monthKey][p.id]) {
@@ -301,7 +314,7 @@ function renderMonthlyWinners(container) {
     });
 
     const sortedMonths = Object.keys(monthlyStats)
-        .sort((a, b) => new Date(b) - new Date(a));
+        .sort((a, b) => new Date(b) - new Date(a));  // newest first
 
     const monthsToShow = sortedMonths.slice(0, 6);
 
@@ -340,7 +353,6 @@ function renderMonthlyWinners(container) {
                 const joined = winners.length === 2
                     ? winners.join(' & ')
                     : winners.slice(0, -1).join(', ') + ' & ' + winners[winners.length - 1];
-
                 winnerText = `${joined} (${maxPoints} points)`;
             }
 
