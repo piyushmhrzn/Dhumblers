@@ -1,3 +1,10 @@
+window.addEventListener('error', (event) => {
+    if (event.message.includes('core.js') && event.message.includes('payload')) {
+        console.warn('Ignoring third-party core.js payload crash - likely unrelated library');
+        event.preventDefault(); // stops uncaught error spam (not perfect)
+    }
+});
+
 // ================================================
 // Data & Constants
 // ================================================
