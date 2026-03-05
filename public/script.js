@@ -281,7 +281,7 @@ function renderWeeklyWinner(el) {
     }
 
     el.innerHTML = `
-        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> ${winnerText} 
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
         <small><em>(Ends ${endFormatted})</em></small><br>
     `;
 }

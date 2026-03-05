@@ -1,84 +1,353 @@
-body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-size: 0.90rem;
-    /* slightly smaller base font */
-    line-height: 1.5;
-    background-color: #f8f9fa;
-    padding: 12px;
-    /* less padding on mobile */
+/* =========================
+GLOBAL THEME
+========================= */
+
+:root {
+    --primary: #6366f1;
+    --secondary: #22d3ee;
+    --accent: #f59e0b;
+
+    --glass-bg: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.15);
+
+    --text-main: #f8fafc;
+    --text-muted: #cbd5f5;
 }
 
-.container {
-    max-width: 1100px;
+body {
+    font-family: 'Inter', sans-serif !important;
+    min-height: 100vh;
+
+    background:
+        radial-gradient(circle at top, #364353, #1b2234 40%);
+
+    color: var(--text-main);
+}
+
+
+/* =========================
+BOOTSTRAP CARD OVERRIDE
+========================= */
+
+.card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    border: 1px solid var(--glass-border) !important;
+
+    border-radius: 16px !important;
+
+    box-shadow: 0 15px 45px rgba(0, 0, 0, .35);
+
+    transition: all .3s ease;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 55px rgba(0, 0, 0, .45);
+}
+
+.card-body {
+    color: var(--text-main);
+}
+
+
+/* =========================
+BOOTSTRAP NAVBAR OVERRIDE
+========================= */
+
+.navbar {
+    background: rgba(255, 255, 255, 0.06) !important;
+
+    backdrop-filter: blur(14px);
+
+    border-bottom: 1px solid rgba(255, 255, 255, .15);
 }
 
 .navbar-brand {
-    font-weight: bold;
-    font-size: 1.6rem;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 600;
+    color: white !important;
+}
+
+
+/* =========================
+BOOTSTRAP TABLE OVERRIDE
+========================= */
+
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.04);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.12);
+
+    color: var(--text-main) !important;
+}
+
+.table thead {
+    background: rgba(255, 255, 255, .1);
 }
 
 .table th {
-    background-color: #e9ecef;
-    text-align: center;
+    color: #e2e8f0 !important;
+    border: none !important;
+    font-weight: 600;
 }
 
 .table td {
-    text-align: center;
+    color: #f8fafc !important;
+    border-color: rgba(255, 255, 255, .1) !important;
 }
 
-.winner-banner {
-    background-color: #d4edda;
-    color: #155724;
-    padding: 15px;
+/* LIST */
+.list-group-item {
+    color: #f8fafc !important;
+    background: rgba(255, 255, 255, .1) !important;
+}
+
+/* glass rows */
+
+.table tbody tr {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    transition: rgba(255, 255, 255, 0.05) .25s ease, box-shadow .25s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.14);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+
+/* =========================
+BOOTSTRAP BUTTON OVERRIDE
+========================= */
+
+.btn {
+    border-radius: 10px !important;
+    font-weight: 500;
+    transition: .25s ease;
+}
+
+/* Primary */
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--secondary)) !important;
+    border: none !important;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(99, 102, 241, .45);
+}
+
+/* Outline */
+
+.btn-outline-secondary {
+    border: 1px solid rgba(255, 255, 255, .25) !important;
+    color: white !important;
+}
+
+.btn-outline-secondary:hover {
+    background: rgba(255, 255, 255, .15);
+}
+
+.btn-outline-danger:hover {
+    transform: scale(1.05);
+}
+
+
+/* =========================
+BOOTSTRAP MODAL OVERRIDE
+========================= */
+
+.modal-content {
+    background: rgba(15, 23, 42, .85) !important;
+
+    backdrop-filter: blur(20px);
+
+    border: 1px solid rgba(255, 255, 255, .1);
+
+    border-radius: 16px;
+}
+
+.modal-header,
+.modal-footer {
+    border-color: rgba(255, 255, 255, .1) !important;
+}
+
+
+/* =========================
+FORM INPUTS
+========================= */
+
+.form-control {
+    background: rgba(255, 255, 255, .08) !important;
+
+    border: 1px solid rgba(255, 255, 255, .18) !important;
+
+    color: white !important;
+}
+
+.form-control:focus {
+    background: rgba(255, 255, 255, .12) !important;
+
+    border-color: var(--primary) !important;
+
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, .35);
+}
+
+
+/* =========================
+PLAYER SELECT GRID
+========================= */
+
+#playerSelectModal {
+    display: grid;
+
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+
+    gap: 8px;
+}
+
+#playerSelectModal label {
+    background: rgba(255, 255, 255, .06);
+
+    padding: 6px 10px;
+
     border-radius: 8px;
-    margin-bottom: 20px;
-    font-size: 1.25rem;
-    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: .2s ease;
 }
 
-#gameHistory td {
-    vertical-align: middle;
+#playerSelectModal label:hover {
+    background: rgba(255, 255, 255, .14);
 }
 
-#gameHistory input {
-    max-width: 80px;
+
+/* =========================
+WINNER BANNER
+========================= */
+
+#winnerBanner {
+    font-size: 1.4rem;
+
+    font-weight: 600;
+
+    color: #facc15;
+
+    animation: fadeIn .6s ease;
 }
+
+
+/* =========================
+LEADERBOARD TOP 3 BADGES
+========================= */
+
+#leaderboardBody tr:nth-child(1) td:first-child::before {
+    content: "🥇 ";
+    font-size: 18px;
+    margin-right: 6px;
+}
+
+#leaderboardBody tr:nth-child(2) td:first-child::before {
+    content: "🥈 ";
+    font-size: 18px;
+    margin-right: 6px;
+}
+
+#leaderboardBody tr:nth-child(3) td:first-child::before {
+    content: "🥉 ";
+    font-size: 18px;
+    margin-right: 6px;
+}
+
+/* Gold */
+#leaderboardBody tr:nth-child(1) {
+    background: rgba(255, 215, 0, 0.12) !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.35);
+}
+
+/* Silver */
+#leaderboardBody tr:nth-child(2) {
+    background: rgba(192, 192, 192, 0.12) !important;
+}
+
+/* Bronze */
+#leaderboardBody tr:nth-child(3) {
+    background: rgba(205, 127, 50, 0.12) !important;
+}
+
+
+
+/* =========================
+LOADING OVERLAY
+========================= */
 
 #loadingOverlay {
-    transition: opacity 0.3s ease;
+    backdrop-filter: blur(6px);
 }
 
-.score-input::placeholder {
-    color: #adb5bd;
-    opacity: 1;
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
 }
 
-.score-input {
-    text-align: center;
+
+/* =========================
+SCROLLBAR
+========================= */
+
+::-webkit-scrollbar {
+    width: 8px;
 }
 
-/* Mobile adjustments */
-@media (max-width: 576px) {
-    .table-responsive {
-        font-size: 0.85rem;
+::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #6366f1;
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #818cf8;
+}
+
+
+/* =========================
+ANIMATIONS
+========================= */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
     }
 
-    .table th,
-    .table td {
-        padding: 0.5rem 0.4rem;
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+/* =========================
+RESPONSIVE
+========================= */
+
+@media(max-width:768px) {
+
+    .card {
+        border-radius: 12px;
     }
 
-    h2 {
-        font-size: 1.4rem;
+    .table {
+        font-size: .9rem;
     }
 
-    .btn {
-        width: 22%;
-        margin-bottom: 0.5rem;
-        font-size: small;
-    }
-
-    .btn.me-3 {
-        margin-right: 0 !important;
-    }
 }
