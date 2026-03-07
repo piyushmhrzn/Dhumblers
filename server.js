@@ -4,12 +4,20 @@ const dotenv = require('dotenv');
 const path = require('path');
 const apiRoutes = require('./routes/api');
 const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io');
 
 dotenv.config();
 
 const app = express();
 app.use(express.json());  // Parse JSON bodies
 app.use(cors());  // Allow cross-origin (for local testing)
+
+// Server and Socket.IO setup
+const server = http.createServer(app);
+const io = new Server(server);
+
+app.set('io', io);
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGO_URI)
@@ -28,8 +36,20 @@ app.get('/*path', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Socket connections
+io.on('connection', (socket) => {
+    console.log('Client connected');
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected');
+    });
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+server.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 
 // Global error handler - must be last
 app.use((err, req, res, next) => {

@@ -119,6 +119,9 @@ BOOTSTRAP TABLE OVERRIDE
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
+#gameHistory .table-secondary td {
+    color: #666 !important;
+}
 
 /* =========================
 BOOTSTRAP BUTTON OVERRIDE
@@ -281,7 +284,68 @@ LEADERBOARD TOP 3 BADGES
     background: rgba(205, 127, 50, 0.12) !important;
 }
 
+/* =========================
+LIVE GAME HIGHLIGHT
+========================= */
 
+#liveGameContainer .table-secondary td {
+    color: #666 !important;
+}
+
+/* LIVE header */
+.live-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+}
+
+/* blinking red dot */
+.live-dot {
+    width: 10px;
+    height: 10px;
+    background: #ff0000;
+    border-radius: 50%;
+    position: relative;
+    animation: liveBlink 1s infinite;
+}
+
+/* pulse effect */
+.live-dot::after {
+    content: '';
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff0000;
+    animation: livePulse 1.5s infinite;
+}
+
+@keyframes liveBlink {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes livePulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(2.5);
+        opacity: 0;
+    }
+}
 
 /* =========================
 LOADING OVERLAY

@@ -91,6 +91,10 @@ router.post('/games', checkGamePasscode, async (req, res) => {
             rounds: []
         });
         await game.save();
+
+        // broadcast updated game
+        req.app.get('io').emit('gameUpdate', game);
+
         res.json(game);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -198,6 +202,10 @@ router.put('/games/ongoing/round', async (req, res) => {
         }
 
         await game.save();
+
+        // broadcast updated game
+        req.app.get('io').emit('gameUpdate', game);
+
         res.json(game);
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -209,6 +217,8 @@ router.delete('/games/ongoing', async (req, res) => {
     try {
         const game = await Game.findOneAndDelete({ status: 'ongoing' });
         if (!game) return res.status(404).json({ error: 'No ongoing game' });
+
+        req.app.get('io').emit('gameUpdate', null);
         res.json({ message: 'Game cancelled' });
     } catch (err) {
         res.status(500).json({ error: err.message });

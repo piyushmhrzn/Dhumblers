@@ -393,7 +393,7 @@ function renderGameTable() {
 
         const tr = document.createElement('tr');
         if (!isActive) {
-            tr.classList.add('table-secondary', 'text-muted');
+            tr.classList.add('table-secondary');
         }
 
         tr.innerHTML = `
@@ -484,3 +484,77 @@ async function cancelGame() {
     }
 }
 
+// ================================================
+// LIVE SCOREBOARD
+// ================================================
+
+let socket = null;
+
+function renderLiveGame(game) {
+    const dot = document.getElementById("liveDot");
+    const bolt = document.getElementById("liveIcon");
+    const badge = document.getElementById("elimScoreBadge");
+    const container = document.getElementById("liveGameContainer");
+
+    if (!container) return;
+
+    if (!game || game.status !== "ongoing") {
+
+        container.innerHTML = `<p class="text-warning">No ongoing game</p>`;
+
+        if (dot) dot.classList.add("d-none");
+        if (bolt) bolt.classList.remove("d-none");
+        if (badge) badge.innerText = "";
+
+        return;
+    }
+
+    if (dot) dot.classList.remove("d-none");
+    if (bolt) bolt.classList.add("d-none");
+
+    // show elimination score
+    if (badge) badge.innerText = "Elimination: " + game.elimScore;
+
+    let html = `
+        <div class="table-responsive">
+        <table class="table table-bordered table-sm">
+        <thead>
+        <tr>
+            <th>Player</th>
+            <th>Total</th>
+        </tr>
+        </thead>
+        <tbody>
+    `;
+
+    game.players.forEach(p => {
+
+        const name = getUserById(p.id)?.name || "Unknown";
+
+        html += `
+            <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
+                <td>${name}</td>
+                <td>${p.total}</td>
+            </tr>
+        `;
+    });
+
+    html += `
+        </tbody>
+        </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+function initLiveSocket() {
+
+    socket = io();
+
+    socket.on("gameUpdate", (game) => {
+
+        renderLiveGame(game);
+
+    });
+}
