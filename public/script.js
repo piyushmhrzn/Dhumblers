@@ -50,6 +50,16 @@ function getAllGamePlayers(game) {
     return all;
 }
 
+// Winner percentage helper for leaderboard
+function getUserWins(userId) {
+    // Count completed games where this user is the winner (elimOrder === -1)
+    const wins = games.filter(g =>
+        g.status === 'completed' &&
+        g.players.some(p => p.elimOrder === -1 && p.id === userId)
+    );
+    return wins.length;
+}
+
 function formatDate(dateStr) {
     const d = new Date(dateStr);
     const options = {
@@ -178,12 +188,16 @@ function renderLeaderboard(tbody) {
     const sorted = [...users].sort((a, b) => b.totalPoints - a.totalPoints);
 
     sorted.forEach(u => {
+        const wins = getUserWins(u.id);
+        const winPct = u.gamesPlayed > 0 ? ((wins / u.gamesPlayed) * 100).toFixed(1) : 0;
+
         const tr = document.createElement('tr');
         tr.innerHTML = `
-      <td>${u.name}</td>
-      <td>${u.totalPoints}</td>
-      <td>${u.gamesPlayed}</td>
-    `;
+            <td>${u.name}</td>
+            <td>${u.totalPoints}</td>
+            <td>${u.gamesPlayed}</td>
+            <td>${winPct}% (${wins})</td> <!-- Show total wins too -->
+        `;
         tbody.appendChild(tr);
     });
 }
