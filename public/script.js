@@ -393,7 +393,10 @@ function renderGameTable() {
 
     tbody.innerHTML = '';
 
-    currentGame.players.forEach(p => {
+    // Sort players by total ascending (lowest points first)
+    const sortedPlayers = [...currentGame.players].sort((a, b) => a.total - b.total);
+
+    sortedPlayers.forEach(p => {
         const user = getUserById(p.id);
         const name = user ? user.name : '?';
         const isActive = p.status === 'active';
@@ -411,16 +414,16 @@ function renderGameTable() {
         }
 
         tr.innerHTML = `
-      <td>${name}</td>
-      <td>${total}</td>
-      <td>${history.trim() || '—'}</td>
-      <td>
-        ${isActive ? `
-          <input class="form-control text-center score-input" type="number" 
-                 data-id="${p.id}" min="0" 
-                 placeholder="" style="width: 100px; margin: 0 auto;">
-        ` : 'Eliminated'}
-      </td>
+        <td>${name}</td>
+        <td>${total}</td>
+        <td>${history.trim() || '—'}</td>
+        <td>
+            ${isActive ? `
+                <input class="form-control text-center score-input" type="number" 
+                       data-id="${p.id}" min="0" 
+                       placeholder="" style="width: 100px; margin: 0 auto;">
+            ` : 'Eliminated'}
+        </td>
     `;
         tbody.appendChild(tr);
     });
@@ -541,16 +544,17 @@ function renderLiveGame(game) {
         <tbody>
     `;
 
-    game.players.forEach(p => {
+    // Sort players by total ascending
+    const sortedPlayers = [...game.players].sort((a, b) => a.total - b.total);
 
+    sortedPlayers.forEach(p => {
         const name = getUserById(p.id)?.name || "Unknown";
-
         html += `
-            <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
-                <td>${name}</td>
-                <td>${p.total}</td>
-            </tr>
-        `;
+        <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
+            <td>${name}</td>
+            <td>${p.total}</td>
+        </tr>
+    `;
     });
 
     html += `
@@ -567,8 +571,10 @@ function initLiveSocket() {
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-
         renderLiveGame(game);
-
+        if (window.location.pathname.includes("game.html")) {
+            currentGame = game;
+            renderGameTable();
+        }
     });
 }
