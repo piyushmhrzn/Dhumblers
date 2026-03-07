@@ -1,47 +1,78 @@
 // ================================================
-// Data & Constants
+// GAME DASHBOARD / LEADERBOARD / LIVE SCORES
+// Client-side JavaScript (script.js)
 // ================================================
 
-let users = [];
-let games = [];
-let currentGame = null;
+// ────────────────────────────────────────────────
+// 1. GLOBAL STATE & CONSTANTS
+// ────────────────────────────────────────────────
 
-const gamesPerPage = 5;
-let currentPage = 1;
+let users = [];                    // All registered users from /api/users
+let games = [];                    // All historical games from /api/games
+let currentGame = null;            // Currently viewed / ongoing game
 
-// ================================================
-// Core shared helpers
-// ================================================
+const gamesPerPage = 5;            // How many games shown per page in recent games table
+let currentPage = 1;               // Current pagination page for recent games
 
+
+// ────────────────────────────────────────────────
+// 2. API FETCH HELPERS
+// ────────────────────────────────────────────────
+
+/**
+ * Fetches all users from backend and stores them in global `users` array
+ * @returns {Promise<Array>} users array
+ */
 async function fetchUsers() {
     const res = await fetch('/api/users');
     users = await res.json();
     return users;
 }
 
+/**
+ * Fetches all historical games and stores them in global `games` array
+ * @returns {Promise<Array>} games array
+ */
 async function fetchGames() {
     const res = await fetch('/api/games');
     games = await res.json();
     return games;
 }
 
+/**
+ * Fetches the currently ongoing game (if any)
+ * @returns {Promise<Object|null>} current game object or null
+ */
 async function fetchOngoingGame() {
     const res = await fetch('/api/games/ongoing');
     currentGame = await res.json();
     return currentGame;
 }
 
+
+// ────────────────────────────────────────────────
+// 3. DATA ACCESS & UTILITY HELPERS
+// ────────────────────────────────────────────────
+
+/**
+ * Find user object by ID from the global users array
+ * @param {number} id - user ID
+ * @returns {Object|undefined} user object or undefined
+ */
 function getUserById(id) {
     return users.find(u => u.id === id);
 }
 
+/**
+ * Returns ALL players who participated in a game (active + eliminated)
+ * @param {Object} game - game object
+ * @returns {Array} array of all player objects
+ */
 function getAllGamePlayers(game) {
-    // Return all players, whether active/winner or eliminated
     const all = [...game.players];
 
-    // Add eliminated players (they may have been removed from players array)
+    // Add eliminated players (they might have been removed from players array)
     game.eliminated.forEach(elim => {
-        // Avoid duplicates if someone is in both (shouldn't happen, but safe)
         if (!all.some(p => p.id === elim.id)) {
             all.push(elim);
         }
@@ -50,16 +81,23 @@ function getAllGamePlayers(game) {
     return all;
 }
 
-// Winner percentage helper for leaderboard
+/**
+ * Count how many games the user has **won** (elimOrder === -1 in completed games)
+ * @param {number} userId
+ * @returns {number} number of wins
+ */
 function getUserWins(userId) {
-    // Count completed games where this user is the winner (elimOrder === -1)
-    const wins = games.filter(g =>
+    return games.filter(g =>
         g.status === 'completed' &&
         g.players.some(p => p.elimOrder === -1 && p.id === userId)
-    );
-    return wins.length;
+    ).length;
 }
 
+/**
+ * Formats ISO date string into nice readable format (e.g. "Mar 7, 2026 3:45 PM")
+ * @param {string} dateStr - ISO date string
+ * @returns {string} formatted date
+ */
 function formatDate(dateStr) {
     const d = new Date(dateStr);
     const options = {
@@ -73,10 +111,18 @@ function formatDate(dateStr) {
     return d.toLocaleString('en-US', options).replace(',', '');
 }
 
-// ================================================
-// Game starter
-// ================================================
 
+// ────────────────────────────────────────────────
+// 4. GAME CREATION / START
+// ────────────────────────────────────────────────
+
+/**
+ * Starts a new game by sending data to backend
+ * Redirects to game.html on success
+ * @param {number} elimScore - score at which player is eliminated
+ * @param {number[]} selectedPlayerIds - array of participating user IDs
+ * @param {string} password - optional game password
+ */
 async function startNewGame(elimScore, selectedPlayerIds, password) {
     if (!Array.isArray(selectedPlayerIds) || selectedPlayerIds.length < 2) {
         alert('Please select at least 2 players.');
@@ -98,6 +144,7 @@ async function startNewGame(elimScore, selectedPlayerIds, password) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ elimScore, selectedPlayerIds, password })
         });
+
         if (!res.ok) {
             const err = await res.json();
             alert(err.error);
@@ -105,34 +152,49 @@ async function startNewGame(elimScore, selectedPlayerIds, password) {
             document.getElementById('homeContent')?.classList.remove('d-none');
             return;
         }
+
         currentGame = await res.json();
         window.location.href = 'game.html';
+
     } catch (err) {
         alert('Error starting game: ' + err.message);
     }
 }
 
-// ================================================
-// Home page helpers (index.html)
-// ================================================
 
+// ────────────────────────────────────────────────
+// 5. HOME PAGE RENDERING (index.html)
+// ────────────────────────────────────────────────
+
+/**
+ * Renders player selection checkboxes on game creation form
+ * @param {HTMLElement} container - DOM element to insert checkboxes into
+ */
 function renderPlayerCheckboxes(container) {
+    if (!container) return;
     container.innerHTML = '';
+
     users.forEach(u => {
         container.innerHTML += `
-      <div class="form-check form-check-inline">
-        <input class="form-check-input" type="checkbox" value="${u.id}" id="p${u.id}">
-        <label class="form-check-label" for="p${u.id}">${u.name}</label>
-      </div>`;
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="checkbox" value="${u.id}" id="p${u.id}">
+                <label class="form-check-label" for="p${u.id}">${u.name}</label>
+            </div>`;
     });
 }
 
+/**
+ * Renders paginated list of recent games in table
+ * @param {HTMLElement} tbody - table body element
+ */
 function renderRecentGames(tbody) {
+    if (!tbody) return;
+
     const totalGames = games.length;
     const startIndex = (currentPage - 1) * gamesPerPage;
     const endIndex = startIndex + gamesPerPage;
 
-    const pageGames = games.slice(startIndex, endIndex);  // Already sorted newest first from API
+    const pageGames = games.slice(startIndex, endIndex);
 
     tbody.innerHTML = '';
 
@@ -150,17 +212,20 @@ function renderRecentGames(tbody) {
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-      <td>${globalSN}</td>
-      <td>${formatDate(g.date)}</td>
-      <td>${winnerName}</td>
-      <td>${playerPoints}</td>
-    `;
+            <td>${globalSN}</td>
+            <td>${formatDate(g.date)}</td>
+            <td>${winnerName}</td>
+            <td>${playerPoints}</td>
+        `;
         tbody.appendChild(tr);
     });
 
     updatePagination(totalGames);
 }
 
+/**
+ * Updates pagination controls state and text
+ */
 function updatePagination(totalGames) {
     const totalPages = Math.ceil(totalGames / gamesPerPage);
     const prevBtn = document.getElementById('prevPage');
@@ -175,38 +240,108 @@ function updatePagination(totalGames) {
     pageInfo.textContent = `Page ${currentPage} of ${totalPages || 1}`;
 }
 
+/**
+ * Changes current page and re-renders recent games table
+ * @param {number} delta - +1 or -1
+ */
 function changePage(delta) {
     currentPage += delta;
     if (currentPage < 1) currentPage = 1;
     renderRecentGames(document.getElementById('recentGamesBody'));
 }
 
-// Leaderboard – sorted by total points
+/**
+ * Renders leaderboard for CURRENT MONTH only
+ * Points automatically reset every month
+ */
 function renderLeaderboard(tbody) {
+    if (!tbody) return;
     tbody.innerHTML = '';
 
-    const sorted = [...users].sort((a, b) => b.totalPoints - a.totalPoints);
+    const now = new Date();
+    const month = now.getMonth();
+    const year = now.getFullYear();
 
-    sorted.forEach(u => {
-        const wins = getUserWins(u.id);
-        const winPct = u.gamesPlayed > 0 ? ((wins / u.gamesPlayed) * 100).toFixed(1) : 0;
+    // Calculate monthly stats
+    const stats = {};
+
+    /*
+    // Only consider players who participated in games this month
+        games.forEach(g => {
+            const d = new Date(g.date);
+
+            if (d.getMonth() === month && d.getFullYear() === year) {
+
+                getAllGamePlayers(g).forEach(p => {
+
+                    if (!stats[p.id]) {
+                        stats[p.id] = { points: 0, games: 0, wins: 0 };
+                    }
+
+                    stats[p.id].points += p.points || 0;
+                    stats[p.id].games += 1;
+
+                    if (p.elimOrder === -1) stats[p.id].wins += 1;
+                });
+            }
+        });
+    */
+
+    // Step 1: create entry for every user
+    users.forEach(u => {
+        stats[u.id] = { points: 0, games: 0, wins: 0 };
+    });
+
+    // Step 2: add monthly game stats
+    games.forEach(g => {
+
+        const d = new Date(g.date);
+
+        if (d.getMonth() === month && d.getFullYear() === year) {
+
+            getAllGamePlayers(g).forEach(p => {
+
+                stats[p.id].points += p.points || 0;
+                stats[p.id].games += 1;
+
+                if (p.elimOrder === -1) stats[p.id].wins += 1;
+            });
+        }
+    });
+
+    const leaderboard = Object.entries(stats)
+        .map(([id, s]) => ({
+            id: parseInt(id),
+            name: getUserById(parseInt(id))?.name || 'Unknown',
+            points: s.points,
+            games: s.games,
+            wins: s.wins
+        }))
+        .sort((a, b) => b.points - a.points);
+
+    leaderboard.forEach(p => {
+
+        const winPct = p.games > 0 ? ((p.wins / p.games) * 100).toFixed(1) : 0;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${u.name}</td>
-            <td>${u.totalPoints}</td>
-            <td>${u.gamesPlayed}</td>
-            <td>${winPct}% (${wins})</td> <!-- Show total wins too -->
+            <td>${p.name}</td>
+            <td>${p.points}</td>
+            <td>${p.games}</td>
+            <td>${winPct}% (${p.wins})</td>
         `;
         tbody.appendChild(tr);
     });
 }
 
-// Weekly Winner logic (client-side computation)
+/**
+ * Renders current weekly winner(s) based on points (tiebreaker: fewer games)
+ * @param {HTMLElement} el - element to insert weekly winner HTML
+ */
 function renderWeeklyWinner(el) {
     if (!el) return;
 
-    // Get Monday of current week
+    // Helper: Get Monday 00:00:00 of current week
     function getMondayOfCurrentWeek() {
         const today = new Date();
         const day = today.getDay();
@@ -217,6 +352,7 @@ function renderWeeklyWinner(el) {
         return monday;
     }
 
+    // Helper: Get Sunday 23:59:59.999 of current week
     function getSundayEndOfWeek(monday) {
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
@@ -235,7 +371,7 @@ function renderWeeklyWinner(el) {
         hour12: true
     }).replace(',', '');
 
-    // Filter games in current week
+    // Filter games from current week
     const weeklyGames = games.filter(g => {
         const d = new Date(g.date);
         return d >= weekStart && d <= weekEnd;
@@ -243,7 +379,6 @@ function renderWeeklyWinner(el) {
 
     const weeklyStats = {};
 
-    // Count points from ALL players (players + eliminated)
     weeklyGames.forEach(g => {
         getAllGamePlayers(g).forEach(p => {
             const pts = p.points || 0;
@@ -262,7 +397,7 @@ function renderWeeklyWinner(el) {
         return;
     }
 
-    // Find best performer (highest points, tiebreaker = fewer games)
+    // Find top performer(s)
     let maxPoints = -1;
     let minGames = Infinity;
 
@@ -275,7 +410,6 @@ function renderWeeklyWinner(el) {
         }
     });
 
-    // Collect all winners (can be multiple if perfect tie)
     const winners = [];
     Object.entries(weeklyStats).forEach(([id, stats]) => {
         if (stats.points === maxPoints && stats.games === minGames) {
@@ -284,23 +418,21 @@ function renderWeeklyWinner(el) {
         }
     });
 
-    let winnerText;
-    if (winners.length === 1) {
-        winnerText = `${winners[0]} (${maxPoints} points, ${minGames} games)`;
-    } else {
-        const joined = winners.length === 2
-            ? winners.join(' & ')
-            : winners.slice(0, -1).join(', ') + ' & ' + winners[winners.length - 1];
-        winnerText = `${joined} (${maxPoints} points)`;
-    }
+    let winnerText = winners.length === 1
+        ? `${winners[0]} (${maxPoints} points, ${minGames} games)`
+        : `${winners.join(' & ')} (${maxPoints} points)`;
 
     el.innerHTML = `
-        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
+        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> 
+        <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
         <small><em>(Ends ${endFormatted})</em></small><br>
     `;
 }
 
-// Monthly Winners (similar, copy from original, use 'games')
+/**
+ * Renders last 6 months winners (points-based, tiebreaker fewer games)
+ * @param {HTMLElement} container - container for monthly winners list
+ */
 function renderMonthlyWinners(container) {
     if (!container) return;
 
@@ -314,7 +446,6 @@ function renderMonthlyWinners(container) {
             monthlyStats[monthKey] = {};
         }
 
-        // Count points from ALL players (players + eliminated)
         getAllGamePlayers(game).forEach(p => {
             const pts = p.points || 0;
             if (pts > 0) {
@@ -328,7 +459,7 @@ function renderMonthlyWinners(container) {
     });
 
     const sortedMonths = Object.keys(monthlyStats)
-        .sort((a, b) => new Date(b) - new Date(a));  // newest first
+        .sort((a, b) => new Date(b) - new Date(a)); // newest first
 
     const monthsToShow = sortedMonths.slice(0, 6);
 
@@ -355,27 +486,27 @@ function renderMonthlyWinners(container) {
             const winners = [];
             Object.entries(statsMap).forEach(([id, stats]) => {
                 if (stats.points === maxPoints && stats.games === minGames) {
-                    const name = getUserById(parseInt(id))?.name || 'Unknown';
-                    winners.push(name);
+                    winners.push(getUserById(parseInt(id))?.name || 'Unknown');
                 }
             });
 
-            let winnerText;
-            if (winners.length === 1) {
-                winnerText = `${winners[0]} (${maxPoints} points)`;
-            } else {
-                const joined = winners.length === 2
-                    ? winners.join(' & ')
-                    : winners.slice(0, -1).join(', ') + ' & ' + winners[winners.length - 1];
-                winnerText = `${joined} (${maxPoints} points)`;
-            }
+            const winnerText = winners.length === 1
+                ? `${winners[0]} (${maxPoints} points)`
+                : `${winners.join(' & ')} (${maxPoints} points)`;
 
             html += `
-                <li class="list-group-item">
-                    <strong>${monthKey}:</strong>
-                    Winner${winners.length > 1 ? 's' : ''}: ${winnerText}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <strong>${monthKey}:</strong>
+                        ${winners.length > 1 ? 's' : ''} ${winnerText}
+                    </span>
+
+                    <button class="btn btn-sm btn-outline-secondary"
+                        onclick="showMonthHistory('${monthKey}')">
+                        View Leaderboard
+                    </button>
                 </li>
-            `;
+                            `;
         });
     }
 
@@ -383,17 +514,82 @@ function renderMonthlyWinners(container) {
     container.innerHTML = html;
 }
 
-// ================================================
-// Game page helpers (game.html)
-// ================================================
+/**
+ * Shows leaderboard history for a specific month
+ */
+function showMonthHistory(monthKey) {
 
+    const tbody = document.getElementById("monthHistoryBody");
+    const title = document.getElementById("monthHistoryTitle");
+
+    tbody.innerHTML = '';
+    title.textContent = `Leaderboard - ${monthKey}`;
+
+    const stats = {};
+
+    games.forEach(g => {
+
+        const d = new Date(g.date);
+        const key = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+
+        if (key === monthKey) {
+
+            getAllGamePlayers(g).forEach(p => {
+
+                if (!stats[p.id]) {
+                    stats[p.id] = { points: 0, games: 0, wins: 0 };
+                }
+
+                stats[p.id].points += p.points || 0;
+                stats[p.id].games += 1;
+
+                if (p.elimOrder === -1) stats[p.id].wins += 1;
+            });
+        }
+    });
+
+    const leaderboard = Object.entries(stats)
+        .map(([id, s]) => ({
+            name: getUserById(parseInt(id))?.name || "Unknown",
+            points: s.points,
+            games: s.games,
+            wins: s.wins
+        }))
+        .sort((a, b) => b.points - a.points);
+
+    leaderboard.forEach(p => {
+
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${p.name}</td>
+            <td>${p.points}</td>
+            <td>${p.games}</td>
+            <td>${p.wins}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById("monthHistoryModal"));
+    modal.show();
+}
+
+
+// ────────────────────────────────────────────────
+// 6. GAME PAGE RENDERING & INTERACTION (game.html)
+// ────────────────────────────────────────────────
+
+/**
+ * Renders current game state table (players, totals, round history)
+ */
 function renderGameTable() {
     const tbody = document.querySelector('#gameHistory tbody');
     if (!tbody || !currentGame) return;
 
     tbody.innerHTML = '';
 
-    // Sort players by total ascending (lowest points first)
+    // Lowest total first (ascending order)
     const sortedPlayers = [...currentGame.players].sort((a, b) => a.total - b.total);
 
     sortedPlayers.forEach(p => {
@@ -402,33 +598,33 @@ function renderGameTable() {
         const isActive = p.status === 'active';
 
         let history = '';
-        let total = p.total || 0;
         currentGame.rounds.forEach((round, idx) => {
             const score = round[p.id] || 0;
             history += `R${idx + 1}(${score}) `;
         });
 
         const tr = document.createElement('tr');
-        if (!isActive) {
-            tr.classList.add('table-secondary');
-        }
+        if (!isActive) tr.classList.add('table-secondary');
 
         tr.innerHTML = `
-        <td>${name}</td>
-        <td>${total}</td>
-        <td>${history.trim() || '—'}</td>
-        <td>
-            ${isActive ? `
-                <input class="form-control text-center score-input" type="number" 
-                       data-id="${p.id}" min="0" 
-                       placeholder="" style="width: 100px; margin: 0 auto;">
-            ` : 'Eliminated'}
-        </td>
-    `;
+            <td>${name}</td>
+            <td>${p.total || 0}</td>
+            <td>${history.trim() || '—'}</td>
+            <td>
+                ${isActive ? `
+                    <input class="form-control text-center score-input" type="number" 
+                           data-id="${p.id}" min="0" 
+                           placeholder="" style="width: 100px; margin: 0 auto;">
+                ` : 'Eliminated'}
+            </td>
+        `;
         tbody.appendChild(tr);
     });
 }
 
+/**
+ * Collects current round scores from inputs and sends them to server
+ */
 async function submitRoundScores() {
     const inputs = document.querySelectorAll('#gameHistory .score-input');
     let roundScores = {};
@@ -437,7 +633,7 @@ async function submitRoundScores() {
         let val = parseInt(inp.value) || 0;
         const id = parseInt(inp.dataset.id);
         roundScores[id] = val;
-        inp.value = '';  // Clear
+        inp.value = ''; // clear input after submit
     });
 
     try {
@@ -446,11 +642,13 @@ async function submitRoundScores() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ roundScores })
         });
+
         if (!res.ok) {
             const err = await res.json();
             alert(err.error);
             return;
         }
+
         currentGame = await res.json();
 
         if (currentGame.status === 'completed') {
@@ -458,29 +656,37 @@ async function submitRoundScores() {
         } else {
             renderGameTable();
         }
+
     } catch (err) {
         alert('Error submitting round: ' + err.message);
     }
 }
 
+/**
+ * Shows winner announcement when game completes
+ */
 function showWinner() {
     const winnerPlayer = currentGame.players.find(p => p.elimOrder === -1);
+    const winnerName = getUserById(winnerPlayer?.id)?.name || 'Unknown';
+
     document.getElementById('winnerBanner').innerHTML = `
-    <div class="alert alert-success text-center mb-4" role="alert">
-      <h4 class="alert-heading">Game Over!</h4>
-      <p><strong>Winner: ${getUserById(winnerPlayer?.id)?.name || 'Unknown'}</strong></p>
-      <hr>
-      <p class="mb-2">Final scores are shown below.</p>
-      <a href="index.html" class="btn btn-success">Back to Home</a>
-    </div>
-  `;
+        <div class="alert alert-success text-center mb-4" role="alert">
+            <h4 class="alert-heading">Game Over!</h4>
+            <p><strong>Winner: ${winnerName}</strong></p>
+            <hr>
+            <p class="mb-2">Final scores are shown below.</p>
+            <a href="index.html" class="btn btn-success">Back to Home</a>
+        </div>
+    `;
 
     document.getElementById('gameControls').style.display = 'none';
     renderGameTable();
 }
 
+/**
+ * Cancels the current ongoing game (admin/host only presumably)
+ */
 async function cancelGame() {
-
     if (!confirm("Cancel game and lose all points?")) return;
 
     try {
@@ -501,12 +707,17 @@ async function cancelGame() {
     }
 }
 
-// ================================================
-// LIVE SCOREBOARD
-// ================================================
+
+// ────────────────────────────────────────────────
+// 7. LIVE SCOREBOARD (SOCKET.IO)
+// ────────────────────────────────────────────────
 
 let socket = null;
 
+/**
+ * Renders minimal live game view (usually on index.html)
+ * @param {Object|null} game - current game object from socket
+ */
 function renderLiveGame(game) {
     const dot = document.getElementById("liveDot");
     const bolt = document.getElementById("liveIcon");
@@ -516,62 +727,54 @@ function renderLiveGame(game) {
     if (!container) return;
 
     if (!game || game.status !== "ongoing") {
-
         container.innerHTML = `<p class="text-warning">No ongoing game</p>`;
 
-        if (dot) dot.classList.add("d-none");
-        if (bolt) bolt.classList.remove("d-none");
-        if (badge) badge.innerText = "";
-
+        dot?.classList.add("d-none");
+        bolt?.classList.remove("d-none");
+        badge && (badge.innerText = "");
         return;
     }
 
-    if (dot) dot.classList.remove("d-none");
-    if (bolt) bolt.classList.add("d-none");
-
-    // show elimination score
-    if (badge) badge.innerText = "Elimination: " + game.elimScore;
+    dot?.classList.remove("d-none");
+    bolt?.classList.add("d-none");
+    badge && (badge.innerText = "Elimination: " + game.elimScore);
 
     let html = `
         <div class="table-responsive">
         <table class="table table-bordered table-sm">
         <thead>
-        <tr>
-            <th>Player</th>
-            <th>Total</th>
-        </tr>
+            <tr>
+                <th>Player</th>
+                <th>Total</th>
+            </tr>
         </thead>
-        <tbody>
-    `;
+        <tbody>`;
 
-    // Sort players by total ascending
     const sortedPlayers = [...game.players].sort((a, b) => a.total - b.total);
 
     sortedPlayers.forEach(p => {
         const name = getUserById(p.id)?.name || "Unknown";
         html += `
-        <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
-            <td>${name}</td>
-            <td>${p.total}</td>
-        </tr>
-    `;
+            <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
+                <td>${name}</td>
+                <td>${p.total}</td>
+            </tr>`;
     });
 
-    html += `
-        </tbody>
-        </table>
-        </div>
-    `;
-
+    html += `</tbody></table></div>`;
     container.innerHTML = html;
 }
 
+/**
+ * Initializes Socket.IO connection and sets up real-time game updates
+ */
 function initLiveSocket() {
-
     socket = io();
 
     socket.on("gameUpdate", (game) => {
         renderLiveGame(game);
+
+        // If we're on game.html, also update local game state and table
         if (window.location.pathname.includes("game.html")) {
             currentGame = game;
             renderGameTable();
