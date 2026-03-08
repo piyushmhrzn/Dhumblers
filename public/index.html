@@ -42,7 +42,7 @@
                             <th>Player</th>
                             <th>Points</th>
                             <th>Games</th>
-                            <th>Win % (1st)</th> 
+                            <th>Wins</th> 
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody"></tbody>
@@ -99,6 +99,36 @@
                 <span id="pageInfo">Page 1 of 1</span>
                 <button id="nextPage" class="btn btn-outline-secondary" onclick="changePage(1)">Next</button>
             </div>
+        </div>
+    </div>
+
+    <!-- Player Career Stats -->
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <h5>
+                <i class="fas fa-chart-line me-2 text-success"></i>
+                Player Career Stats
+            </h5>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Games</th>
+                            <th>Wins</th>
+                            <th>Win %</th>
+                            <th>Total Points</th>
+                            <th>Avg Points</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="careerStatsBody"></tbody>
+                </table>
+            </div>
+
         </div>
     </div>
 </div>
@@ -178,6 +208,26 @@
   </div>
 </div>
 
+<!-- Player Detailed Stats Modal -->
+<div class="modal fade" id="playerStatsModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="playerStatsTitle">Player Stats</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div id="playerStatsContent"></div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
@@ -193,6 +243,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   renderLeaderboard(document.getElementById('leaderboardBody'));
   renderWeeklyWinner(document.getElementById('weeklyWinner'));
   renderMonthlyWinners(document.getElementById('monthlyWinners'));
+  renderCareerStats(document.getElementById('careerStatsBody'));
 
   initLiveSocket();
 

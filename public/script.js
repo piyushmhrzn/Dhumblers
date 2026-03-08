@@ -111,6 +111,264 @@ function formatDate(dateStr) {
     return d.toLocaleString('en-US', options).replace(',', '');
 }
 
+/**
+ * Determine player playstyle based on stats
+ */
+function determinePlayerType(stats, avgRoundScore, avgFinish) {
+
+    const types = [];
+
+    // Dominance: long win streaks
+    if (stats.longestWinStreak >= 3)
+        types.push("🔥 Dominant");
+
+    // Aggressive: very high round scores
+    if (stats.highestRoundScore >= 25)
+        types.push("🎯 Aggressive");
+
+    // Consistency: good average finishing position
+    if (avgFinish !== "-" && avgFinish <= 2.5)
+        types.push("🧠 Consistent");
+
+    // Efficient winner: wins with low points
+    if (stats.bestGameWinPoints !== Infinity && stats.bestGameWinPoints <= 20)
+        types.push("⚡ Efficient");
+
+    // Risky: eliminated early often
+    if (stats.fastestElimination !== Infinity && stats.fastestElimination <= 15)
+        types.push("💀 High-Risk");
+
+    // fallback if none triggered
+    if (types.length === 0)
+        types.push("🎮 Balanced");
+
+    return types.join(" • ");
+}
+
+/**
+ * Show detailed career statistics for a player
+ */
+function showPlayerStats(userId) {
+
+    const user = getUserById(userId);
+
+    const stats = {
+        games: 0,
+        wins: 0,
+        seconds: 0,
+        thirds: 0,
+        totalPoints: 0,
+        roundsPlayed: 0,
+        totalScore: 0,
+
+        longestWinStreak: 0,
+        currentWinStreak: 0,
+        tempWinStreak: 0,
+
+        highestRoundScore: 0,
+        fastestEliminationRounds: Infinity, // updated
+        finishingSum: 0,
+
+        bestWinningGameRounds: Infinity // updated
+    };
+
+    // Sort games chronologically
+    const sortedGames = [...games].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    sortedGames.forEach(g => {
+
+        const players = getAllGamePlayers(g);
+        const player = players.find(p => p.id === userId);
+
+        if (!player) return;
+
+        stats.games++;
+        stats.totalPoints += player.points || 0;
+
+        let finish = player.elimOrder === -1 ? 1 : player.elimOrder + 1;
+
+        stats.finishingSum += finish;
+
+        if (finish === 1) {
+            stats.wins++;
+            stats.tempWinStreak++;
+        } else {
+            if (stats.tempWinStreak > stats.longestWinStreak)
+                stats.longestWinStreak = stats.tempWinStreak;
+
+            stats.tempWinStreak = 0;
+        }
+
+        if (finish === 2) stats.seconds++;
+        if (finish === 3) stats.thirds++;
+
+        // --- Calculate fastest elimination ---
+        if (player.status === 'eliminated') {
+            let cumulative = 0;
+            let roundsToElim = 0;
+            for (let i = 0; i < g.rounds.length; i++) {
+                cumulative += g.rounds[i][player.id] || 0;
+                roundsToElim++;
+                if (cumulative >= g.elimScore) break;
+            }
+            if (roundsToElim < stats.fastestEliminationRounds)
+                stats.fastestEliminationRounds = roundsToElim;
+        }
+
+        // --- Calculate best winning game ---
+        if (finish === 1) {
+            // Track cumulative points of all other players
+            const otherPlayers = players.filter(p => p.id !== userId);
+            const cumTotals = {};
+            otherPlayers.forEach(p => cumTotals[p.id] = 0);
+
+            let roundsToEliminateAll = 0;
+
+            for (let i = 0; i < g.rounds.length; i++) {
+                g.rounds[i] && otherPlayers.forEach(p => {
+                    cumTotals[p.id] += g.rounds[i][p.id] || 0;
+                });
+
+                roundsToEliminateAll = i + 1;
+
+                // Check if all other players eliminated
+                const allElim = Object.values(cumTotals).every(t => t >= g.elimScore);
+                if (allElim) break; // Stop at round when last player eliminated
+            }
+
+            if (roundsToEliminateAll < stats.bestWinningGameRounds)
+                stats.bestWinningGameRounds = roundsToEliminateAll;
+        }
+
+        // round statistics
+        g.rounds.forEach(r => {
+            const score = r[userId] || 0;
+
+            stats.roundsPlayed++;
+            stats.totalScore += score;
+
+            if (score > stats.highestRoundScore)
+                stats.highestRoundScore = score;
+        });
+
+    });
+
+    // finalize streaks
+    stats.longestWinStreak = Math.max(stats.longestWinStreak, stats.tempWinStreak);
+    stats.currentWinStreak = stats.tempWinStreak;
+
+    const winPct = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
+    const avgPoints = stats.games ? (stats.totalPoints / stats.games).toFixed(2) : 0;
+    const avgRoundScore = stats.roundsPlayed ? (stats.totalScore / stats.roundsPlayed).toFixed(2) : 0;
+    const avgFinish = stats.games ? (stats.finishingSum / stats.games).toFixed(2) : "-";
+    const playerType = determinePlayerType(stats, avgRoundScore, avgFinish);
+
+    const html = `
+        <div class="alert alert-secondary text-center mb-4">
+            <strong>Style:</strong> ${playerType}
+        </div>
+        
+        <div class="row text-center mb-3">
+
+            <div class="col-md-3">
+                <h6>🎮 Games</h6>
+                <h4>${stats.games}</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>🏆 Wins</h6>
+                <h4>${stats.wins}</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>📊 Win Rate</h6>
+                <h4>${winPct}%</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>⭐ Total Points</h6>
+                <h4>${stats.totalPoints}</h4>
+            </div>
+
+        </div>
+
+
+        <div class="row text-center mb-3">
+
+            <div class="col-md-3">
+                <h6>🥈 2nd Places</h6>
+                <h4>${stats.seconds}</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>🥉 3rd Places</h6>
+                <h4>${stats.thirds}</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>📊 Avg Finish</h6>
+                <h4>${avgFinish}</h4>
+            </div>
+
+            <div class="col-md-3">
+                <h6>🎯 Avg Points/Game</h6>
+                <h4>${avgPoints}</h4>
+            </div>
+
+        </div>
+
+
+        <hr>
+
+
+        <div class="row text-center mb-3">
+
+            <div class="col-md-4">
+                <h6>🔥 Longest Win Streak</h6>
+                <h4>${stats.longestWinStreak}</h4>
+            </div>
+
+            <div class="col-md-4">
+                <h6>⚡ Current Win Streak</h6>
+                <h4>${stats.currentWinStreak}</h4>
+            </div>
+
+            <div class="col-md-4">
+                <h6>🎯 Highest Round Score</h6>
+                <h4>${stats.highestRoundScore}</h4>
+            </div>
+
+        </div>
+
+
+        <div class="row text-center">
+
+            <div class="col-md-4">
+                <h6>💀 Fastest Elimination</h6>
+                <h4>${stats.fastestEliminationRounds === Infinity ? "-" : stats.fastestEliminationRounds} rounds</h4>
+            </div>
+
+            <div class="col-md-4">
+                <h6>🏆 Best Winning Game</h6>
+                <h4>${stats.bestWinningGameRounds === Infinity ? "-" : stats.bestWinningGameRounds} rounds</h4>
+            </div>
+
+            <div class="col-md-4">
+                <h6>🎯 Avg Round Score</h6>
+                <h4>${avgRoundScore}</h4>
+            </div>
+
+        </div>
+    `;
+
+    document.getElementById("playerStatsTitle").innerText =
+        `${user.name} - Career Stats`;
+
+    document.getElementById("playerStatsContent").innerHTML = html;
+
+    const modal = new bootstrap.Modal(document.getElementById("playerStatsModal"));
+    modal.show();
+}
 
 // ────────────────────────────────────────────────
 // 4. GAME CREATION / START
@@ -319,16 +577,14 @@ function renderLeaderboard(tbody) {
         }))
         .sort((a, b) => b.points - a.points);
 
+    // Render leaderboard
     leaderboard.forEach(p => {
-
-        const winPct = p.games > 0 ? ((p.wins / p.games) * 100).toFixed(1) : 0;
-
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${p.name}</td>
             <td>${p.points}</td>
             <td>${p.games}</td>
-            <td>${winPct}% (${p.wins})</td>
+            <td>${p.wins}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -575,6 +831,58 @@ function showMonthHistory(monthKey) {
     modal.show();
 }
 
+/**
+ * Render player career statistics table
+ */
+function renderCareerStats(tbody) {
+
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    // Compute stats for all users first
+    const userStats = users.map(u => {
+        let gamesPlayed = 0;
+        let wins = 0;
+        let totalPoints = 0;
+
+        games.forEach(g => {
+            const player = getAllGamePlayers(g).find(p => p.id === u.id);
+            if (player) {
+                gamesPlayed++;
+                totalPoints += player.points || 0;
+                if (player.elimOrder === -1) wins++;
+            }
+        });
+
+        const winPct = gamesPlayed ? ((wins / gamesPlayed) * 100).toFixed(1) : 0;
+        const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed).toFixed(2) : 0;
+
+        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints };
+    });
+
+    // Sort by totalPoints descending
+    userStats.sort((a, b) => b.totalPoints - a.totalPoints);
+
+    // Render rows
+    userStats.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${u.name}</td>
+            <td>${u.gamesPlayed}</td>
+            <td>${u.wins}</td>
+            <td>${u.winPct}%</td>
+            <td>${u.totalPoints}</td>
+            <td>${u.avgPoints}</td>
+            <td>
+                <button class="btn btn-sm btn-outline-secondary"
+                    onclick="showPlayerStats(${u.id})">
+                    Details
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
 
 // ────────────────────────────────────────────────
 // 6. GAME PAGE RENDERING & INTERACTION (game.html)
