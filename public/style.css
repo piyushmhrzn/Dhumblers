@@ -17,6 +17,7 @@ GLOBAL THEME
 body {
     font-family: 'Inter', sans-serif !important;
     min-height: 100vh;
+    margin-bottom: 100px;
 
     background:
         radial-gradient(circle at top, #364353, #1b2234 40%);
@@ -59,9 +60,7 @@ BOOTSTRAP NAVBAR OVERRIDE
 
 .navbar {
     background: rgba(255, 255, 255, 0.06) !important;
-
     backdrop-filter: blur(14px);
-
     border-bottom: 1px solid rgba(255, 255, 255, .15);
 }
 

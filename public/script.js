@@ -270,49 +270,48 @@ function showPlayerStats(userId) {
         
         <div class="row text-center mb-3">
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>🎮 Games</h6>
-                <h4>${stats.games}</h4>
+                <p class="fw-bold">${stats.games}</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>🏆 Wins</h6>
-                <h4>${stats.wins}</h4>
+                <p class="fw-bold">${stats.wins}</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>📊 Win Rate</h6>
-                <h4>${winPct}%</h4>
+                <p class="fw-bold">${winPct}%</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>⭐ Total Points</h6>
-                <h4>${stats.totalPoints}</h4>
+                <p class="fw-bold">${stats.totalPoints}</p>
             </div>
 
         </div>
 
-
         <div class="row text-center mb-3">
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>🥈 2nd Places</h6>
-                <h4>${stats.seconds}</h4>
+                <p class="fw-bold">${stats.seconds}</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>🥉 3rd Places</h6>
-                <h4>${stats.thirds}</h4>
+                <p class="fw-bold">${stats.thirds}</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>📊 Avg Finish</h6>
-                <h4>${avgFinish}</h4>
+                <p class="fw-bold">${avgFinish}</p>
             </div>
 
-            <div class="col-md-3">
+            <div class="col-6 col-md-3 mb-2">
                 <h6>🎯 Avg Points/Game</h6>
-                <h4>${avgPoints}</h4>
+                <p class="fw-bold">${avgPoints}</p>
             </div>
 
         </div>
@@ -323,25 +322,28 @@ function showPlayerStats(userId) {
 
         <div class="row text-center mb-3">
 
-            <div class="col-md-4">
+            <div class="col-md-4 mb-2">
                 <h6>🔥 Longest Win Streak</h6>
-                <h4>${stats.longestWinStreak}</h4>
+                <p class="font-weight-bold">${stats.longestWinStreak}</p>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-4 mb-2">
                 <h6>⚡ Current Win Streak</h6>
-                <h4>${stats.currentWinStreak}</h4>
+                <p class="font-weight-bold">${stats.currentWinStreak}</p>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-4 mb-2">
                 <h6>🎯 Highest Round Score</h6>
-                <h4>${stats.highestRoundScore}</h4>
+                <p class="font-weight-bold">${stats.highestRoundScore}</p>
             </div>
 
         </div>
 
+    `;
 
-        <div class="row text-center">
+    /*
+    // Career Stats last row
+          <div class="row text-center">
 
             <div class="col-md-4">
                 <h6>💀 Fastest Elimination</h6>
@@ -359,7 +361,7 @@ function showPlayerStats(userId) {
             </div>
 
         </div>
-    `;
+    */
 
     document.getElementById("playerStatsTitle").innerText =
         `${user.name} - Career Stats`;
@@ -759,7 +761,7 @@ function renderMonthlyWinners(container) {
 
                     <button class="btn btn-sm btn-outline-secondary"
                         onclick="showMonthHistory('${monthKey}')">
-                        View Leaderboard
+                        View
                     </button>
                 </li>
                             `;
