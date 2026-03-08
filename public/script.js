@@ -112,37 +112,117 @@ function formatDate(dateStr) {
 }
 
 /**
- * Determine player playstyle based on stats
+ * Determine player playstyle based on stats - more nuanced & fun version
  */
 function determinePlayerType(stats, avgRoundScore, avgFinish) {
 
     const types = [];
+    const triggers = [];
 
-    // Dominance: long win streaks
-    if (stats.longestWinStreak >= 3)
+    // ─────────────────────────────────────────────
+    // Helper values (normalized / relative)
+    // ─────────────────────────────────────────────
+    const winRate = stats.games > 0 ? stats.wins / stats.games : 0;
+    const avgFinishNum = avgFinish !== "-" ? parseFloat(avgFinish) : 99;
+
+    const hasManyGames = stats.games >= 8;
+    const hasDecentSample = stats.games >= 5;
+
+    // ─────────────────────────────────────────────
+    // 1. Win power & streaks
+    // ─────────────────────────────────────────────
+    if (stats.longestWinStreak >= 4) {
+        types.push("🔥 Warlord");
+        triggers.push("very long streaks");
+    } else if (stats.longestWinStreak >= 3) {
         types.push("🔥 Dominant");
+    } else if (stats.currentWinStreak >= 3 && hasDecentSample) {
+        types.push("😈 On Fire");
+    }
 
-    // Aggressive: very high round scores
-    if (stats.highestRoundScore >= 25)
-        types.push("🎯 Aggressive");
+    // ─────────────────────────────────────────────
+    // 2. High scoring rounds vs safe/consistent scoring
+    // ─────────────────────────────────────────────
+    if (stats.highestRoundScore >= 28 && hasManyGames) {
+        types.push("💥 Nuke");
+    } else if (stats.highestRoundScore >= 22) {
+        types.push("🎯 Sniper");
+    } else if (avgRoundScore >= 9.5 && hasManyGames) {
+        types.push("📈 Steady Farmer");
+    } else if (avgRoundScore <= 4.8 && hasManyGames) {
+        types.push("🐢 Turtle");
+    }
 
-    // Consistency: good average finishing position
-    if (avgFinish !== "-" && avgFinish <= 2.5)
+    // ─────────────────────────────────────────────
+    // 3. Finishing position personality
+    // ─────────────────────────────────────────────
+    if (avgFinishNum <= 2.1 && hasDecentSample) {
+        types.push("👑 Dominator");
+    } else if (avgFinishNum <= 2.6) {
         types.push("🧠 Consistent");
+    } else if (avgFinishNum >= 4.2 && hasManyGames) {
+        types.push("💀 Early Exit Specialist");
+    } else if (stats.seconds + stats.thirds >= stats.wins * 1.8 && hasDecentSample) {
+        types.push("🥈 Silver Collector");  // always 2nd/3rd more than wins
+    }
 
-    // Efficient winner: wins with low points
-    if (stats.bestGameWinPoints !== Infinity && stats.bestGameWinPoints <= 20)
-        types.push("⚡ Efficient");
+    // ─────────────────────────────────────────────
+    // 4. Win efficiency (low points to win)
+    // ─────────────────────────────────────────────
+    // Note: you need to actually compute & pass bestGameWinPoints
+    //       (currently missing from your stats object)
+    if (stats.bestGameWinPoints !== undefined && stats.bestGameWinPoints <= 18 && hasDecentSample) {
+        types.push("⚡ Ghost Winner");
+    } else if (stats.bestGameWinPoints !== undefined && stats.bestGameWinPoints >= 35) {
+        types.push("🪖 Attrition Master");
+    }
 
-    // Risky: eliminated early often
-    if (stats.fastestElimination !== Infinity && stats.fastestElimination <= 15)
-        types.push("💀 High-Risk");
+    // ─────────────────────────────────────────────
+    // 5. Risk profiles
+    // ─────────────────────────────────────────────
+    if (stats.fastestEliminationRounds <= 3 && hasManyGames) {
+        types.push("🎲 YOLO");
+    } else if (stats.fastestEliminationRounds <= 6) {
+        types.push("💣 Speedrun Elim");
+    }
 
-    // fallback if none triggered
-    if (types.length === 0)
-        types.push("🎮 Balanced");
+    // ─────────────────────────────────────────────
+    // 6. Special rare / meme styles
+    // ─────────────────────────────────────────────
+    if (winRate >= 0.50 && hasManyGames) {
+        types.push("🪄 Cheater Allegations");
+    } else if (winRate <= 0.10 && hasManyGames) {
+        types.push("🪦 Eternal 4th");
+    }
 
-    return types.join(" • ");
+    if (stats.games >= 12 && stats.wins === 0) {
+        types.push("😂 Professional Participant");
+    }
+
+    // ─────────────────────────────────────────────
+    // Fallbacks / default personality
+    // ─────────────────────────────────────────────
+    if (types.length === 0) {
+        if (hasManyGames) {
+            types.push("🌀 Chaos Agent");
+        } else {
+            types.push("🎮 New Blood");
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Pick 1–2 most representative (or just join all for fun)
+    // ─────────────────────────────────────────────
+    // Option A: show all (chaotic & funny)
+    // return types.join(" • ");
+
+    // Option B: prefer 1 strong + 1 flavor (cleaner UI)
+    if (types.length >= 2) {
+        // Put the "strongest" first, then a fun one
+        return `${types[0]} • ${types[types.length - 1]}`;
+    }
+
+    return types[0] || "🎮 Rookie Energy";
 }
 
 /**
