@@ -185,7 +185,8 @@ function showPlayerStats(userId) {
         stats.games++;
         stats.totalPoints += player.points || 0;
 
-        let finish = player.elimOrder === -1 ? 1 : player.elimOrder + 1;
+        const numPlayers = players.length;
+        let finish = player.elimOrder === -1 ? 1 : numPlayers - player.elimOrder + 1;
 
         stats.finishingSum += finish;
 
