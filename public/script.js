@@ -894,8 +894,11 @@ function showMonthHistory(monthKey) {
                 stats[p.id].games += 1;
 
                 if (p.elimOrder === -1) stats[p.id].wins += 1;
+
             });
+
         }
+
     });
 
     const leaderboard = Object.entries(stats)
@@ -905,13 +908,25 @@ function showMonthHistory(monthKey) {
             games: s.games,
             wins: s.wins
         }))
-        .sort((a, b) => b.points - a.points);
+        .sort((a, b) => {
 
-    leaderboard.forEach(p => {
+            // 1. Higher points first
+            if (b.points !== a.points) return b.points - a.points;
+
+            // 2. Higher wins first
+            if (b.wins !== a.wins) return b.wins - a.wins;
+
+            // 3. Fewer games first
+            return a.games - b.games;
+
+        });
+
+    leaderboard.forEach((p, i) => {
 
         const tr = document.createElement("tr");
 
         tr.innerHTML = `
+            <td>${i + 1}</td>
             <td>${p.name}</td>
             <td>${p.points}</td>
             <td>${p.games}</td>
@@ -919,6 +934,7 @@ function showMonthHistory(monthKey) {
         `;
 
         tbody.appendChild(tr);
+
     });
 
     const modal = new bootstrap.Modal(document.getElementById("monthHistoryModal"));
