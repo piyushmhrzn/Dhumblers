@@ -658,7 +658,18 @@ function renderLeaderboard(tbody) {
             games: s.games,
             wins: s.wins
         }))
-        .sort((a, b) => b.points - a.points);
+        .sort((a, b) => {
+
+            // 1. Higher points first
+            if (b.points !== a.points) return b.points - a.points;
+
+            // 2. Higher wins first
+            if (b.wins !== a.wins) return b.wins - a.wins;
+
+            // 3. Fewer games first
+            return a.games - b.games;
+
+        });
 
     // Render leaderboard
     leaderboard.forEach(p => {
