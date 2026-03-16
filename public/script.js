@@ -1125,7 +1125,6 @@ async function cancelGame() {
     }
 }
 
-
 // ────────────────────────────────────────────────
 // 7. LIVE SCOREBOARD (SOCKET.IO)
 // ────────────────────────────────────────────────
@@ -1137,25 +1136,47 @@ let socket = null;
  * @param {Object|null} game - current game object from socket
  */
 function renderLiveGame(game) {
+
     const dot = document.getElementById("liveDot");
     const bolt = document.getElementById("liveIcon");
     const badge = document.getElementById("elimScoreBadge");
     const container = document.getElementById("liveGameContainer");
+    const roundEl = document.getElementById("liveRound");
 
     if (!container) return;
 
+    // ── No game active ───────────────────────────
     if (!game || game.status !== "ongoing") {
+
         container.innerHTML = `<p class="text-warning">No ongoing game</p>`;
 
         dot?.classList.add("d-none");
         bolt?.classList.remove("d-none");
-        badge && (badge.innerText = "");
+
+        if (badge) badge.innerText = "";
+        if (roundEl) roundEl.innerText = "";
+
         return;
     }
 
+    // ── Live indicators ──────────────────────────
     dot?.classList.remove("d-none");
     bolt?.classList.add("d-none");
-    badge && (badge.innerText = "Elimination: " + game.elimScore);
+
+    if (badge) badge.innerText = "Elimination: " + game.elimScore;
+
+    // ── Current round display ────────────────────
+    const currentRound = game.rounds.length + 1;
+
+    if (roundEl) {
+        roundEl.innerText = `Round ${currentRound}`;
+    }
+
+    // ── Previous round scores ────────────────────
+    const lastRound = game.rounds[game.rounds.length - 1] || {};
+
+    // ── Sort players by lowest total (best position) ──
+    const sortedPlayers = [...game.players].sort((a, b) => (a.total || 0) - (b.total || 0));
 
     let html = `
         <div class="table-responsive">
@@ -1164,38 +1185,94 @@ function renderLiveGame(game) {
             <tr>
                 <th>Player</th>
                 <th>Total</th>
+                <th>Last Round</th>
             </tr>
         </thead>
-        <tbody>`;
-
-    const sortedPlayers = [...game.players].sort((a, b) => a.total - b.total);
+        <tbody>
+    `;
 
     sortedPlayers.forEach(p => {
+
         const name = getUserById(p.id)?.name || "Unknown";
+        const total = p.total || 0;
+
+        const prevScore = lastRound[p.id] ?? null;
+
+        const prevDisplay =
+            prevScore === null
+                ? ""
+                : `<small>
+                (${prevScore >= 0 ? "+" : ""}${prevScore})
+              </small>`;
+
+        // ── Danger thresholds ─────────────────────
+        const nearDanger = total >= game.elimScore - 15;
+        const extremeDanger = total > game.elimScore - 5;
+
+        let dangerEmoji = "";
+
+        if (p.status === "active") {
+            if (extremeDanger) {
+                dangerEmoji = " 💀";
+            } else if (nearDanger) {
+                dangerEmoji = " 🪽";
+            }
+        }
+
+        // ── Round performance emoji ───────────────
+
+        let roundEmoji = "";
+
+        if (prevScore !== null) {
+
+            if (prevScore >= 50) {
+                roundEmoji = " 🤡";
+            } else if (prevScore >= 40) {
+                roundEmoji = " 😭";
+            } else if (prevScore >= 30) {
+                roundEmoji = " 😵‍💫";
+            } else if (prevScore >= 20) {
+                roundEmoji = " 😰";
+            } else if (prevScore >= 1 && prevScore <= 4) {
+                roundEmoji = " 😎";
+            }
+        }
+
         html += `
-            <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
-                <td>${name}</td>
-                <td>${p.total}</td>
-            </tr>`;
+        <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
+            <td>${name} ${dangerEmoji} ${roundEmoji}</td>
+            <td><strong>${total}</strong></td>
+            <td>${prevDisplay}</td>
+        </tr>
+    `;
     });
 
-    html += `</tbody></table></div>`;
+    html += `
+        </tbody>
+        </table>
+        </div>
+    `;
+
     container.innerHTML = html;
 }
+
 
 /**
  * Initializes Socket.IO connection and sets up real-time game updates
  */
 function initLiveSocket() {
+
     socket = io();
 
     socket.on("gameUpdate", (game) => {
+
         renderLiveGame(game);
 
-        // If we're on game.html, also update local game state and table
+        // If we're on game.html update live table
         if (window.location.pathname.includes("game.html")) {
             currentGame = game;
             renderGameTable();
         }
+
     });
 }

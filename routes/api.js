@@ -193,12 +193,11 @@ router.put('/games/ongoing/round', async (req, res) => {
 
         // ── Score validation ────────────────────────────────
         let allZero = true;
+
         for (const score of Object.values(roundScores)) {
-            if (score < 0) {
-                return res.status(400).json({ error: 'Scores cannot be negative' });
-            }
-            if (score > 0) allZero = false;
+            if (score !== 0) allZero = false;
         }
+
         if (allZero) {
             return res.status(400).json({ error: 'At least one score >0' });
         }
