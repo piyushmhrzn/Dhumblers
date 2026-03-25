@@ -13,7 +13,7 @@ let currentGame = null;            // Currently viewed / ongoing game
 
 const gamesPerPage = 5;            // How many games shown per page in recent games table
 let currentPage = 1;               // Current pagination page for recent games
-
+let lastProcessedRound = 0;
 
 // ────────────────────────────────────────────────
 // 2. API FETCH HELPERS
@@ -114,119 +114,87 @@ function formatDate(dateStr) {
 /**
  * Determine player playstyle based on stats - more nuanced & fun version
  */
-function determinePlayerType(stats, avgRoundScore, avgFinish) {
+function determinePlayerType(stats, avgPoints) {
 
     const types = [];
-    const triggers = [];
 
-    // ─────────────────────────────────────────────
-    // Helper values (normalized / relative)
-    // ─────────────────────────────────────────────
     const winRate = stats.games > 0 ? stats.wins / stats.games : 0;
-    const avgFinishNum = avgFinish !== "-" ? parseFloat(avgFinish) : 99;
-
-    const hasManyGames = stats.games >= 8;
-    const hasDecentSample = stats.games >= 5;
+    const hasGames = stats.games >= 5;
 
     // ─────────────────────────────────────────────
-    // 1. Win power & streaks
+    // 1. PRIMARY IDENTITY (WIN BASED)
     // ─────────────────────────────────────────────
-    if (stats.longestWinStreak >= 4) {
-        types.push("🔥 Warlord");
-        triggers.push("very long streaks");
-    } else if (stats.longestWinStreak >= 3) {
-        types.push("🔥 Dominant");
-    } else if (stats.currentWinStreak >= 3 && hasDecentSample) {
-        types.push("😈 On Fire");
+    if (winRate >= 0.30 && hasGames) {
+        types.push("👑 Sab ka Baap");        // insane dominance
+    }
+    else if (winRate >= 0.25 && hasGames) {
+        types.push("🔥 Baazigarr");           // top tier
+    }
+    else if (winRate >= 0.20) {
+        types.push("⚔️ Thikthak");        // strong
+    }
+    else if (winRate >= 0.15) {
+        types.push("😂 Tapari");     // competitive
+    }
+    else if (winRate <= 0.15 && hasGames) {
+        types.push("🤡 Pataki");     // struggling
     }
 
     // ─────────────────────────────────────────────
-    // 2. High scoring rounds vs safe/consistent scoring
+    // 2. SCORING STYLE (Avg points based)
     // ─────────────────────────────────────────────
-    if (stats.highestRoundScore >= 28 && hasManyGames) {
-        types.push("💥 Nuke");
-    } else if (stats.highestRoundScore >= 22) {
-        types.push("🎯 Sniper");
-    } else if (avgRoundScore >= 9.5 && hasManyGames) {
-        types.push("📈 Steady Farmer");
-    } else if (avgRoundScore <= 4.8 && hasManyGames) {
-        types.push("🐢 Turtle");
+    if (avgPoints >= 3.4 && hasGames) {
+        types.push("💣 Dangdung Khiladi");     // chaotic high scoring
+    }
+    else if (avgPoints >= 3.3 && hasGames) {
+        types.push("💥 Jhyap Boro");    // aggressive
+    }
+    else if (avgPoints >= 3.2) {
+        types.push("🎯 Shooter ho Shooter");   // efficient scoring
+    }
+    else if (avgPoints >= 3.1) {
+        types.push("⚖️ Balance Khiladi");      // stable play
+    }
+    else if (avgPoints >= 3 && hasGames) {
+        types.push("🛡️ Bhagwan Bhar Player");     // careful
+    }
+    else if (avgPoints <= 3 && hasGames) {
+        types.push("🐸 Lute");    // very low risk
     }
 
     // ─────────────────────────────────────────────
-    // 3. Finishing position personality
+    // 3. STREAK ENERGY
     // ─────────────────────────────────────────────
-    if (avgFinishNum <= 2.1 && hasDecentSample) {
-        types.push("👑 Dominator");
-    } else if (avgFinishNum <= 2.6) {
-        types.push("🧠 Consistent");
-    } else if (avgFinishNum >= 4.2 && hasManyGames) {
-        types.push("💀 Early Exit Specialist");
-    } else if (stats.seconds + stats.thirds >= stats.wins * 1.8 && hasDecentSample) {
-        types.push("🥈 Silver Collector");  // always 2nd/3rd more than wins
+    if (stats.currentWinStreak >= 3) {
+        types.push("⚡Unstoppable");
+    }
+    else if (stats.currentWinStreak === 2) {
+        types.push("🔥 On Fire");
     }
 
     // ─────────────────────────────────────────────
-    // 4. Win efficiency (low points to win)
+    // 6. SPECIAL FUN TAGS
     // ─────────────────────────────────────────────
-    // Note: you need to actually compute & pass bestGameWinPoints
-    //       (currently missing from your stats object)
-    if (stats.bestGameWinPoints !== undefined && stats.bestGameWinPoints <= 18 && hasDecentSample) {
-        types.push("⚡ Ghost Winner");
-    } else if (stats.bestGameWinPoints !== undefined && stats.bestGameWinPoints >= 35) {
-        types.push("🪖 Attrition Master");
+
+    if (stats.games <= 3) {
+        types.push("🎮 New Blood");
     }
 
     // ─────────────────────────────────────────────
-    // 5. Risk profiles
-    // ─────────────────────────────────────────────
-    if (stats.fastestEliminationRounds <= 3 && hasManyGames) {
-        types.push("🎲 YOLO");
-    } else if (stats.fastestEliminationRounds <= 6) {
-        types.push("💣 Speedrun Elim");
-    }
-
-    // ─────────────────────────────────────────────
-    // 6. Special rare / meme styles
-    // ─────────────────────────────────────────────
-    if (winRate >= 0.50 && hasManyGames) {
-        types.push("🪄 Cheater Allegations");
-    } else if (winRate <= 0.10 && hasManyGames) {
-        types.push("🪦 Eternal 4th");
-    }
-
-    if (stats.games >= 12 && stats.wins === 0) {
-        types.push("😂 Professional Participant");
-    }
-
-    // ─────────────────────────────────────────────
-    // Fallbacks / default personality
+    // FALLBACK
     // ─────────────────────────────────────────────
     if (types.length === 0) {
-        if (hasManyGames) {
-            types.push("🌀 Chaos Agent");
-        } else {
-            types.push("🎮 New Blood");
-        }
+        return hasGames ? "🌀 Casual" : "🎮 Rookie";
     }
 
     // ─────────────────────────────────────────────
-    // Pick 1–2 most representative (or just join all for fun)
+    // RETURN BEST 3 (clean UI)
     // ─────────────────────────────────────────────
-    // Option A: show all (chaotic & funny)
-    // return types.join(" • ");
-
-    // Option B: prefer 1 strong + 1 flavor (cleaner UI)
-    if (types.length >= 2) {
-        // Put the "strongest" first, then a fun one
-        return `${types[0]} • ${types[types.length - 1]}`;
-    }
-
-    return types[0] || "🎮 Rookie Energy";
+    return types.slice(0, 3).join(" • ");
 }
 
 /**
- * Show detailed career statistics for a player
+ * DETAILED PLAYER STATS CALCULATOR
  */
 function showPlayerStats(userId) {
 
@@ -342,7 +310,7 @@ function showPlayerStats(userId) {
     const avgPoints = stats.games ? (stats.totalPoints / stats.games).toFixed(2) : 0;
     const avgRoundScore = stats.roundsPlayed ? (stats.totalScore / stats.roundsPlayed).toFixed(2) : 0;
     const avgFinish = stats.games ? (stats.finishingSum / stats.games).toFixed(2) : "-";
-    const playerType = determinePlayerType(stats, avgRoundScore, avgFinish);
+    const playerType = determinePlayerType(stats, avgPoints);
 
     const html = `
         <div class="alert alert-secondary text-center mb-4">
@@ -397,9 +365,7 @@ function showPlayerStats(userId) {
 
         </div>
 
-
         <hr>
-
 
         <div class="row text-center mb-3">
 
@@ -421,28 +387,6 @@ function showPlayerStats(userId) {
         </div>
 
     `;
-
-    /*
-    // Career Stats last row
-          <div class="row text-center">
-
-            <div class="col-md-4">
-                <h6>💀 Fastest Elimination</h6>
-                <h4>${stats.fastestEliminationRounds === Infinity ? "-" : stats.fastestEliminationRounds} rounds</h4>
-            </div>
-
-            <div class="col-md-4">
-                <h6>🏆 Best Winning Game</h6>
-                <h4>${stats.bestWinningGameRounds === Infinity ? "-" : stats.bestWinningGameRounds} rounds</h4>
-            </div>
-
-            <div class="col-md-4">
-                <h6>🎯 Avg Round Score</h6>
-                <h4>${avgRoundScore}</h4>
-            </div>
-
-        </div>
-    */
 
     document.getElementById("playerStatsTitle").innerText =
         `${user.name} - Career Stats`;
@@ -592,7 +536,7 @@ function changePage(delta) {
 }
 
 /**
- * Renders leaderboard for CURRENT MONTH only
+ * ---------------------- RENDERS MONTHLY LEADERBOARD ----------------------
  * Points automatically reset every month
  */
 function renderLeaderboard(tbody) {
@@ -602,6 +546,10 @@ function renderLeaderboard(tbody) {
     const now = new Date();
     const month = now.getMonth();
     const year = now.getFullYear();
+    const monthName = now.toLocaleString('en-US', { month: 'long' });
+
+    const monthEl = document.getElementById("leaderboardMonth");
+    if (monthEl) monthEl.innerText = monthName;
 
     // Calculate monthly stats
     const stats = {};
@@ -684,8 +632,74 @@ function renderLeaderboard(tbody) {
     });
 }
 
+
 /**
- * Renders current weekly winner(s) based on points (tiebreaker: fewer games)
+ * ---------------------- SHOWS DETAILED WEEKLY LEADERBOARD HISTORY ----------------------
+ */
+function showWeeklyHistory() {
+
+    const tbody = document.getElementById("weeklyHistoryBody");
+    tbody.innerHTML = '';
+
+    const today = new Date();
+    const day = today.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    const stats = {};
+
+    games.forEach(g => {
+        const d = new Date(g.date);
+
+        if (d >= monday && d <= sunday) {
+
+            getAllGamePlayers(g).forEach(p => {
+
+                if (!stats[p.id]) {
+                    stats[p.id] = { points: 0, games: 0 };
+                }
+
+                stats[p.id].points += p.points || 0;
+                stats[p.id].games += 1;
+            });
+        }
+    });
+
+    const leaderboard = Object.entries(stats)
+        .map(([id, s]) => ({
+            name: getUserById(parseInt(id))?.name || "Unknown",
+            points: s.points,
+            games: s.games
+        }))
+        .sort((a, b) => b.points - a.points || a.games - b.games);
+
+    leaderboard.forEach((p, i) => {
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${i + 1}</td>
+            <td>${p.name}</td>
+            <td>${p.points}</td>
+            <td>${p.games}</td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+
+    const modal = new bootstrap.Modal(document.getElementById("weeklyHistoryModal"));
+    modal.show();
+}
+
+
+/**
+ * ---------------------- RENDERS CURRENT WEEKLY WINNER ----------------------
  * @param {HTMLElement} el - element to insert weekly winner HTML
  */
 function renderWeeklyWinner(el) {
@@ -743,7 +757,7 @@ function renderWeeklyWinner(el) {
     });
 
     if (Object.keys(weeklyStats).length === 0) {
-        el.innerHTML = `<br><strong>Current Week:</strong> No games with points awarded yet (Ends ${endFormatted})<br>`;
+        el.innerHTML = `<br><strong>Current Week:</strong> No games played yet (Ends ${endFormatted})<br>`;
         return;
     }
 
@@ -775,12 +789,18 @@ function renderWeeklyWinner(el) {
     el.innerHTML = `
         <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> 
         <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
-        <small><em>(Ends ${endFormatted})</em></small><br>
+        <small><em>(Ends ${endFormatted})</em></small>
+
+        <button class="btn btn-sm btn-outline-secondary ms-2"
+            onclick="showWeeklyHistory()">
+            View
+        </button>
+        <br>
     `;
 }
 
 /**
- * Renders last 6 months winners (points-based, tiebreaker fewer games)
+ * ---------------------- RENDERS MONTHLY LEADERBOARD ----------------------
  * @param {HTMLElement} container - container for monthly winners list
  */
 function renderMonthlyWinners(container) {
@@ -865,7 +885,8 @@ function renderMonthlyWinners(container) {
 }
 
 /**
- * Shows leaderboard history for a specific month
+ * ---------------------- SHOWS DETAILED MONTHLY LEADERBOARD HISTORY ----------------------
+ * @param {string} monthKey - the month for which to show history
  */
 function showMonthHistory(monthKey) {
 
@@ -942,7 +963,8 @@ function showMonthHistory(monthKey) {
 }
 
 /**
- * Render player career statistics table
+ * ---------------------- RENDER PLAYER CAREER STATISTICS TABLE ----------------------
+ * @param {HTMLElement} tbody - the tbody element to render stats in
  */
 function renderCareerStats(tbody) {
 
@@ -1210,6 +1232,8 @@ function renderLiveGame(game) {
         const extremeDanger = total > game.elimScore - 5;
 
         let dangerEmoji = "";
+        let roundEmoji = "";
+        let statusEmoji = "";
 
         if (p.status === "active") {
             if (extremeDanger) {
@@ -1220,12 +1244,18 @@ function renderLiveGame(game) {
         }
 
         // ── Round performance emoji ───────────────
-
-        let roundEmoji = "";
+        // Winner
+        if (p.elimOrder === -1) {
+            statusEmoji = " 👑";
+        }
+        // Eliminated
+        else if (p.status !== "active") {
+            statusEmoji = " 🪦";
+        }
 
         if (prevScore !== null) {
 
-            if (prevScore >= 50) {
+            if (prevScore >= 45) {
                 roundEmoji = " 🤡";
             } else if (prevScore >= 40) {
                 roundEmoji = " 😭";
@@ -1240,9 +1270,9 @@ function renderLiveGame(game) {
 
         html += `
         <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
-            <td>${name} ${dangerEmoji} ${roundEmoji}</td>
+            <td>${name} ${dangerEmoji} ${roundEmoji} ${statusEmoji}</td>
             <td><strong>${total}</strong></td>
-            <td>${prevDisplay}</td>
+            <td>${prevDisplay} </td>
         </tr>
     `;
     });
@@ -1265,7 +1295,6 @@ function initLiveSocket() {
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-
         renderLiveGame(game);
 
         // If we're on game.html update live table
