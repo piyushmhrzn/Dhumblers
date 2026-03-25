@@ -1231,9 +1231,9 @@ async function cancelGame() {
     }
 }
 
-// ────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 // 7. LIVE SCOREBOARD (SOCKET.IO)
-// ────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 let socket = null;
 
@@ -1269,7 +1269,7 @@ function renderLiveGame(game) {
     dot?.classList.remove("d-none");
     bolt?.classList.add("d-none");
 
-    if (badge) badge.innerText = "Elimination: " + game.elimScore;
+    if (badge) badge.innerText = "Elim: " + game.elimScore;
 
     // ── Current round display ────────────────────
     const currentRound = game.rounds.length + 1;
