@@ -15,6 +15,20 @@ const gamesPerPage = 5;            // How many games shown per page in recent ga
 let currentPage = 1;               // Current pagination page for recent games
 let lastProcessedRound = 0;
 
+
+// ────────────────────────────────────────────────
+// 🔊 SOUND SYSTEM
+// ────────────────────────────────────────────────
+
+function playSound(id) {
+    const audio = document.getElementById(id);
+    if (!audio) return;
+
+    audio.currentTime = 0;
+    audio.play().catch(() => { });
+}
+
+
 // ────────────────────────────────────────────────
 // 2. API FETCH HELPERS
 // ────────────────────────────────────────────────
@@ -1063,7 +1077,10 @@ function renderGameTable() {
 }
 
 /**
- * Collects current round scores from inputs and sends them to server
+ * --------------------------------------------------------------------------------------------------------------------------------
+ * COLLECTS CURRENT ROUND SCORES FROM INPUTS, SENDS TO BACKEND, AND UPDATES GAME STATE
+ * Also contains simple sound logic based on round outcomes (elimination or 40/0 scenario)
+ * --------------------------------------------------------------------------------------------------------------------------------
  */
 async function submitRoundScores() {
     const inputs = document.querySelectorAll('#gameHistory .score-input');
@@ -1089,7 +1106,74 @@ async function submitRoundScores() {
             return;
         }
 
-        currentGame = await res.json();
+        const updatedGame = await res.json();
+
+        // ─────────────────────────────
+        // 🔊 SOUND LOGIC (SUPER SIMPLE)
+        // ─────────────────────────────
+
+        let eliminationTriggered = false;
+
+        // 💀 Check elimination first
+        updatedGame.players.forEach(p => {
+            const old = currentGame.players.find(o => o.id === p.id);
+
+            if (old && old.status === 'active' && p.status === 'eliminated') {
+                eliminationTriggered = true;
+            }
+        });
+
+        // 👉 PRIORITY: elimination wins
+        if (eliminationTriggered) {
+            playSound("elimSound");
+
+            const eliminatedPlayers = updatedGame.players.filter(p => {
+                const old = currentGame.players.find(o => o.id === p.id);
+                return old && old.status === 'active' && p.status === 'eliminated';
+            });
+
+            if (eliminatedPlayers.length > 0) {
+                const names = eliminatedPlayers
+                    .map(p => getUserById(p.id)?.name || "Unknown");
+
+                let text = "";
+
+                if (names.length === 1) {
+                    text = `${names[0]} ji TATA BYE BYE! 👋`;
+                } else {
+                    text = `${names.join(" & ")} ji TATA BYE BYE! 👋`;
+                }
+
+                showGif("elim", text);
+            }
+        } else {
+
+            // 😂 Only if NO elimination
+            const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
+
+            let fortyCount = 0;
+            let zeroCount = 0;
+
+            Object.values(lastRound).forEach(score => {
+                if (score === 40) fortyCount++;
+                if (score === 0) zeroCount++;
+            });
+
+            const total = Object.keys(lastRound).length;
+
+            if (fortyCount === 1 && zeroCount === total - 1) {
+                playSound("funnySound");
+
+                const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+                const name = getUserById(parseInt(scorerId))?.name || "Legend";
+
+                showGif("funny", `${name} ji wah kya khela! 😂`);
+            }
+        }
+
+        // ✅ Update game AFTER logic
+        currentGame = updatedGame;
+
 
         if (currentGame.status === 'completed') {
             showWinner();
@@ -1288,6 +1372,56 @@ function renderLiveGame(game) {
 
 
 /**
+ * Gif display helper function to show a gif for a certain duration (used for sound effects on index page)
+ * @param {string} id - the DOM element ID of the gif to show
+ * @param {number} duration - how long to show the gif in milliseconds (default 13000ms = 13s)
+ */
+function showGif(type, playerName = "", duration = 13000) {
+
+    const overlay = document.getElementById("gifOverlay");
+    const text = document.getElementById("gifText");
+    const elimGif = document.getElementById("elimGif");
+    const funnyGif = document.getElementById("funnyGif");
+
+    if (!overlay) return;
+
+    // Reset
+    elimGif.style.display = "none";
+    funnyGif.style.display = "none";
+    elimGif.classList.remove("gif-show");
+    funnyGif.classList.remove("gif-show");
+
+    // Set player text
+    text.innerText = playerName ? playerName : "";
+
+    // Show overlay
+    overlay.classList.remove("d-none");
+
+    let gif;
+
+    if (type === "elim") {
+        gif = elimGif;
+    } else if (type === "funny") {
+        gif = funnyGif;
+    }
+
+    if (!gif) return;
+
+    gif.style.display = "block";
+
+    // Trigger animation
+    setTimeout(() => {
+        gif.classList.add("gif-show");
+    }, 50);
+
+    // Hide after duration
+    setTimeout(() => {
+        overlay.classList.add("d-none");
+    }, duration);
+}
+
+
+/**
  * Initializes Socket.IO connection and sets up real-time game updates
  */
 function initLiveSocket() {
@@ -1295,13 +1429,104 @@ function initLiveSocket() {
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-        renderLiveGame(game);
 
-        // If we're on game.html update live table
-        if (window.location.pathname.includes("game.html")) {
+        // 🧠 If no previous game → just store and exit
+        if (!currentGame) {
             currentGame = game;
-            renderGameTable();
+            renderLiveGame(game);
+            return;
         }
 
+        // ─────────────────────────────
+        // 🔊 SOUND LOGIC
+        // ─────────────────────────────
+        if (game && currentGame && game.rounds.length > currentGame.rounds.length) {
+
+            let eliminationTriggered = false;
+
+            // 💀 Check elimination
+            game.players.forEach(newP => {
+                const oldP = currentGame.players.find(p => p.id === newP.id);
+
+                if (oldP && oldP.status === "active" && newP.status === "eliminated") {
+                    eliminationTriggered = true;
+                }
+            });
+
+            if (eliminationTriggered) {
+                playSound("elimSound");
+
+                const eliminatedPlayers = game.players.filter(newP => {
+                    const oldP = currentGame.players.find(p => p.id === newP.id);
+                    return oldP && oldP.status === "active" && newP.status === "eliminated";
+                });
+
+                if (eliminatedPlayers.length > 0) {
+                    const names = eliminatedPlayers
+                        .map(p => getUserById(p.id)?.name || "Unknown");
+
+                    let text = "";
+
+                    if (names.length === 1) {
+                        text = `${names[0]} ji TATA BYE BYE! 👋`;
+                    } else {
+                        text = `${names.join(" & ")} ji TATA BYE BYE! 👋`;
+                    }
+
+                    showGif("elim", text);
+                }
+            } else {
+                // 😂 Only if NO elimination happened
+                const lastRound = game.rounds[game.rounds.length - 1] || {};
+
+                let forty = 0;
+                let zero = 0;
+
+                Object.values(lastRound).forEach(score => {
+                    if (score === 40) forty++;
+                    if (score === 0) zero++;
+                });
+
+                if (forty === 1 && zero === Object.keys(lastRound).length - 1) {
+                    playSound("funnySound");
+
+                    const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+                    const name = getUserById(parseInt(scorerId))?.name || "Legend";
+
+                    showGif("funny", `${name} ji wah kya khela! 😂`);
+                }
+            }
+        }
+
+        // ✅ Update state AFTER checks
+        currentGame = game;
+
+        renderLiveGame(game);
     });
 }
+
+// ────────────────────────────────────────────────
+// 🔊 UNLOCK AUDIO (REQUIRED FOR INDEX PAGE)
+// ────────────────────────────────────────────────
+
+let audioUnlocked = false;
+
+document.addEventListener("click", () => {
+    if (audioUnlocked) return;
+
+    const a1 = document.getElementById("elimSound");
+    const a2 = document.getElementById("funnySound");
+
+    if (a1) {
+        a1.play().then(() => a1.pause()).catch(() => { });
+    }
+
+    if (a2) {
+        a2.play().then(() => a2.pause()).catch(() => { });
+    }
+
+    audioUnlocked = true;
+
+    console.log("🔊 Audio unlocked!");
+});
+

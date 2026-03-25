@@ -64,7 +64,11 @@
             <h5 class="live-header">
                 <i id="liveIcon" class="fas fa-bolt text-warning"></i>
                 <span id="liveDot" class="live-dot d-none"></span>
-                Live Game
+                  Live Game
+
+                  <button id="soundToggleBtn" class="btn btn-sm btn-outline-secondary ms-2">
+                      🔊 Sound
+                  </button>
                 <span id="elimScoreBadge" class="badge bg-danger ms-2"></span>
                 <span id="liveRound" class="badge bg-info ms-2"></span>
             </h5>
@@ -263,6 +267,28 @@
   </div>
 </div>
 
+<!-- 🎬 GIF OVERLAY -->
+<div id="gifOverlay" class="gif-overlay d-none">
+
+    <!-- Background blur -->
+    <div class="gif-backdrop"></div>
+
+    <!-- Content -->
+    <div class="gif-content">
+
+        <!-- 🔥 Player name -->
+        <div id="gifText" class="gif-text"></div>
+
+        <!-- 💀 Elimination -->
+        <img id="elimGif" src="img/coffin.gif" class="gif-img">
+
+        <!-- 😂 Funny -->
+        <img id="funnyGif" src="img/laugh.gif" class="gif-img">
+
+    </div>
+</div>
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 <script src="script.js"></script>
@@ -298,5 +324,8 @@ function startGameFromModal() {
 }
 </script>
 
+<!-- Sound Effects -->
+<audio id="elimSound" src="sounds/coffin.mp3" preload="auto"></audio>
+<audio id="funnySound" src="sounds/laugh.mp3" preload="auto"></audio>
 </body>
 </html>

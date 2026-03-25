@@ -283,6 +283,80 @@ LEADERBOARD TOP 3 BADGES
     background: rgba(205, 127, 50, 0.12) !important;
 }
 
+/* ───────────────────────────── */
+/* 🎬 GIF OVERLAY BASE */
+/* ───────────────────────────── */
+.gif-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 🌫️ BLUR BACKGROUND */
+.gif-backdrop {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backdrop-filter: blur(8px);
+    background: rgba(0, 0, 0, 0.4);
+}
+
+/* 🎯 CENTER CONTENT */
+.gif-content {
+    position: relative;
+    text-align: center;
+    z-index: 2;
+}
+
+/* 🏷️ PLAYER NAME */
+.gif-text {
+    color: #fff;
+    font-size: 1.6rem;
+    font-weight: 400;
+    margin-bottom: 15px;
+
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fadeSlide 0.4s ease forwards;
+}
+
+/* 🎥 GIF IMAGE */
+.gif-img {
+    width: 350px;
+    display: none;
+
+    transform: scale(0.7);
+    opacity: 0;
+}
+
+/* 🚀 ANIMATION CLASS */
+.gif-show {
+    animation: zoomFade 0.5s ease forwards;
+}
+
+/* ✨ KEYFRAMES */
+@keyframes zoomFade {
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeSlide {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* =========================
 LIVE GAME HIGHLIGHT
 ========================= */
