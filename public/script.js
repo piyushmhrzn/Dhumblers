@@ -125,6 +125,75 @@ function formatDate(dateStr) {
     return d.toLocaleString('en-US', options).replace(',', '');
 }
 
+
+/**
+ * Gif display helper function to show a gif for a certain duration (used for sound effects on index page)
+ * @param {string} id - the DOM element ID of the gif to show
+ * @param {number} duration - how long to show the gif in milliseconds (default 13000ms = 13s)
+ */
+/**
+ * Shows GIF + plays sound for dramatic moments
+ * Different durations based on event importance
+ */
+function showGif(type, playerName = "", customDuration = null) {
+
+    const overlay = document.getElementById("gifOverlay");
+    const text = document.getElementById("gifText");
+
+    const elimGif = document.getElementById("elimGif");
+    const funnyGif = document.getElementById("funnyGif");
+    const highGif = document.getElementById("highGif");
+    const nearElimGif = document.getElementById("nearElimGif");
+
+    if (!overlay) return;
+
+    // Reset all GIFs
+    [elimGif, funnyGif, highGif, nearElimGif].forEach(gif => {
+        gif.style.display = "none";
+        gif.classList.remove("gif-show");
+    });
+
+    text.innerText = playerName || "";
+
+    overlay.classList.remove("d-none");
+
+    let activeGif = null;
+    let duration = customDuration;
+
+    switch (type) {
+        case "elim":
+            activeGif = elimGif;
+            duration = duration || 14000;
+            break;
+        case "funny":
+            activeGif = funnyGif;
+            duration = duration || 13000;
+            break;
+        case "high":
+            activeGif = highGif;
+            duration = duration || 9000;
+            break;
+        case "nearElim":
+            activeGif = nearElimGif;
+            duration = duration || 9000;
+            break;
+        default:
+            duration = duration || 9000;
+    }
+
+    if (activeGif) {
+        activeGif.style.display = "block";
+        setTimeout(() => {
+            activeGif.classList.add("gif-show");
+        }, 50);
+    }
+
+    // Auto hide after specified duration
+    setTimeout(() => {
+        overlay.classList.add("d-none");
+    }, duration);
+}
+
 /**
  * Determine player playstyle based on stats - more nuanced & fun version
  */
@@ -145,7 +214,7 @@ function determinePlayerType(stats, avgPoints) {
         types.push("🔥 Baazigarr");           // top tier
     }
     else if (winRate >= 0.20) {
-        types.push("⚔️ Thikthak");        // strong
+        types.push("⚔️ Don");        // strong
     }
     else if (winRate >= 0.15) {
         types.push("😂 Tapari");     // competitive
@@ -164,15 +233,15 @@ function determinePlayerType(stats, avgPoints) {
         types.push("💥 Jhyap Boro");    // aggressive
     }
     else if (avgPoints >= 3.2) {
-        types.push("🎯 Shooter ho Shooter");   // efficient scoring
+        types.push("🎯 Shooter Honi");   // efficient scoring
     }
     else if (avgPoints >= 3.1) {
         types.push("⚖️ Balance Khiladi");      // stable play
     }
     else if (avgPoints >= 3 && hasGames) {
-        types.push("🛡️ Bhagwan Bhar Player");     // careful
+        types.push("🛡️ Bhagwan Bharosa");     // careful
     }
-    else if (avgPoints <= 3 && hasGames) {
+    else if (avgPoints < 3 && hasGames) {
         types.push("🐸 Lute");    // very low risk
     }
 
@@ -1087,10 +1156,10 @@ async function submitRoundScores() {
     let roundScores = {};
 
     inputs.forEach(inp => {
-        let val = parseInt(inp.value) || 0;
+        const val = parseInt(inp.value) || 0;
         const id = parseInt(inp.dataset.id);
         roundScores[id] = val;
-        inp.value = ''; // clear input after submit
+        inp.value = '';
     });
 
     try {
@@ -1109,71 +1178,103 @@ async function submitRoundScores() {
         const updatedGame = await res.json();
 
         // ─────────────────────────────
-        // 🔊 SOUND LOGIC (SUPER SIMPLE)
+        // 🔊 ADVANCED SOUND + GIF LOGIC
         // ─────────────────────────────
 
-        let eliminationTriggered = false;
+        const oldGame = { ...currentGame };   // snapshot before update
 
-        // 💀 Check elimination first
-        updatedGame.players.forEach(p => {
-            const old = currentGame.players.find(o => o.id === p.id);
-
-            if (old && old.status === 'active' && p.status === 'eliminated') {
-                eliminationTriggered = true;
-            }
+        // 1. ELIMINATION (Highest Priority)
+        const newlyEliminated = updatedGame.players.filter(p => {
+            const oldP = oldGame.players.find(o => o.id === p.id);
+            return oldP && oldP.status === 'active' && p.status === 'eliminated';
         });
 
-        // 👉 PRIORITY: elimination wins
-        if (eliminationTriggered) {
+        if (newlyEliminated.length > 0) {
             playSound("elimSound");
 
-            const eliminatedPlayers = updatedGame.players.filter(p => {
-                const old = currentGame.players.find(o => o.id === p.id);
-                return old && old.status === 'active' && p.status === 'eliminated';
-            });
+            const names = newlyEliminated.map(p => getUserById(p.id)?.name || "Unknown");
+            const text = names.length === 1
+                ? `${names[0]} ji TATA BYE BYE! 👋`
+                : `${names.join(" & ")} ji TATA BYE BYE! 👋`;
 
-            if (eliminatedPlayers.length > 0) {
-                const names = eliminatedPlayers
-                    .map(p => getUserById(p.id)?.name || "Unknown");
+            showGif("elim", text);
+        }
 
-                let text = "";
-
-                if (names.length === 1) {
-                    text = `${names[0]} ji TATA BYE BYE! 👋`;
-                } else {
-                    text = `${names.join(" & ")} ji TATA BYE BYE! 👋`;
-                }
-
-                showGif("elim", text);
-            }
-        } else {
-
-            // 😂 Only if NO elimination
+        // 2. THUKKA SCORE - Someone scored > 40 (only if no elimination)
+        else {
             const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
 
-            let fortyCount = 0;
-            let zeroCount = 0;
+            const highScorers = Object.entries(lastRound)
+                .filter(([_, score]) => score > 40)
+                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
-            Object.values(lastRound).forEach(score => {
-                if (score === 40) fortyCount++;
-                if (score === 0) zeroCount++;
-            });
+            if (highScorers.length > 0) {
+                playSound("highScoreSound");
 
-            const total = Object.keys(lastRound).length;
+                const text = highScorers.length === 1
+                    ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
+                    : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
 
-            if (fortyCount === 1 && zeroCount === total - 1) {
-                playSound("funnySound");
+                showGif("high", text);
+            }
 
-                const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
-                const name = getUserById(parseInt(scorerId))?.name || "Legend";
+            // 3. FUNNY DHUMBLE - 40-0 special
+            else {
+                let fortyCount = 0;
+                let zeroCount = 0;
 
-                showGif("funny", `${name} ji wah kya khela! 😂`);
+                Object.values(lastRound).forEach(score => {
+                    if (score === 40) fortyCount++;
+                    if (score === 0) zeroCount++;
+                });
+
+                const totalPlayers = Object.keys(lastRound).length;
+
+                if (fortyCount === 1 && zeroCount === totalPlayers - 1) {
+                    playSound("funnySound");
+
+                    const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+                    const name = getUserById(parseInt(scorerId))?.name || "Legend";
+
+                    showGif("funny", `${name} ji wah kya khela! 😂`);
+                }
             }
         }
 
-        // ✅ Update game AFTER logic
-        currentGame = updatedGame;
+        // 4. NEAR ELIMINATION (Udna Lagyo) - Check every active player
+        const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
+        const highScorerIds = Object.entries(lastRound)
+            .filter(([_, score]) => score > 40)
+            .map(([id]) => parseInt(id));
 
+        const nearElimPlayers = updatedGame.players.filter(p => {
+            if (p.status !== 'active') return false;
+            const threshold = updatedGame.elimScore - 15;
+            // ❌ Skip if player already scored >40
+            if (highScorerIds.includes(p.id)) return false;
+            return p.total >= threshold;
+        });
+
+        if (nearElimPlayers.length > 0) {
+            const justEnteredDanger = nearElimPlayers.some(p => {
+                const oldP = oldGame.players.find(o => o.id === p.id);
+                return oldP && oldP.total < (updatedGame.elimScore - 15) && p.total >= (updatedGame.elimScore - 15);
+            });
+
+            if (justEnteredDanger) {
+                playSound("nearElimSound");
+
+                const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
+                const text = names.length === 1
+                    ? `${names[0]} ji udan hudai xa 🚀`
+                    : `${names.join(" & ")} ji udan hudai xa 🚀`;
+
+                showGif("nearElim", text, 8000);
+            }
+        }
+
+        // Update current game state
+        currentGame = updatedGame;
 
         if (currentGame.status === 'completed') {
             showWinner();
@@ -1339,7 +1440,7 @@ function renderLiveGame(game) {
 
         if (prevScore !== null) {
 
-            if (prevScore >= 45) {
+            if (prevScore > 40) {
                 roundEmoji = " 🤡";
             } else if (prevScore >= 40) {
                 roundEmoji = " 😭";
@@ -1372,135 +1473,107 @@ function renderLiveGame(game) {
 
 
 /**
- * Gif display helper function to show a gif for a certain duration (used for sound effects on index page)
- * @param {string} id - the DOM element ID of the gif to show
- * @param {number} duration - how long to show the gif in milliseconds (default 13000ms = 13s)
- */
-function showGif(type, playerName = "", duration = 13000) {
-
-    const overlay = document.getElementById("gifOverlay");
-    const text = document.getElementById("gifText");
-    const elimGif = document.getElementById("elimGif");
-    const funnyGif = document.getElementById("funnyGif");
-
-    if (!overlay) return;
-
-    // Reset
-    elimGif.style.display = "none";
-    funnyGif.style.display = "none";
-    elimGif.classList.remove("gif-show");
-    funnyGif.classList.remove("gif-show");
-
-    // Set player text
-    text.innerText = playerName ? playerName : "";
-
-    // Show overlay
-    overlay.classList.remove("d-none");
-
-    let gif;
-
-    if (type === "elim") {
-        gif = elimGif;
-    } else if (type === "funny") {
-        gif = funnyGif;
-    }
-
-    if (!gif) return;
-
-    gif.style.display = "block";
-
-    // Trigger animation
-    setTimeout(() => {
-        gif.classList.add("gif-show");
-    }, 50);
-
-    // Hide after duration
-    setTimeout(() => {
-        overlay.classList.add("d-none");
-    }, duration);
-}
-
-
-/**
  * Initializes Socket.IO connection and sets up real-time game updates
  */
 function initLiveSocket() {
-
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-
-        // 🧠 If no previous game → just store and exit
         if (!currentGame) {
             currentGame = game;
             renderLiveGame(game);
             return;
         }
 
-        // ─────────────────────────────
-        // 🔊 SOUND LOGIC
-        // ─────────────────────────────
-        if (game && currentGame && game.rounds.length > currentGame.rounds.length) {
+        const oldGame = { ...currentGame };
 
-            let eliminationTriggered = false;
+        // New round detected
+        if (game.rounds.length > currentGame.rounds.length) {
 
-            // 💀 Check elimination
-            game.players.forEach(newP => {
-                const oldP = currentGame.players.find(p => p.id === newP.id);
-
-                if (oldP && oldP.status === "active" && newP.status === "eliminated") {
-                    eliminationTriggered = true;
-                }
+            // 1. ELIMINATION
+            const newlyEliminated = game.players.filter(p => {
+                const oldP = oldGame.players.find(o => o.id === p.id);
+                return oldP && oldP.status === "active" && p.status === "eliminated";
             });
 
-            if (eliminationTriggered) {
+            if (newlyEliminated.length > 0) {
                 playSound("elimSound");
 
-                const eliminatedPlayers = game.players.filter(newP => {
-                    const oldP = currentGame.players.find(p => p.id === newP.id);
-                    return oldP && oldP.status === "active" && newP.status === "eliminated";
-                });
+                const names = newlyEliminated.map(p => getUserById(p.id)?.name || "Unknown");
+                const text = names.length === 1
+                    ? `${names[0]} ji TATA BYE BYE! 👋`
+                    : `${names.join(" & ")} ji TATA BYE BYE! 👋`;
 
-                if (eliminatedPlayers.length > 0) {
-                    const names = eliminatedPlayers
-                        .map(p => getUserById(p.id)?.name || "Unknown");
+                showGif("elim", text);
+            }
 
-                    let text = "";
-
-                    if (names.length === 1) {
-                        text = `${names[0]} ji TATA BYE BYE! 👋`;
-                    } else {
-                        text = `${names.join(" & ")} ji TATA BYE BYE! 👋`;
-                    }
-
-                    showGif("elim", text);
-                }
-            } else {
-                // 😂 Only if NO elimination happened
+            // 2. THUKKA SCORE (>40)
+            else {
                 const lastRound = game.rounds[game.rounds.length - 1] || {};
 
-                let forty = 0;
-                let zero = 0;
+                const highScorers = Object.entries(lastRound)
+                    .filter(([_, score]) => score > 40)
+                    .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
-                Object.values(lastRound).forEach(score => {
-                    if (score === 40) forty++;
-                    if (score === 0) zero++;
-                });
+                if (highScorers.length > 0) {
+                    playSound("highScoreSound");
 
-                if (forty === 1 && zero === Object.keys(lastRound).length - 1) {
-                    playSound("funnySound");
+                    const text = highScorers.length === 1
+                        ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
+                        : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
 
-                    const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
-                    const name = getUserById(parseInt(scorerId))?.name || "Legend";
-
-                    showGif("funny", `${name} ji wah kya khela! 😂`);
+                    showGif("high", text);
                 }
+
+                // 3. DHUMBLE (40-0)
+                else {
+                    let forty = 0, zero = 0;
+                    Object.values(lastRound).forEach(s => {
+                        if (s === 40) forty++;
+                        if (s === 0) zero++;
+                    });
+
+                    if (forty === 1 && zero === Object.keys(lastRound).length - 1) {
+                        playSound("funnySound");
+
+                        const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+                        const name = getUserById(parseInt(scorerId))?.name || "Legend";
+
+                        showGif("funny", `${name} ji wah kya khela! 😂`);
+                    }
+                }
+            }
+
+            // 4. NEAR ELIMINATION (Udna Lagyo)
+            const lastRound = game.rounds[game.rounds.length - 1] || {};
+            const highScorerIds = Object.entries(lastRound)
+                .filter(([_, score]) => score > 40)
+                .map(([id]) => parseInt(id));
+
+            const nearElimPlayers = game.players.filter(p => {
+                if (p.status !== 'active') return false;
+                if (highScorerIds.includes(p.id)) return false; // ❌ Skip if scored >40
+                return p.total >= (game.elimScore - 15);
+            });
+
+            const justEntered = nearElimPlayers.some(p => {
+                const oldP = oldGame.players.find(o => o.id === p.id);
+                return oldP && oldP.total < (game.elimScore - 15);
+            });
+
+            if (justEntered) {
+                playSound("nearElimSound");
+
+                const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
+                const text = names.length === 1
+                    ? `${names[0]} ji udan hudai xa 🚀`
+                    : `${names.join(" & ")} ji udan hudai xa 🚀`;
+
+                showGif("nearElim", text, 9000);
             }
         }
 
-        // ✅ Update state AFTER checks
         currentGame = game;
-
         renderLiveGame(game);
     });
 }
@@ -1514,19 +1587,17 @@ let audioUnlocked = false;
 document.addEventListener("click", () => {
     if (audioUnlocked) return;
 
-    const a1 = document.getElementById("elimSound");
-    const a2 = document.getElementById("funnySound");
-
-    if (a1) {
-        a1.play().then(() => a1.pause()).catch(() => { });
-    }
-
-    if (a2) {
-        a2.play().then(() => a2.pause()).catch(() => { });
-    }
+    ["elimSound", "funnySound", "highScoreSound", "nearElimSound"].forEach(id => {
+        const audio = document.getElementById(id);
+        if (audio) {
+            audio.muted = true;
+            audio.play().then(() => {
+                audio.pause();
+                audio.muted = false;
+            }).catch(() => { });
+        }
+    });
 
     audioUnlocked = true;
-
-    console.log("🔊 Audio unlocked!");
+    console.log("🔊 All audio unlocked!");
 });
-
