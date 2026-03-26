@@ -203,7 +203,7 @@ function determinePlayerType(stats, avgPoints) {
     const types = [];
 
     const winRate = stats.games > 0 ? stats.wins / stats.games : 0;
-    const hasGames = stats.games >= 5;
+    const hasGames = stats.games >= 10;
 
     // ─────────────────────────────────────────────
     // 1. PRIMARY IDENTITY (WIN BASED) - Original Style
@@ -284,8 +284,8 @@ function determinePlayerType(stats, avgPoints) {
     // ─────────────────────────────────────────────
     // 5. SPECIAL FUN TAGS
     // ─────────────────────────────────────────────
-    if (stats.games <= 3) {
-        types.push("🎮 New Blood");
+    if (stats.games <= 10) {
+        types.push("🎮 Rookie");
     }
 
     // ─────────────────────────────────────────────
@@ -1098,7 +1098,19 @@ function renderCareerStats(tbody) {
         const winPct = gamesPlayed ? ((wins / gamesPlayed) * 100).toFixed(1) : 0;
         const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed).toFixed(2) : 0;
 
-        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints };
+        // Get Prestige Tier from determinePlayerType
+        const tempStats = {
+            games: gamesPlayed,
+            wins: wins,
+            currentWinStreak: 0
+        };
+
+        const fullType = determinePlayerType(tempStats, avgPoints);
+
+        // Extract only the Prestige Tier (the last tag)
+        const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
+
+        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints, prestigeTier };
     });
 
     // Sort by totalPoints descending
@@ -1109,11 +1121,17 @@ function renderCareerStats(tbody) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${u.name}</td>
-            <td>${u.gamesPlayed}</td>
-            <td>${u.wins}</td>
-            <td>${u.winPct}%</td>
+            <td>
+                <div class="stat-main">${u.gamesPlayed}</div>
+                <div class="stat-sub">🏆 ${u.wins}</div>
+            </td>
+
+            <td>
+                <div class="stat-main">${u.winPct}%</div>
+                <div class="stat-sub">⚡ ${u.avgPoints}</div>
+            </td>
             <td>${u.totalPoints}</td>
-            <td>${u.avgPoints}</td>
+            <td><span class="tier-badge">${u.prestigeTier}</span></td>
             <td>
                 <button class="btn btn-sm btn-outline-secondary"
                     onclick="showPlayerStats(${u.id})">

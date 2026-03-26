@@ -27,6 +27,103 @@
         box-shadow: 0 0 8px rgba(0,0,0,0.2);
         background-color: #e9ecef;
     }
+
+    .career-table th {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+    }
+
+    .career-table td, 
+    .career-table th {
+        padding: 14px 16px !important;
+        vertical-align: middle;
+    }
+
+    .career-table {
+        border-collapse: separate;
+        border-spacing: 0 8px; /* creates row gaps */
+    }
+
+    .career-table tbody tr {
+        background: rgba(255, 255, 255, 0.06);
+        backdrop-filter: blur(10px);
+
+        border-radius: 12px;
+        overflow: hidden;
+
+        transition: all .25s ease;
+    }
+
+    .career-table tbody tr td:first-child {
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+    }
+
+    .career-table tbody tr td:last-child {
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+    }
+
+    .career-table tbody tr:hover {
+        transform: translateY(-3px);
+    }
+
+    .career-table td:nth-child(2),
+    .career-table td:nth-child(3),
+    .career-table td:nth-child(4),
+    .career-table td:nth-child(5),
+    .career-table td:nth-child(6) {
+        font-size: 0.9rem;
+        color: var(--text-muted) !important;
+    }
+
+    /* Player name */
+    .career-table td:first-child {
+        font-weight: 600;
+        font-size: 1rem;
+    }
+
+    /* Total points (important stat) */
+    .career-table td:nth-child(4) {
+        font-weight: 600;
+        color: #facc15 !important;
+    }
+
+    /* Tier column */
+    .career-table td:nth-child(7) {
+        font-weight: 500;
+    }
+
+    .tier-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        white-space: nowrap; 
+    }
+
+    .btn-sm {
+        padding: 4px 10px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .career-table thead th {
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted) !important;
+    }
+
+    .stat-main {
+        font-weight: 600;
+        font-size: 0.95rem;
+    }
+
+    .stat-sub {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
   </style>
 </head>
 <body>
@@ -128,15 +225,21 @@
             </h5>
 
             <div class="table-responsive">
-                <table class="table table-striped">
+                <table class="table table-striped career-table">
                     <thead>
                         <tr>
                             <th>Player</th>
-                            <th>Games</th>
-                            <th>Wins</th>
-                            <th>Win %</th>
+                            <th>
+                                Games /<br>
+                                <span class="small">Wins</span>
+                            </th>
+
+                            <th>
+                                Win % /<br>
+                                <span class="small">Avg</span>
+                            </th>
                             <th>Total Points</th>
-                            <th>Avg Points</th>
+                            <th>Tier</th>
                             <th></th>
                         </tr>
                     </thead>
