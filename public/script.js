@@ -219,60 +219,63 @@ function determinePlayerType(stats, avgPoints) {
     else if (winRate >= 0.25 && hasGames) {
         types.push("🔥 Baazigarr");
     }
-    else if (winRate >= 0.20) {
+    else if (winRate >= 0.20 && hasGames) {
         types.push("⚔️ Don");
     }
-    else if (winRate >= 0.15) {
+    else if (winRate >= 0.15 && hasGames) {
+        types.push("🗡️ Striker");
+    }
+    else if (winRate >= 0.10 && hasGames) {
         types.push("😂 Tapari");
     }
-    else if (winRate <= 0.15 && hasGames) {
+    else if (winRate < 0.10 && hasGames) {
         types.push("🤡 Pataki");
     }
 
     // ─────────────────────────────────────────────
     // 2. SCORING STYLE (Avg Points Based) - Original Style
     // ─────────────────────────────────────────────
-    if (avgPoints >= 3.4 && hasGames) {
+    if (avgPoints >= 3.40 && hasGames) {
         types.push("💣 Dangdung Khiladi");
     }
-    else if (avgPoints >= 3.3 && hasGames) {
+    else if (avgPoints >= 3.30 && hasGames) {
         types.push("💥 Khiladi 420");
     }
-    else if (avgPoints >= 3.2) {
+    else if (avgPoints >= 3.20 && hasGames) {
         types.push("🎯 Shooter Honi");
     }
-    else if (avgPoints >= 3.1) {
+    else if (avgPoints >= 3.05 && hasGames) {
         types.push("⚖️ Balance Khiladi");
     }
-    else if (avgPoints >= 3 && hasGames) {
+    else if (avgPoints >= 2.90 && hasGames) {
         types.push("🛡️ Bhagwan Bharosa");
     }
-    else if (avgPoints < 3 && hasGames) {
+    else if (avgPoints < 2.90 && hasGames) {
         types.push("🐸 Lute");
     }
 
     // ─────────────────────────────────────────────
     // 3. PRESTIGE TIER (Expanded Version)
     // ─────────────────────────────────────────────
-    if (winRate >= 0.35 && avgPoints >= 3.4 && hasGames) {
+    if (winRate >= 0.30 && avgPoints >= 3.40 && hasGames) {
         types.push("💎 Diamond");
     }
-    else if (winRate >= 0.30 && avgPoints >= 3.3 && hasGames) {
+    else if (winRate >= 0.27 && avgPoints >= 3.30 && hasGames) {
         types.push("🔷 Platinum");
     }
-    else if (winRate >= 0.25 && avgPoints >= 3.2 && hasGames) {
+    else if (winRate >= 0.24 && avgPoints >= 3.20 && hasGames) {
         types.push("♦️ Ruby");
     }
-    else if (winRate >= 0.20 && avgPoints >= 3.1 && hasGames) {
+    else if (winRate >= 0.20 && avgPoints >= 3.10 && hasGames) {
         types.push("🧈 Gold");
     }
-    else if (winRate >= 0.15 && avgPoints >= 3 && hasGames) {
+    else if (winRate >= 0.15 && avgPoints >= 3.00 && hasGames) {
         types.push("⬜ Silver");
     }
     else if (winRate >= 0.10 && avgPoints >= 2.90 && hasGames) {
         types.push("🟤 Bronze");
     }
-    else if (hasGames) {
+    else if (winRate < 0.10 && avgPoints < 2.90 && hasGames) {
         types.push("🪵 Wood");
     }
 
@@ -306,6 +309,69 @@ function determinePlayerType(stats, avgPoints) {
     return types.slice(0, 3).join(" • ");
 }
 
+/* Tier info modal display helper - shows fun descriptions for each tier when badge is clicked */
+function showTierInfo(tierText) {
+
+    const title = document.getElementById("tierDetailTitle");
+    const body = document.getElementById("tierDetailBody");
+
+    if (!title || !body) return;
+
+    let content = "";
+
+    if (tierText.includes("Diamond")) {
+        title.innerText = "💎 Diamond Tier";
+        content = "Top of the game. Elite win rate + insane consistency.";
+    }
+    else if (tierText.includes("Platinum")) {
+        title.innerText = "🔷 Platinum Tier";
+        content = "Highly skilled player with strong performance.";
+    }
+    else if (tierText.includes("Ruby")) {
+        title.innerText = "♦️ Ruby Tier";
+        content = "Very competitive. Strong scoring and wins.";
+    }
+    else if (tierText.includes("Gold")) {
+        title.innerText = "🧈 Gold Tier";
+        content = "Reliable player with solid gameplay.";
+    }
+    else if (tierText.includes("Silver")) {
+        title.innerText = "⬜ Silver Tier";
+        content = "Decent player, still improving.";
+    }
+    else if (tierText.includes("Bronze")) {
+        title.innerText = "🟤 Bronze Tier";
+        content = "Needs improvement. Focus on consistency.";
+    }
+    else if (tierText.includes("Wood")) {
+        title.innerText = "🪵 Wood Tier";
+        content = "Welcome to Dhumble \"Dhumbler\" 😂.";
+    }
+    else {
+        title.innerText = tierText;
+        content = "Newbie.";
+    }
+
+    body.innerHTML = `
+        <div class="mb-3" style="font-size: 2rem;">${tierText}</div>
+        <p>${content}</p>
+    `;
+
+    const modal = new bootstrap.Modal(document.getElementById("tierDetailModal"));
+    modal.show();
+}
+
+/* Calculates progress towards next prestige tier based on win rate and average points */
+function getTierProgress(winRate, avgPoints) {
+
+    // Normalize values
+    const winScore = Math.min(winRate / 0.30, 1); // 30% = max
+    const avgScore = Math.min(avgPoints / 3.4, 1); // 3.4 = max
+
+    const progress = (winScore + avgScore) / 2;
+
+    return Math.floor(progress * 100); // %
+}
 
 /**
  * DETAILED PLAYER STATS CALCULATOR
@@ -713,13 +779,30 @@ function renderLeaderboard(tbody) {
     });
 
     const leaderboard = Object.entries(stats)
-        .map(([id, s]) => ({
-            id: parseInt(id),
-            name: getUserById(parseInt(id))?.name || 'Unknown',
-            points: s.points,
-            games: s.games,
-            wins: s.wins
-        }))
+        .map(([id, s]) => {
+            const userId = parseInt(id);
+            const name = getUserById(userId)?.name || 'Unknown';
+
+            const avgPoints = s.games ? (s.points / s.games) : 0;
+
+            const tempStats = {
+                games: s.games,
+                wins: s.wins,
+                currentWinStreak: 0
+            };
+
+            const fullType = determinePlayerType(tempStats, avgPoints);
+            const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
+
+            return {
+                id: userId,
+                name,
+                points: s.points,
+                games: s.games,
+                wins: s.wins,
+                tier: prestigeTier
+            };
+        })
         .sort((a, b) => {
 
             // 1. Higher points first
@@ -741,6 +824,13 @@ function renderLeaderboard(tbody) {
             <td>${p.points}</td>
             <td>${p.games}</td>
             <td>${p.wins}</td>
+            <td>
+                <span class="tier-badge"
+                    data-tier="${p.tier}"
+                    onclick="showTierInfo('${p.tier}')">
+                    ${p.tier}
+                </span>
+            </td>
         `;
         tbody.appendChild(tr);
     });
@@ -1115,7 +1205,10 @@ function renderCareerStats(tbody) {
         // Extract only the Prestige Tier (the last tag)
         const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
 
-        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints, prestigeTier };
+        // Calculate progress towards next tier 
+        const progress = getTierProgress(wins / (gamesPlayed || 1), avgPoints);
+
+        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints, prestigeTier, progress };
     });
 
     // Sort by totalPoints descending
@@ -1124,8 +1217,18 @@ function renderCareerStats(tbody) {
     // Render rows
     userStats.forEach(u => {
         const tr = document.createElement('tr');
+
+        // Make row clickable
+        tr.style.cursor = "pointer";
+        tr.onclick = () => showPlayerStats(u.id);
+
+        // Optional: add hover effect class
+        tr.classList.add("clickable-row");
+
         tr.innerHTML = `
-            <td>${u.name}</td>
+            <td>
+                ${u.name}
+            </td>
             <td>
                 <div class="stat-main">${u.gamesPlayed}</div>
                 <div class="stat-sub">🏆 ${u.wins}</div>
@@ -1135,13 +1238,15 @@ function renderCareerStats(tbody) {
                 <div class="stat-main">${u.winPct}%</div>
                 <div class="stat-sub">⚡ ${u.avgPoints}</div>
             </td>
+
             <td>${u.totalPoints}</td>
-            <td><span class="tier-badge">${u.prestigeTier}</span></td>
+
             <td>
-                <button class="btn btn-sm btn-outline-secondary"
-                    onclick="showPlayerStats(${u.id})">
-                    Details
-                </button>
+                <span class="tier-badge">${u.prestigeTier}</span>
+            
+                <div class="progress mt-1" style="height:6px;">
+                    <div class="progress-bar" style="width:${u.progress}%"></div>
+                </div>
             </td>
         `;
         tbody.appendChild(tr);

@@ -32,93 +32,6 @@
         font-size: 0.75rem;
         letter-spacing: 0.08em;
     }
-
-    .career-table td, 
-    .career-table th {
-        padding: 14px 16px !important;
-        vertical-align: middle;
-    }
-
-    .career-table {
-        border-collapse: separate;
-        border-spacing: 0 8px; /* creates row gaps */
-    }
-
-    .career-table tbody tr {
-        background: rgba(255, 255, 255, 0.06);
-        backdrop-filter: blur(10px);
-
-        border-radius: 12px;
-        overflow: hidden;
-
-        transition: all .25s ease;
-    }
-
-    .career-table tbody tr td:first-child {
-        border-top-left-radius: 12px;
-        border-bottom-left-radius: 12px;
-    }
-
-    .career-table tbody tr td:last-child {
-        border-top-right-radius: 12px;
-        border-bottom-right-radius: 12px;
-    }
-
-    .career-table tbody tr:hover {
-        transform: translateY(-3px);
-    }
-
-    .career-table td:nth-child(2),
-    .career-table td:nth-child(3),
-    .career-table td:nth-child(4),
-    .career-table td:nth-child(5),
-    .career-table td:nth-child(6) {
-        font-size: 0.9rem;
-        color: var(--text-muted) !important;
-    }
-
-    /* Player name */
-    .career-table td:first-child {
-        font-weight: 600;
-        font-size: 1rem;
-    }
-
-    /* Total points (important stat) */
-    .career-table td:nth-child(4) {
-        font-weight: 600;
-        color: #facc15 !important;
-    }
-
-    .tier-badge {
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: 0.8rem;
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        white-space: nowrap; 
-    }
-
-    .btn-sm {
-        padding: 4px 10px !important;
-        font-size: 0.8rem !important;
-    }
-
-    .career-table thead th {
-        font-size: 0.75rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: var(--text-muted) !important;
-    }
-
-    .stat-main {
-        font-weight: 600;
-        font-size: 0.95rem;
-    }
-
-    .stat-sub {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-    }
   </style>
 </head>
 <body>
@@ -137,7 +50,13 @@
     <!-- Leaderboard -->
     <div class="card mb-3">
         <div class="card-body">
-            <h5><i class="fas fa-trophy me-2 text-warning"></i>Leaderboard <span id="leaderboardMonth" class="badge bg-secondary ms-2"></span> </h5>
+            <h5><i class="fas fa-trophy me-2 text-warning"></i>
+                Leaderboard 
+                    <button class="btn btn-sm btn-outline-secondary ms-2" data-bs-toggle="modal" data-bs-target="#tierInfoModal">
+                        <i class="fas fa-circle-info"></i>
+                    </button>
+                    <span id="leaderboardMonth" class="badge bg-secondary ms-2"></span> 
+            </h5>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
@@ -146,6 +65,7 @@
                             <th>Points</th>
                             <th>Games</th>
                             <th>Wins</th> 
+                            <th>Tier</th>
                         </tr>
                     </thead>
                     <tbody id="leaderboardBody"></tbody>
@@ -235,7 +155,6 @@
                             </th>
                             <th>Total Points</th>
                             <th>Tier</th>
-                            <th></th>
                         </tr>
                     </thead>
 
@@ -370,6 +289,67 @@
 
         <div id="playerStatsContent"></div>
 
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Tier Info Modal -->
+<div class="modal fade" id="tierInfoModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Tier System Explained</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <h6>🏆 Prestige Tiers</h6>
+        <p>Based on Win Rate + Avg Points</p>
+        <ul>
+          <li>💎 Diamond → 30%+ win & 3.40+ avg</li>
+          <li>🔷 Platinum → 27%+ win & 3.30+ avg</li>
+          <li>♦️ Ruby → 24%+ win & 3.20+ avg</li>
+          <li>🧈 Gold → 20%+ win & 3.10+ avg</li>
+          <li>⬜ Silver → 15%+ win & 3.00+ avg</li>
+          <li>🟤 Bronze → 10%+ win & 2.90+ avg</li>
+          <li>🪵 Wood → Below that 😅</li>
+        </ul>
+
+        <hr>
+
+        <h6>⚔️ Player Identity</h6>
+        <p>Based on Win Rate</p>
+
+        <h6>🎯 Scoring Style</h6>
+        <p>Based on average points per game</p>
+
+        <hr>
+
+        <p class="text-secondary small">
+          * Minimum 10 games required for most ranks
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Tier Detail Modal -->
+<div class="modal fade" id="tierDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="tierDetailTitle">Tier Info</h5>
+        <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body text-center" id="tierDetailBody">
       </div>
 
     </div>
