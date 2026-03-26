@@ -195,7 +195,8 @@ function showGif(type, playerName = "", customDuration = null) {
 }
 
 /**
- * Determine player playstyle based on stats - more nuanced & fun version
+ * Determine player playstyle based on stats 
+ * Now with 3 separate systems: Win Identity + Scoring Style + Prestige Tier
  */
 function determinePlayerType(stats, avgPoints) {
 
@@ -205,60 +206,84 @@ function determinePlayerType(stats, avgPoints) {
     const hasGames = stats.games >= 5;
 
     // ─────────────────────────────────────────────
-    // 1. PRIMARY IDENTITY (WIN BASED)
+    // 1. PRIMARY IDENTITY (WIN BASED) - Original Style
     // ─────────────────────────────────────────────
     if (winRate >= 0.30 && hasGames) {
-        types.push("👑 Sab ka Baap");        // insane dominance
+        types.push("👑 Sab ka Baap");
     }
     else if (winRate >= 0.25 && hasGames) {
-        types.push("🔥 Baazigarr");           // top tier
+        types.push("🔥 Baazigarr");
     }
     else if (winRate >= 0.20) {
-        types.push("⚔️ Don");        // strong
+        types.push("⚔️ Don");
     }
     else if (winRate >= 0.15) {
-        types.push("😂 Tapari");     // competitive
+        types.push("😂 Tapari");
     }
     else if (winRate <= 0.15 && hasGames) {
-        types.push("🤡 Pataki");     // struggling
+        types.push("🤡 Pataki");
     }
 
     // ─────────────────────────────────────────────
-    // 2. SCORING STYLE (Avg points based)
+    // 2. SCORING STYLE (Avg Points Based) - Original Style
     // ─────────────────────────────────────────────
     if (avgPoints >= 3.4 && hasGames) {
-        types.push("💣 Dangdung Khiladi");     // chaotic high scoring
+        types.push("💣 Dangdung Khiladi");
     }
     else if (avgPoints >= 3.3 && hasGames) {
-        types.push("💥 Jhyap Boro");    // aggressive
+        types.push("💥 Khiladi 420");
     }
     else if (avgPoints >= 3.2) {
-        types.push("🎯 Shooter Honi");   // efficient scoring
+        types.push("🎯 Shooter Honi");
     }
     else if (avgPoints >= 3.1) {
-        types.push("⚖️ Balance Khiladi");      // stable play
+        types.push("⚖️ Balance Khiladi");
     }
     else if (avgPoints >= 3 && hasGames) {
-        types.push("🛡️ Bhagwan Bharosa");     // careful
+        types.push("🛡️ Bhagwan Bharosa");
     }
     else if (avgPoints < 3 && hasGames) {
-        types.push("🐸 Lute");    // very low risk
+        types.push("🐸 Lute");
     }
 
     // ─────────────────────────────────────────────
-    // 3. STREAK ENERGY
+    // 3. PRESTIGE TIER (Expanded Version)
+    // ─────────────────────────────────────────────
+    if (winRate >= 0.35 && avgPoints >= 3.4 && hasGames) {
+        types.push("💎 Diamond");
+    }
+    else if (winRate >= 0.30 && avgPoints >= 3.3 && hasGames) {
+        types.push("🔷 Platinum");
+    }
+    else if (winRate >= 0.25 && avgPoints >= 3.2 && hasGames) {
+        types.push("♦️ Ruby");
+    }
+    else if (winRate >= 0.20 && avgPoints >= 3.1 && hasGames) {
+        types.push("🧈 Gold");
+    }
+    else if (winRate >= 0.15 && avgPoints >= 3 && hasGames) {
+        types.push("⬜ Silver");
+    }
+    else if (winRate >= 0.10 && avgPoints >= 2.90 && hasGames) {
+        types.push("🟤 Bronze");
+    }
+    else if (hasGames) {
+        types.push("🪵 Wood");
+    }
+
+    // ─────────────────────────────────────────────
+    // 4. STREAK ENERGY
     // ─────────────────────────────────────────────
     if (stats.currentWinStreak >= 3) {
-        types.push("⚡Unstoppable");
+        types.push("⚡ Unstoppable");
     }
     else if (stats.currentWinStreak === 2) {
         types.push("🔥 On Fire");
     }
 
     // ─────────────────────────────────────────────
-    // 6. SPECIAL FUN TAGS
+    // 5. SPECIAL FUN TAGS
     // ─────────────────────────────────────────────
-
     if (stats.games <= 3) {
         types.push("🎮 New Blood");
     }
@@ -271,10 +296,11 @@ function determinePlayerType(stats, avgPoints) {
     }
 
     // ─────────────────────────────────────────────
-    // RETURN BEST 3 (clean UI)
+    // RETURN UP TO 3 BEST TAGS
     // ─────────────────────────────────────────────
     return types.slice(0, 3).join(" • ");
 }
+
 
 /**
  * DETAILED PLAYER STATS CALCULATOR
@@ -1266,8 +1292,8 @@ async function submitRoundScores() {
 
                 const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
                 const text = names.length === 1
-                    ? `${names[0]} ji udan hudai xa 🚀`
-                    : `${names.join(" & ")} ji udan hudai xa 🚀`;
+                    ? `${names[0]} ko udaan tayari 🚀`
+                    : `${names.join(" & ")} ko udaan tayari 🚀`;
 
                 showGif("nearElim", text, 8000);
             }
@@ -1479,16 +1505,17 @@ function initLiveSocket() {
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-        if (!currentGame) {
-            currentGame = game;
-            renderLiveGame(game);
+        // FIX: If game is cancelled or completed → clear live game
+        if (!game || game.status !== "ongoing") {
+            currentGame = null;
+            renderLiveGame(null);
             return;
         }
 
-        const oldGame = { ...currentGame };
+        const oldGame = currentGame ? { ...currentGame } : null;
 
         // New round detected
-        if (game.rounds.length > currentGame.rounds.length) {
+        if (oldGame && game.rounds.length > oldGame.rounds.length) {
 
             // 1. ELIMINATION
             const newlyEliminated = game.players.filter(p => {
@@ -1566,8 +1593,8 @@ function initLiveSocket() {
 
                 const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
                 const text = names.length === 1
-                    ? `${names[0]} ji udan hudai xa 🚀`
-                    : `${names.join(" & ")} ji udan hudai xa 🚀`;
+                    ? `${names[0]} ko udaan tayari 🚀`
+                    : `${names.join(" & ")} ko udaan tayari 🚀`;
 
                 showGif("nearElim", text, 9000);
             }
