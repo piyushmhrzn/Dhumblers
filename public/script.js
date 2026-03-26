@@ -144,11 +144,12 @@ function showGif(type, playerName = "", customDuration = null) {
     const funnyGif = document.getElementById("funnyGif");
     const highGif = document.getElementById("highGif");
     const nearElimGif = document.getElementById("nearElimGif");
+    const winnerGif = document.getElementById("winnerGif");
 
     if (!overlay) return;
 
     // Reset all GIFs
-    [elimGif, funnyGif, highGif, nearElimGif].forEach(gif => {
+    [elimGif, funnyGif, highGif, nearElimGif, winnerGif].forEach(gif => {
         gif.style.display = "none";
         gif.classList.remove("gif-show");
     });
@@ -176,6 +177,10 @@ function showGif(type, playerName = "", customDuration = null) {
         case "nearElim":
             activeGif = nearElimGif;
             duration = duration || 9000;
+            break;
+        case "winner":
+            activeGif = winnerGif;
+            duration = duration || 13000;
             break;
         default:
             duration = duration || 9000;
@@ -1256,8 +1261,8 @@ async function submitRoundScores() {
                 playSound("highScoreSound");
 
                 const text = highScorers.length === 1
-                    ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
-                    : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
+                    ? `${highScorers[0]} ji wah ultra-legend honi 😂`
+                    : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
 
                 showGif("high", text);
             }
@@ -1310,8 +1315,8 @@ async function submitRoundScores() {
 
                 const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
                 const text = names.length === 1
-                    ? `${names[0]} ko udaan tayari 🚀`
-                    : `${names.join(" & ")} ko udaan tayari 🚀`;
+                    ? `${names[0]} ji udaan tayari hudai 🚀`
+                    : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
 
                 showGif("nearElim", text, 8000);
             }
@@ -1337,6 +1342,10 @@ async function submitRoundScores() {
 function showWinner() {
     const winnerPlayer = currentGame.players.find(p => p.elimOrder === -1);
     const winnerName = getUserById(winnerPlayer?.id)?.name || 'Unknown';
+
+    // 🔊 NEW: Winner celebration
+    playSound("winnerSound");
+    // showGif("winner", `${winnerName} is the WINNER 👑🔥`, 13000);
 
     document.getElementById('winnerBanner').innerHTML = `
         <div class="alert alert-success text-center mb-4" role="alert">
@@ -1525,6 +1534,16 @@ function initLiveSocket() {
     socket.on("gameUpdate", (game) => {
         // FIX: If game is cancelled or completed → clear live game
         if (!game || game.status !== "ongoing") {
+
+            // 🎉 If game just finished → show winner
+            if (game && game.status === "completed" && currentGame) {
+                const winner = game.players.find(p => p.elimOrder === -1);
+                const name = getUserById(winner?.id)?.name || "Champion";
+
+                playSound("winnerSound");
+                showGif("winner", `${name} is the WINNER 👑🔥`, 13000);
+            }
+
             currentGame = null;
             renderLiveGame(null);
             return;
@@ -1611,8 +1630,8 @@ function initLiveSocket() {
 
                 const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
                 const text = names.length === 1
-                    ? `${names[0]} ko udaan tayari 🚀`
-                    : `${names.join(" & ")} ko udaan tayari 🚀`;
+                    ? `${names[0]} ji udaan tayari hudai 🚀`
+                    : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
 
                 showGif("nearElim", text, 9000);
             }
