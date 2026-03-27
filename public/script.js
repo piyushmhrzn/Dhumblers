@@ -361,17 +361,80 @@ function showTierInfo(tierText) {
     modal.show();
 }
 
+// TIER DEFINITIONS 
+const TIERS = [
+    { name: "🪵 Wood", win: 0.00, avg: 0.00 },
+    { name: "🟤 Bronze", win: 0.10, avg: 2.90 },
+    { name: "⬜ Silver", win: 0.15, avg: 3.00 },
+    { name: "🧈 Gold", win: 0.20, avg: 3.10 },
+    { name: "♦️ Ruby", win: 0.24, avg: 3.20 },
+    { name: "🔷 Platinum", win: 0.27, avg: 3.30 },
+    { name: "💎 Diamond", win: 0.30, avg: 3.40 }
+];
+
+
 /* Calculates progress towards next prestige tier based on win rate and average points */
 function getTierProgress(winRate, avgPoints) {
 
-    // Normalize values
-    const winScore = Math.min(winRate / 0.30, 1); // 30% = max
-    const avgScore = Math.min(avgPoints / 3.4, 1); // 3.4 = max
+    winRate = Number(winRate) || 0;
+    avgPoints = Number(avgPoints) || 0;
 
-    const progress = (winScore + avgScore) / 2;
+    let currentIndex = 0;
 
-    return Math.floor(progress * 100); // %
+    for (let i = TIERS.length - 1; i >= 0; i--) {
+        if (winRate >= TIERS[i].win && avgPoints >= TIERS[i].avg) {
+            currentIndex = i;
+            break;
+        }
+    }
+
+    // Max tier
+    if (currentIndex === TIERS.length - 1) {
+        return {
+            progress: 100,
+            remaining: 0,
+            nextTier: null
+        };
+    }
+
+    const current = TIERS[currentIndex];
+    const next = TIERS[currentIndex + 1];
+
+    const winRange = (next.win - current.win) || 1;
+    const avgRange = (next.avg - current.avg) || 1;
+
+    const winProgress = (winRate - current.win) / winRange;
+    const avgProgress = (avgPoints - current.avg) / avgRange;
+
+    let progressRaw = (winProgress + avgProgress) / 2;
+
+    // Clamp
+    progressRaw = Math.max(0, Math.min(1, progressRaw));
+
+    // 🔥 CRITICAL FIX:
+    // If player hasn't reached next tier yet → NEVER allow 100%
+    const qualifiesForNext =
+        winRate >= next.win && avgPoints >= next.avg;
+
+    if (!qualifiesForNext && progressRaw >= 1) {
+        progressRaw = 0.99;
+    }
+
+    let progressPercent = Math.floor(progressRaw * 100);
+    let remainingPercent = Math.ceil((1 - progressRaw) * 100);
+
+    // 🔥 FORCE minimum 1% remaining if not promoted
+    if (!qualifiesForNext && remainingPercent === 0) {
+        remainingPercent = 1;
+    }
+
+    return {
+        progress: progressPercent,
+        remaining: remainingPercent,
+        nextTier: next.name
+    };
 }
+
 
 /**
  * DETAILED PLAYER STATS CALCULATOR
@@ -1175,8 +1238,8 @@ function renderCareerStats(tbody) {
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    // Compute stats for all users first
     const userStats = users.map(u => {
+
         let gamesPlayed = 0;
         let wins = 0;
         let totalPoints = 0;
@@ -1190,10 +1253,13 @@ function renderCareerStats(tbody) {
             }
         });
 
-        const winPct = gamesPlayed ? ((wins / gamesPlayed) * 100).toFixed(1) : 0;
-        const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed).toFixed(2) : 0;
+        // Calculate win rate and average points
+        const winRate = gamesPlayed ? (wins / gamesPlayed) : 0;
+        const winPct = gamesPlayed ? (winRate * 100).toFixed(1) : 0;
+        const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed) : 0;
+        const avgPointsDisplay = avgPoints.toFixed(2);
 
-        // Get Prestige Tier from determinePlayerType
+        // Tier calculation
         const tempStats = {
             games: gamesPlayed,
             wins: wins,
@@ -1201,34 +1267,37 @@ function renderCareerStats(tbody) {
         };
 
         const fullType = determinePlayerType(tempStats, avgPoints);
-
-        // Extract only the Prestige Tier (the last tag)
         const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
 
-        // Calculate progress towards next tier 
-        const progress = getTierProgress(wins / (gamesPlayed || 1), avgPoints);
+        // ✅ NEW: progress object
+        const progressData = getTierProgress(winRate, avgPoints);
 
-        return { ...u, gamesPlayed, wins, totalPoints, winPct, avgPoints, prestigeTier, progress };
+        return {
+            ...u,
+            gamesPlayed,
+            wins,
+            totalPoints,
+            winPct,
+            avgPointsDisplay,
+            prestigeTier,
+            progressData
+        };
     });
 
-    // Sort by totalPoints descending
+    // Sort
     userStats.sort((a, b) => b.totalPoints - a.totalPoints);
 
-    // Render rows
+    // Render
     userStats.forEach(u => {
-        const tr = document.createElement('tr');
 
-        // Make row clickable
+        const tr = document.createElement('tr');
         tr.style.cursor = "pointer";
         tr.onclick = () => showPlayerStats(u.id);
-
-        // Optional: add hover effect class
         tr.classList.add("clickable-row");
 
         tr.innerHTML = `
-            <td>
-                ${u.name}
-            </td>
+            <td>${u.name}</td>
+
             <td>
                 <div class="stat-main">${u.gamesPlayed}</div>
                 <div class="stat-sub">🏆 ${u.wins}</div>
@@ -1236,7 +1305,7 @@ function renderCareerStats(tbody) {
 
             <td>
                 <div class="stat-main">${u.winPct}%</div>
-                <div class="stat-sub">⚡ ${u.avgPoints}</div>
+                <div class="stat-sub">⚡ ${u.avgPointsDisplay}</div>
             </td>
 
             <td>${u.totalPoints}</td>
@@ -1245,13 +1314,22 @@ function renderCareerStats(tbody) {
                 <span class="tier-badge">${u.prestigeTier}</span>
             
                 <div class="progress mt-1" style="height:6px;">
-                    <div class="progress-bar" style="width:${u.progress}%"></div>
+                    <div class="progress-bar" style="width:${u.progressData.progress}%"></div>
+                </div>
+
+                <div class="small text-white mt-1">
+                    ${u.progressData.nextTier
+                ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
+                : "Max tier reached"
+            }
                 </div>
             </td>
         `;
+
         tbody.appendChild(tr);
     });
 }
+
 
 // ────────────────────────────────────────────────
 // 6. GAME PAGE RENDERING & INTERACTION (game.html)
