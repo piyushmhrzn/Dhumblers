@@ -244,7 +244,6 @@ WINNER BANNER
     animation: fadeIn .6s ease;
 }
 
-
 /* =========================
 LEADERBOARD TOP 3 BADGES
 ========================= */
@@ -283,6 +282,19 @@ LEADERBOARD TOP 3 BADGES
     background: rgba(205, 127, 50, 0.12) !important;
 }
 
+/* Player column hierarchy */
+#leaderboardBody td:first-child {
+    font-size: 1.05rem;
+    font-weight: 600;
+}
+
+/* Badge smaller + separated */
+#leaderboardBody .tier-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+}
 
 /* =========================
 CAREER TABLE CUSTOMIZATION
@@ -302,10 +314,8 @@ CAREER TABLE CUSTOMIZATION
 .career-table tbody tr {
     background: rgba(255, 255, 255, 0.06);
     backdrop-filter: blur(10px);
-
     border-radius: 12px;
     overflow: hidden;
-
     transition: all .25s ease;
 }
 
@@ -391,10 +401,45 @@ CAREER TABLE CUSTOMIZATION
     pointer-events: none;
 }
 
+/* Wrapper */
+.career-player-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Name + badge row */
+.career-top-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Name stronger */
+.career-top-row .player-name {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Badge smaller + fixed */
+.career-top-row .tier-badge {
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    display: inline-block;
+}
+
+/* Progress text cleaner */
+.career-progress-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+
 /* =========================
 TIER BADGES
 ========================= */
 .tier-badge {
+    display: inline-block;
     padding: 4px 10px;
     border-radius: 999px;
     font-size: 0.8rem;
@@ -405,7 +450,6 @@ TIER BADGES
 }
 
 /* Tier Colors */
-.tier-badge:has(:contains("Diamond")),
 .tier-badge[data-tier*="Diamond"] {
     background: rgba(0, 200, 255, 0.15);
     color: #58cbfc;
@@ -666,5 +710,4 @@ RESPONSIVE
     .table {
         font-size: .9rem;
     }
-
 }

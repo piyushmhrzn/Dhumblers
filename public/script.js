@@ -164,26 +164,26 @@ function showGif(type, playerName = "", customDuration = null) {
     switch (type) {
         case "elim":
             activeGif = elimGif;
-            duration = duration || 14000;
+            duration = duration || 15000;
             break;
         case "funny":
             activeGif = funnyGif;
-            duration = duration || 13000;
+            duration = duration || 14000;
             break;
         case "high":
             activeGif = highGif;
-            duration = duration || 9000;
+            duration = duration || 10000;
             break;
         case "nearElim":
             activeGif = nearElimGif;
-            duration = duration || 9000;
+            duration = duration || 10000;
             break;
         case "winner":
             activeGif = winnerGif;
-            duration = duration || 13000;
+            duration = duration || 14000;
             break;
         default:
-            duration = duration || 9000;
+            duration = duration || 10000;
     }
 
     if (activeGif) {
@@ -275,7 +275,7 @@ function determinePlayerType(stats, avgPoints) {
     else if (winRate >= 0.10 && avgPoints >= 2.90 && hasGames) {
         types.push("🟤 Bronze");
     }
-    else if (winRate < 0.10 && avgPoints < 2.90 && hasGames) {
+    else if (hasGames) {
         types.push("🪵 Wood");
     }
 
@@ -393,7 +393,8 @@ function getTierProgress(winRate, avgPoints) {
         return {
             progress: 100,
             remaining: 0,
-            nextTier: null
+            nextTier: null,
+            gapText: ""
         };
     }
 
@@ -406,7 +407,7 @@ function getTierProgress(winRate, avgPoints) {
     const winProgress = (winRate - current.win) / winRange;
     const avgProgress = (avgPoints - current.avg) / avgRange;
 
-    let progressRaw = (winProgress + avgProgress) / 2;
+    let progressRaw = Math.min(winProgress, avgProgress);
 
     // Clamp
     progressRaw = Math.max(0, Math.min(1, progressRaw));
@@ -428,10 +429,33 @@ function getTierProgress(winRate, avgPoints) {
         remainingPercent = 1;
     }
 
+    // ✅ BONUS UPGRADE (THIS IS THE NEW PART)
+    const winGap = Math.max(0, next.win - winRate);
+    const avgGap = Math.max(0, next.avg - avgPoints);
+
+    let gapParts = [];
+
+    if (winGap > 0) {
+        gapParts.push(`+${(winGap * 100).toFixed(1)}% win`);
+    }
+
+    if (avgGap > 0) {
+        gapParts.push(`+${avgGap.toFixed(2)} avg`);
+    }
+
+    let gapText = "";
+
+    if (gapParts.length > 0) {
+        gapText = `Needs ${gapParts.join(" + ")}`;
+    } else {
+        gapText = "Ready to rank up! 🔥";
+    }
+
     return {
         progress: progressPercent,
         remaining: remainingPercent,
-        nextTier: next.name
+        nextTier: next.name,
+        gapText
     };
 }
 
@@ -551,7 +575,6 @@ function showPlayerStats(userId) {
 
     const winPct = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
     const avgPoints = stats.games ? (stats.totalPoints / stats.games).toFixed(2) : 0;
-    const avgRoundScore = stats.roundsPlayed ? (stats.totalScore / stats.roundsPlayed).toFixed(2) : 0;
     const avgFinish = stats.games ? (stats.finishingSum / stats.games).toFixed(2) : "-";
     const playerType = determinePlayerType(stats, avgPoints);
 
@@ -883,17 +906,17 @@ function renderLeaderboard(tbody) {
     leaderboard.forEach(p => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${p.name}</td>
-            <td>${p.points}</td>
-            <td>${p.games}</td>
-            <td>${p.wins}</td>
             <td>
+                ${p.name}
                 <span class="tier-badge"
-                    data-tier="${p.tier}"
+                    data-tier="${p.tier}" 
                     onclick="showTierInfo('${p.tier}')">
                     ${p.tier}
                 </span>
             </td>
+            <td>${p.points}</td>
+            <td>${p.games}</td>
+            <td>${p.wins}</td>
         `;
         tbody.appendChild(tr);
     });
@@ -1296,7 +1319,31 @@ function renderCareerStats(tbody) {
         tr.classList.add("clickable-row");
 
         tr.innerHTML = `
-            <td>${u.name}</td>
+            <td>
+                <div class="career-player-cell">
+
+                <div class="career-top-row">
+                    <span class="player-name">${u.name}</span>
+                    <span class="tier-badge">${u.prestigeTier}</span>
+                </div>
+
+                <div class="progress mt-1" style="height:6px;">
+                    <div class="progress-bar" style="width:${u.progressData.progress}%"></div>
+                </div>
+
+                <div class="career-progress-text">
+                    ${u.progressData.nextTier
+                ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
+                : "Max tier reached"
+            }
+                    <br>
+                    <small class="text-white">
+                        ${u.progressData.gapText}
+                    </small>
+                </div>
+
+            </div>
+            </td>
 
             <td>
                 <div class="stat-main">${u.gamesPlayed}</div>
@@ -1311,18 +1358,7 @@ function renderCareerStats(tbody) {
             <td>${u.totalPoints}</td>
 
             <td>
-                <span class="tier-badge">${u.prestigeTier}</span>
-            
-                <div class="progress mt-1" style="height:6px;">
-                    <div class="progress-bar" style="width:${u.progressData.progress}%"></div>
-                </div>
-
-                <div class="small text-white mt-1">
-                    ${u.progressData.nextTier
-                ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
-                : "Max tier reached"
-            }
-                </div>
+               
             </td>
         `;
 
@@ -1410,18 +1446,70 @@ async function submitRoundScores() {
         const updatedGame = await res.json();
 
         // ─────────────────────────────
-        // 🔊 ADVANCED SOUND + GIF LOGIC
+        // 🔊 PRIORITY-BASED SOUND SYSTEM
         // ─────────────────────────────
 
-        const oldGame = { ...currentGame };   // snapshot before update
+        const oldGame = { ...currentGame };
 
-        // 1. ELIMINATION (Highest Priority)
+        // Detect events
+        const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
+
+        // 1. WINNER
+        const isWinner = updatedGame.status === "completed";
+
+        // 2. ELIMINATION
         const newlyEliminated = updatedGame.players.filter(p => {
             const oldP = oldGame.players.find(o => o.id === p.id);
             return oldP && oldP.status === 'active' && p.status === 'eliminated';
         });
 
-        if (newlyEliminated.length > 0) {
+        // 3. FUNNY (40-0)
+        let fortyCount = 0;
+        let zeroCount = 0;
+
+        Object.values(lastRound).forEach(score => {
+            if (score === 40) fortyCount++;
+            if (score === 0) zeroCount++;
+        });
+
+        const totalPlayers = Object.keys(lastRound).length;
+        const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
+
+        // 4. THUKKA (>40)
+        const highScorers = Object.entries(lastRound)
+            .filter(([_, score]) => score > 40)
+            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
+        // 5. NEAR ELIMINATION
+        const highScorerIds = Object.entries(lastRound)
+            .filter(([_, score]) => score > 40)
+            .map(([id]) => parseInt(id));
+
+        const nearElimPlayers = updatedGame.players.filter(p => {
+            if (p.status !== 'active') return false;
+            if (highScorerIds.includes(p.id)) return false;
+            return p.total >= (updatedGame.elimScore - 15);
+        });
+
+        const justEnteredDanger = nearElimPlayers.some(p => {
+            const oldP = oldGame.players.find(o => o.id === p.id);
+            return oldP && oldP.total < (updatedGame.elimScore - 15);
+        });
+
+
+        // ─────────────────────────────
+        // 🎯 APPLY PRIORITY
+        // ─────────────────────────────
+
+        if (isWinner) {
+            const winner = updatedGame.players.find(p => p.elimOrder === -1);
+            const name = getUserById(winner?.id)?.name || "Champion";
+
+            playSound("winnerSound");
+            showGif("winner", `${name} is the WINNER 👑🔥`, 14000);
+        }
+
+        else if (newlyEliminated.length > 0) {
             playSound("elimSound");
 
             const names = newlyEliminated.map(p => getUserById(p.id)?.name || "Unknown");
@@ -1432,78 +1520,36 @@ async function submitRoundScores() {
             showGif("elim", text);
         }
 
-        // 2. THUKKA SCORE - Someone scored > 40 (only if no elimination)
-        else {
-            const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
+        else if (isFunny) {
+            playSound("funnySound");
 
-            const highScorers = Object.entries(lastRound)
-                .filter(([_, score]) => score > 40)
-                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+            const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+            const name = getUserById(parseInt(scorerId))?.name || "Legend";
 
-            if (highScorers.length > 0) {
-                playSound("highScoreSound");
-
-                const text = highScorers.length === 1
-                    ? `${highScorers[0]} ji wah ultra-legend honi 😂`
-                    : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
-
-                showGif("high", text);
-            }
-
-            // 3. FUNNY DHUMBLE - 40-0 special
-            else {
-                let fortyCount = 0;
-                let zeroCount = 0;
-
-                Object.values(lastRound).forEach(score => {
-                    if (score === 40) fortyCount++;
-                    if (score === 0) zeroCount++;
-                });
-
-                const totalPlayers = Object.keys(lastRound).length;
-
-                if (fortyCount === 1 && zeroCount === totalPlayers - 1) {
-                    playSound("funnySound");
-
-                    const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
-                    const name = getUserById(parseInt(scorerId))?.name || "Legend";
-
-                    showGif("funny", `${name} ji wah kya khela! 😂`);
-                }
-            }
+            showGif("funny", `${name} ji wah kya khela! 😂`);
         }
 
-        // 4. NEAR ELIMINATION (Udna Lagyo) - Check every active player
-        const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
-        const highScorerIds = Object.entries(lastRound)
-            .filter(([_, score]) => score > 40)
-            .map(([id]) => parseInt(id));
+        else if (highScorers.length > 0) {
+            playSound("highScoreSound");
 
-        const nearElimPlayers = updatedGame.players.filter(p => {
-            if (p.status !== 'active') return false;
-            const threshold = updatedGame.elimScore - 15;
-            // ❌ Skip if player already scored >40
-            if (highScorerIds.includes(p.id)) return false;
-            return p.total >= threshold;
-        });
+            const text = highScorers.length === 1
+                ? `${highScorers[0]} ji wah ultra-legend honi 😂`
+                : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
 
-        if (nearElimPlayers.length > 0) {
-            const justEnteredDanger = nearElimPlayers.some(p => {
-                const oldP = oldGame.players.find(o => o.id === p.id);
-                return oldP && oldP.total < (updatedGame.elimScore - 15) && p.total >= (updatedGame.elimScore - 15);
-            });
-
-            if (justEnteredDanger) {
-                playSound("nearElimSound");
-
-                const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
-                const text = names.length === 1
-                    ? `${names[0]} ji udaan tayari hudai 🚀`
-                    : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
-
-                showGif("nearElim", text, 8000);
-            }
+            showGif("high", text);
         }
+
+        else if (justEnteredDanger) {
+            playSound("nearElimSound");
+
+            const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
+            const text = names.length === 1
+                ? `${names[0]} ji udaan tayari hudai 🚀`
+                : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
+
+            showGif("nearElim", text, 10000);
+        }
+
 
         // Update current game state
         currentGame = updatedGame;
@@ -1715,10 +1761,12 @@ function initLiveSocket() {
     socket = io();
 
     socket.on("gameUpdate", (game) => {
-        // FIX: If game is cancelled or completed → clear live game
+
+        // ─────────────────────────────
+        // 🧹 HANDLE GAME END / NO GAME
+        // ─────────────────────────────
         if (!game || game.status !== "ongoing") {
 
-            // 🎉 If game just finished → show winner
             if (game && game.status === "completed" && currentGame) {
                 const winner = game.players.find(p => p.elimOrder === -1);
                 const name = getUserById(winner?.id)?.name || "Champion";
@@ -1734,14 +1782,55 @@ function initLiveSocket() {
 
         const oldGame = currentGame ? { ...currentGame } : null;
 
-        // New round detected
+        // ─────────────────────────────
+        // 🧠 ONLY PROCESS IF NEW ROUND
+        // ─────────────────────────────
         if (oldGame && game.rounds.length > oldGame.rounds.length) {
+
+            const lastRound = game.rounds[game.rounds.length - 1] || {};
+
+            // ───────── DETECTIONS ─────────
 
             // 1. ELIMINATION
             const newlyEliminated = game.players.filter(p => {
                 const oldP = oldGame.players.find(o => o.id === p.id);
                 return oldP && oldP.status === "active" && p.status === "eliminated";
             });
+
+            // 2. FUNNY (40-0)
+            let fortyCount = 0;
+            let zeroCount = 0;
+
+            Object.values(lastRound).forEach(score => {
+                if (score === 40) fortyCount++;
+                if (score === 0) zeroCount++;
+            });
+
+            const totalPlayers = Object.keys(lastRound).length;
+            const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
+
+            // 3. THUKKA (>40)
+            const highScorers = Object.entries(lastRound)
+                .filter(([_, score]) => score > 40)
+                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
+            // 4. NEAR ELIMINATION
+            const highScorerIds = Object.entries(lastRound)
+                .filter(([_, score]) => score > 40)
+                .map(([id]) => parseInt(id));
+
+            const nearElimPlayers = game.players.filter(p => {
+                if (p.status !== 'active') return false;
+                if (highScorerIds.includes(p.id)) return false;
+                return p.total >= (game.elimScore - 15);
+            });
+
+            const justEnteredDanger = nearElimPlayers.some(p => {
+                const oldP = oldGame.players.find(o => o.id === p.id);
+                return oldP && oldP.total < (game.elimScore - 15);
+            });
+
+            // ───────── PRIORITY SYSTEM ─────────
 
             if (newlyEliminated.length > 0) {
                 playSound("elimSound");
@@ -1754,61 +1843,26 @@ function initLiveSocket() {
                 showGif("elim", text);
             }
 
-            // 2. THUKKA SCORE (>40)
-            else {
-                const lastRound = game.rounds[game.rounds.length - 1] || {};
+            else if (isFunny) {
+                playSound("funnySound");
 
-                const highScorers = Object.entries(lastRound)
-                    .filter(([_, score]) => score > 40)
-                    .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+                const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
+                const name = getUserById(parseInt(scorerId))?.name || "Legend";
 
-                if (highScorers.length > 0) {
-                    playSound("highScoreSound");
-
-                    const text = highScorers.length === 1
-                        ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
-                        : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
-
-                    showGif("high", text);
-                }
-
-                // 3. DHUMBLE (40-0)
-                else {
-                    let forty = 0, zero = 0;
-                    Object.values(lastRound).forEach(s => {
-                        if (s === 40) forty++;
-                        if (s === 0) zero++;
-                    });
-
-                    if (forty === 1 && zero === Object.keys(lastRound).length - 1) {
-                        playSound("funnySound");
-
-                        const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
-                        const name = getUserById(parseInt(scorerId))?.name || "Legend";
-
-                        showGif("funny", `${name} ji wah kya khela! 😂`);
-                    }
-                }
+                showGif("funny", `${name} ji wah kya khela! 😂`);
             }
 
-            // 4. NEAR ELIMINATION (Udna Lagyo)
-            const lastRound = game.rounds[game.rounds.length - 1] || {};
-            const highScorerIds = Object.entries(lastRound)
-                .filter(([_, score]) => score > 40)
-                .map(([id]) => parseInt(id));
+            else if (highScorers.length > 0) {
+                playSound("highScoreSound");
 
-            const nearElimPlayers = game.players.filter(p => {
-                if (p.status !== 'active') return false;
-                if (highScorerIds.includes(p.id)) return false; // ❌ Skip if scored >40
-                return p.total >= (game.elimScore - 15);
-            });
+                const text = highScorers.length === 1
+                    ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
+                    : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
 
-            const justEntered = nearElimPlayers.some(p => {
-                const oldP = oldGame.players.find(o => o.id === p.id);
-                return oldP && oldP.total < (game.elimScore - 15);
-            });
+                showGif("high", text);
+            }
 
-            if (justEntered) {
+            else if (justEnteredDanger) {
                 playSound("nearElimSound");
 
                 const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
@@ -1816,14 +1870,18 @@ function initLiveSocket() {
                     ? `${names[0]} ji udaan tayari hudai 🚀`
                     : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
 
-                showGif("nearElim", text, 9000);
+                showGif("nearElim", text, 10000);
             }
         }
 
+        // ─────────────────────────────
+        // 🔄 UPDATE UI
+        // ─────────────────────────────
         currentGame = game;
         renderLiveGame(game);
     });
 }
+
 
 // ────────────────────────────────────────────────
 // 🔊 UNLOCK AUDIO (REQUIRED FOR INDEX PAGE)
