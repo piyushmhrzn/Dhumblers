@@ -102,33 +102,6 @@
         </div>
     </div>
 
-    <!-- Recent Games -->
-    <div class="card">
-        <div class="card-body">
-            <h5><i class="fas fa-history me-2 text-info"></i>Recent Games</h5>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>S.N.</th>
-                            <th>Date</th>
-                            <th>Winner</th>
-                            <th>Player(Points)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="recentGamesBody"></tbody>
-                </table>
-            </div>
-
-            <!-- Pagination controls -->
-            <div class="d-flex justify-content-between align-items-center mt-3">
-                <button id="prevPage" class="btn btn-outline-secondary" onclick="changePage(-1)" disabled>Previous</button>
-                <span id="pageInfo">Page 1 of 1</span>
-                <button id="nextPage" class="btn btn-outline-secondary" onclick="changePage(1)">Next</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Player Career Stats -->
     <div class="card mt-3">
         <div class="card-body">
@@ -162,6 +135,34 @@
 
         </div>
     </div>
+
+    <!-- Recent Games -->
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5><i class="fas fa-history me-2 text-info"></i>Recent Games</h5>
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>S.N.</th>
+                            <th>Date</th>
+                            <th>Winner</th>
+                            <th>Player(Points)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recentGamesBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination controls -->
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button id="prevPage" class="btn btn-outline-secondary" onclick="changePage(-1)" disabled>Previous</button>
+                <span id="pageInfo">Page 1 of 1</span>
+                <button id="nextPage" class="btn btn-outline-secondary" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- Loading overlay (shown when starting game) -->

@@ -575,8 +575,9 @@ function showPlayerStats(userId) {
 
     const winPct = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
     const avgPoints = stats.games ? (stats.totalPoints / stats.games).toFixed(2) : 0;
-    const avgFinish = stats.games ? (stats.finishingSum / stats.games).toFixed(2) : "-";
     const playerType = determinePlayerType(stats, avgPoints);
+    const rivalry = getRivalry(userId);
+    const nemesis = getNemesis(userId);
 
     const html = `
         <div class="alert alert-secondary text-center mb-4">
@@ -620,8 +621,8 @@ function showPlayerStats(userId) {
             </div>
 
             <div class="col-6 col-md-3 mb-2">
-                <h6>📊 Avg Finish</h6>
-                <p class="fw-bold">${avgFinish}</p>
+                <h6>🚨 Highest Score</h6>
+                <p class="font-weight-bold">${stats.highestRoundScore}</p>
             </div>
 
             <div class="col-6 col-md-3 mb-2">
@@ -634,22 +635,35 @@ function showPlayerStats(userId) {
         <hr>
 
         <div class="row text-center mb-3">
+            <div class="col-6 col-md-6 mb-2">
+                <h6>🤜 Rival</h6>
+                <p class="fw-bold">${rivalry.rival || "—"}</p>
+                <small class="text-white-50">
+                    ${rivalry.rivalStats || "Your closest competitor"}
+                </small>
+            </div>
 
-            <div class="col-md-4 mb-2">
+            <div class="col-6 col-md-6 mb-2">
+                <h6>💀 Nemesis</h6>
+                <p class="fw-bold">${nemesis.nemesis || "—"}</p>
+                <small class="text-white-50">
+                    ${nemesis.nemesisStats || "Beats you most in finals"}
+                </small>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="row text-center mb-3">
+            <div class="col-6 col-md-6 mb-2">
                 <h6>🔥 Longest Win Streak</h6>
                 <p class="font-weight-bold">${stats.longestWinStreak}</p>
             </div>
 
-            <div class="col-md-4 mb-2">
+            <div class="col-6 col-md-6 mb-2">
                 <h6>⚡ Current Win Streak</h6>
                 <p class="font-weight-bold">${stats.currentWinStreak}</p>
             </div>
-
-            <div class="col-md-4 mb-2">
-                <h6>🎯 Highest Round Score</h6>
-                <p class="font-weight-bold">${stats.highestRoundScore}</p>
-            </div>
-
         </div>
 
     `;
@@ -661,6 +675,265 @@ function showPlayerStats(userId) {
 
     const modal = new bootstrap.Modal(document.getElementById("playerStatsModal"));
     modal.show();
+}
+
+/* Rivalry stats calculator - finds the player you have the best and worst record against (min 5 games together) */
+function getRivalry(userId) {
+
+    const record = {};
+
+    let myStats = {
+        wins: 0,
+        games: 0,
+        avg: 0,
+        totalPoints: 0
+    };
+
+    // ---------------------------
+    // STEP 1: COLLECT DATA
+    // ---------------------------
+    games.forEach(g => {
+
+        const players = getAllGamePlayers(g);
+        const me = players.find(p => p.id === userId);
+
+        if (!me) return;
+
+        const totalPlayers = players.length;
+
+        const myRank = me.elimOrder === -1
+            ? 1
+            : totalPlayers - me.elimOrder + 1;
+
+        myStats.games++;
+        myStats.totalPoints += me.avgPoints || 0;
+        if (myRank === 1) myStats.wins++;
+
+        players.forEach(op => {
+
+            if (op.id === userId) return;
+
+            const opRank = op.elimOrder === -1
+                ? 1
+                : totalPlayers - op.elimOrder + 1;
+
+            if (!record[op.id]) {
+                record[op.id] = {
+                    finalsPlayed: 0,
+                    wins: 0,
+                    losses: 0,
+                    nearEncounters: 0,
+                    totalGamesTogether: 0,
+                    rankDistanceSum: 0,
+                    opWins: 0,
+                    opGames: 0,
+                    opAvgPoints: 0
+                };
+            }
+
+            const r = record[op.id];
+
+            r.totalGamesTogether++;
+
+            // ---------------------------
+            // FINALS TRACKING (TOP 2 ONLY)
+            // ---------------------------
+            if (g.status === "completed") {
+
+                const finalists = players
+                    .map(p => ({
+                        ...p,
+                        rank: p.elimOrder === -1
+                            ? 1
+                            : totalPlayers - p.elimOrder + 1
+                    }))
+                    .sort((a, b) => a.rank - b.rank)
+                    .slice(0, 2);
+
+                if (finalists.length === 2 &&
+                    finalists.some(p => p.id === userId) &&
+                    finalists.some(p => p.id === op.id)
+                ) {
+                    r.finalsPlayed++;
+
+                    const meFinal = finalists.find(p => p.id === userId);
+                    const opFinal = finalists.find(p => p.id === op.id);
+
+                    if (meFinal.rank < opFinal.rank) {
+                        r.wins++;
+                    } else {
+                        r.losses++;
+                    }
+                }
+            }
+
+            // ---------------------------
+            // RANK CLOSENESS
+            // ---------------------------
+            const diff = Math.abs(myRank - opRank);
+            r.rankDistanceSum += diff;
+
+            if (diff <= 1) {
+                r.nearEncounters++;
+            }
+
+            // ---------------------------
+            // OPPONENT STATS (SKILL MATCHING)
+            // ---------------------------
+            r.opGames++;
+            r.opAvgPoints += op.avgPoints || 0;
+
+        });
+
+    });
+
+    myStats.avg = myStats.games
+        ? myStats.totalPoints / myStats.games
+        : 0;
+
+    // ---------------------------
+    // STEP 2: FIND RIVAL SCORE
+    // ---------------------------
+    let bestId = null;
+    let bestScore = -Infinity;
+
+    Object.entries(record).forEach(([id, r]) => {
+
+        const totalMatches = r.wins + r.losses;
+
+        if (totalMatches < 2) return;
+
+        // ---------------------------
+        // FACTOR 1: FINAL BALANCE
+        // ---------------------------
+        const finalBalance = totalMatches
+            ? 1 - Math.abs(r.wins - r.losses) / totalMatches
+            : 0;
+
+        // ---------------------------
+        // FACTOR 2: FREQUENCY IN FINALS
+        // ---------------------------
+        const finalFrequency = Math.min(r.finalsPlayed / 5, 1);
+
+        // ---------------------------
+        // FACTOR 3: RANK CLOSENESS
+        // ---------------------------
+        const avgRankDiff = r.rankDistanceSum / r.totalGamesTogether;
+        const closenessScore = Math.max(0, 1 - avgRankDiff / 5);
+
+        // ---------------------------
+        // FACTOR 4: NEAR ENCOUNTERS
+        // ---------------------------
+        const nearScore = Math.min(r.nearEncounters / r.totalGamesTogether, 1);
+
+        // ---------------------------
+        // FACTOR 5: SKILL SIMILARITY
+        // ---------------------------
+        const opAvg = r.opGames ? r.opAvgPoints / r.opGames : 0;
+        const skillDiff = Math.abs(myStats.avg - opAvg);
+        const skillScore = Math.max(0, 1 - skillDiff / 20);
+
+        // ---------------------------
+        // FINAL SCORE (WEIGHTED MODEL)
+        // ---------------------------
+        const score =
+            finalBalance * 0.30 +
+            finalFrequency * 0.20 +
+            closenessScore * 0.20 +
+            nearScore * 0.15 +
+            skillScore * 0.15;
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestId = id;
+        }
+
+    });
+
+    const rivalData = bestId ? record[bestId] : null;
+
+    return {
+        rival: bestId ? getUserById(parseInt(bestId))?.name : null,
+
+        rivalStats: rivalData
+            ? `${rivalData.finalsPlayed} finals • ${rivalData.wins}W-${rivalData.losses}L • ${rivalData.nearEncounters} close fights`
+            : null,
+
+        rivalScore: bestScore ? bestScore.toFixed(2) : null
+    };
+}
+
+/* Get nemesis stats */
+function getNemesis(userId) {
+
+    const record = {};
+
+    games.forEach(g => {
+
+        const players = getAllGamePlayers(g);
+
+        // Only consider completed games
+        if (g.status !== "completed") return;
+
+        // Get top 2 players (finalists)
+        const finalists = players
+            .map(p => ({
+                ...p,
+                rank: p.elimOrder === -1
+                    ? 1
+                    : players.length - p.elimOrder + 1
+            }))
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, 2);
+
+        if (finalists.length < 2) return;
+
+        const me = finalists.find(p => p.id === userId);
+        if (!me) return;
+
+        const opponent = finalists.find(p => p.id !== userId);
+        if (!opponent) return;
+
+        if (!record[opponent.id]) {
+            record[opponent.id] = {
+                finalsPlayed: 0,
+                wins: 0,
+                losses: 0
+            };
+        }
+
+        record[opponent.id].finalsPlayed++;
+
+        if (me.rank < opponent.rank) {
+            record[opponent.id].wins++;
+        } else {
+            record[opponent.id].losses++;
+        }
+
+    });
+
+    let nemesis = null;
+    let maxLosses = -1;
+
+    Object.entries(record).forEach(([id, r]) => {
+
+        // 💀 Nemesis → most losses in finals
+        if (r.losses > maxLosses) {
+            maxLosses = r.losses;
+            nemesis = {
+                id,
+                ...r
+            };
+        }
+
+    });
+
+    return {
+        nemesis: nemesis ? getUserById(parseInt(nemesis.id))?.name : null,
+        nemesisStats: nemesis
+            ? `${nemesis.losses} losses in ${nemesis.finalsPlayed} finals`
+            : null
+    };
 }
 
 // ────────────────────────────────────────────────
@@ -1328,7 +1601,9 @@ function renderCareerStats(tbody) {
                 </div>
 
                 <div class="progress mt-1" style="height:6px;">
-                    <div class="progress-bar" style="width:${u.progressData.progress}%"></div>
+                    <div class="progress-bar" style="width:${u.progressData.progress}%">
+
+                    </div>
                 </div>
 
                 <div class="career-progress-text">
@@ -1338,7 +1613,7 @@ function renderCareerStats(tbody) {
             }
                     <br>
                     <small class="text-white">
-                        ${u.progressData.gapText}
+                        ${u.progressData.gapText || ""}
                     </small>
                 </div>
 

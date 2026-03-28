@@ -319,6 +319,10 @@ CAREER TABLE CUSTOMIZATION
     transition: all .25s ease;
 }
 
+.career-table .progress-bar small {
+    font-size: 0.60rem;
+}
+
 .career-table tbody tr td:first-child {
     border-top-left-radius: 12px;
     border-bottom-left-radius: 12px;
