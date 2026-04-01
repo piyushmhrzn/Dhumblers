@@ -353,7 +353,7 @@ CAREER TABLE CUSTOMIZATION
 }
 
 /* Total points (important stat) */
-.career-table td:nth-child(4) {
+.career-table td:nth-child(2) {
     font-weight: 600;
     color: #facc15 !important;
 }
@@ -713,5 +713,22 @@ RESPONSIVE
 
     .table {
         font-size: .9rem;
+    }
+
+    .container {
+        padding-right: 0 !important;
+        padding-left: 0 !important;
+    }
+
+    .card-body {
+        padding: 10px 12px !important;
+    }
+
+    .navbar-brand {
+        padding-left: 14px !important;
+    }
+
+    .navbar button {
+        margin-right: 12px !important;
     }
 }
