@@ -1131,28 +1131,6 @@ function renderLeaderboard(tbody) {
     // Calculate monthly stats
     const stats = {};
 
-    /*
-    // Only consider players who participated in games this month
-        games.forEach(g => {
-            const d = new Date(g.date);
- 
-            if (d.getMonth() === month && d.getFullYear() === year) {
- 
-                getAllGamePlayers(g).forEach(p => {
- 
-                    if (!stats[p.id]) {
-                        stats[p.id] = { points: 0, games: 0, wins: 0 };
-                    }
- 
-                    stats[p.id].points += p.points || 0;
-                    stats[p.id].games += 1;
- 
-                    if (p.elimOrder === -1) stats[p.id].wins += 1;
-                });
-            }
-        });
-    */
-
     // Step 1: create entry for every user
     users.forEach(u => {
         stats[u.id] = { points: 0, games: 0, wins: 0 };
@@ -1176,6 +1154,7 @@ function renderLeaderboard(tbody) {
     });
 
     const leaderboard = Object.entries(stats)
+        .filter(([_, s]) => s.games > 0)
         .map(([id, s]) => {
             const userId = parseInt(id);
             const name = getUserById(userId)?.name || 'Unknown';
@@ -1214,6 +1193,18 @@ function renderLeaderboard(tbody) {
             return a.games - b.games;
 
         });
+
+    // If no games this month, show message
+    if (leaderboard.length === 0) {
+        tbody.innerHTML = `
+        <tr>
+            <td colspan="4" class="text-center text-white">
+                No games played this month
+            </td>
+        </tr>
+    `;
+        return;
+    }
 
     // Render leaderboard
     leaderboard.forEach(p => {
