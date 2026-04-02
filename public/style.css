@@ -731,4 +731,9 @@ RESPONSIVE
     .navbar button {
         margin-right: 12px !important;
     }
+
+    .career-table td,
+    .career-table th {
+        padding: 6px 9px !important;
+    }
 }

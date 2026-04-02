@@ -95,6 +95,30 @@ function getAllGamePlayers(game) {
     return all;
 }
 
+/* Player lifetime stats calculator - total games, wins, average points */
+function getLifetimeStats(userId) {
+    let gamesPlayed = 0;
+    let wins = 0;
+    let totalPoints = 0;
+
+    games.forEach(g => {
+        const player = getAllGamePlayers(g).find(p => p.id === userId);
+        if (player) {
+            gamesPlayed++;
+            totalPoints += player.points || 0;
+            if (player.elimOrder === -1) wins++;
+        }
+    });
+
+    const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed) : 0;
+
+    return {
+        games: gamesPlayed,
+        wins: wins,
+        avgPoints
+    };
+}
+
 /**
  * Count how many games the user has **won** (elimOrder === -1 in completed games)
  * @param {number} userId
@@ -311,51 +335,65 @@ function determinePlayerType(stats, avgPoints) {
 
 /* Tier info modal display helper - shows fun descriptions for each tier when badge is clicked */
 function showTierInfo(tierText) {
-
     const title = document.getElementById("tierDetailTitle");
     const body = document.getElementById("tierDetailBody");
-
     if (!title || !body) return;
 
+    let tierName = "";
     let content = "";
+    let rangeText = "";
 
     if (tierText.includes("Diamond")) {
-        title.innerText = "💎 Diamond Tier";
+        tierName = "💎 Diamond Tier";
+        rangeText = "Win Rate: ≥ 30% &nbsp; | &nbsp; Avg Points: ≥ 3.40";
         content = "Top of the game. Elite win rate + insane consistency.";
     }
     else if (tierText.includes("Platinum")) {
-        title.innerText = "🔷 Platinum Tier";
-        content = "Highly skilled player with strong performance.";
+        tierName = "🔷 Platinum Tier";
+        rangeText = "Win Rate: 27% - 29.99% &nbsp; | &nbsp; Avg Points: 3.30 - 3.39";
+        content = "Highly skilled player with strong performance..";
     }
     else if (tierText.includes("Ruby")) {
-        title.innerText = "♦️ Ruby Tier";
+        tierName = "♦️ Ruby Tier";
+        rangeText = "Win Rate: 24% - 26.99% &nbsp; | &nbsp; Avg Points: 3.20 - 3.29";
         content = "Very competitive. Strong scoring and wins.";
     }
     else if (tierText.includes("Gold")) {
-        title.innerText = "🧈 Gold Tier";
+        tierName = "🧈 Gold Tier";
+        rangeText = "Win Rate: 20% - 23.99% &nbsp; | &nbsp; Avg Points: 3.10 - 3.19";
         content = "Reliable player with solid gameplay.";
     }
     else if (tierText.includes("Silver")) {
-        title.innerText = "⬜ Silver Tier";
+        tierName = "⬜ Silver Tier";
+        rangeText = "Win Rate: 15% - 19.99% &nbsp; | &nbsp; Avg Points: 3.00 - 3.09";
         content = "Decent player, still improving.";
     }
     else if (tierText.includes("Bronze")) {
-        title.innerText = "🟤 Bronze Tier";
+        tierName = "🟤 Bronze Tier";
+        rangeText = "Win Rate: 10% - 14.99% &nbsp; | &nbsp; Avg Points: 2.90 - 2.99";
         content = "Needs improvement. Focus on consistency.";
     }
     else if (tierText.includes("Wood")) {
-        title.innerText = "🪵 Wood Tier";
-        content = "Welcome to Dhumble \"Dhumbler\" 😂.";
+        tierName = "🪵 Wood Tier";
+        rangeText = "Win Rate: < 10% &nbsp; | &nbsp; Avg Points: < 2.90";
+        content = "Welcome to Dhumble 😂";
     }
     else {
-        title.innerText = tierText;
-        content = "Newbie.";
+        tierName = tierText || "New Player";
+        rangeText = "New to the game";
+        content = "Welcome! Play more games to unlock your tier.";
     }
 
     body.innerHTML = `
-        <div class="mb-3" style="font-size: 2rem;">${tierText}</div>
-        <p>${content}</p>
+        <div class="mb-2" style="font-size: 1.8rem;">${tierText}</div>
+        <div class="mb-2">
+            <strong style="color: #ffd700;">Requirements:</strong><br>
+            <span style="font-size: .90rem;">${rangeText}</span>
+        </div>
+        <p class="mb-3">${content}</p>
     `;
+
+    title.innerText = tierName;
 
     const modal = new bootstrap.Modal(document.getElementById("tierDetailModal"));
     modal.show();
@@ -1097,18 +1135,18 @@ function renderLeaderboard(tbody) {
     // Only consider players who participated in games this month
         games.forEach(g => {
             const d = new Date(g.date);
-
+ 
             if (d.getMonth() === month && d.getFullYear() === year) {
-
+ 
                 getAllGamePlayers(g).forEach(p => {
-
+ 
                     if (!stats[p.id]) {
                         stats[p.id] = { points: 0, games: 0, wins: 0 };
                     }
-
+ 
                     stats[p.id].points += p.points || 0;
                     stats[p.id].games += 1;
-
+ 
                     if (p.elimOrder === -1) stats[p.id].wins += 1;
                 });
             }
@@ -1142,13 +1180,15 @@ function renderLeaderboard(tbody) {
             const userId = parseInt(id);
             const name = getUserById(userId)?.name || 'Unknown';
 
-            const avgPoints = s.games ? (s.points / s.games) : 0;
+            const lifetime = getLifetimeStats(userId);
 
             const tempStats = {
-                games: s.games,
-                wins: s.wins,
+                games: lifetime.games,
+                wins: lifetime.wins,
                 currentWinStreak: 0
             };
+
+            const avgPoints = lifetime.avgPoints;
 
             const fullType = determinePlayerType(tempStats, avgPoints);
             const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
@@ -1595,30 +1635,32 @@ function renderCareerStats(tbody) {
             <td>
                 <div class="career-player-cell">
 
-                <div class="career-top-row">
-                    <span class="player-name">${u.name}</span>
-                    <span class="tier-badge">${u.prestigeTier}</span>
-                </div>
-
-                <div class="progress mt-1" style="height:6px;">
-                    <div class="progress-bar" style="width:${u.progressData.progress}%">
-
+                    <div class="career-top-row">
+                        <span class="player-name">${u.name}</span>
+                        <span class="tier-badge">${u.prestigeTier}</span>
                     </div>
-                </div>
 
-                <div class="career-progress-text">
-                    ${u.progressData.nextTier
+                    <div class="progress mt-1" style="height:6px;">
+                        <div class="progress-bar" style="width:${u.progressData.progress}%">
+
+                        </div>
+                    </div>
+
+                    <div class="career-progress-text">
+                        ${u.progressData.nextTier
                 ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
                 : "Max tier reached"
             }
-                    <br>
-                    <small class="text-white">
-                        ${u.progressData.gapText || ""}
-                    </small>
-                </div>
+                        <br>
+                        <small class="text-white">
+                            ${u.progressData.gapText || ""}
+                        </small>
+                    </div>
 
-            </div>
+                </div>
             </td>
+
+            <td>${u.totalPoints}</td>
 
             <td>
                 <div class="stat-main">${u.gamesPlayed}</div>
@@ -1627,13 +1669,7 @@ function renderCareerStats(tbody) {
 
             <td>
                 <div class="stat-main">${u.winPct}%</div>
-                <div class="stat-sub">⚡ ${u.avgPointsDisplay}</div>
-            </td>
-
-            <td>${u.totalPoints}</td>
-
-            <td>
-               
+                <div class="stat-sub">⚡${u.avgPointsDisplay}</div>
             </td>
         `;
 
