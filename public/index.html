@@ -102,6 +102,38 @@
         </div>
     </div>
 
+    <!-- 1 vs 1 Bets -->
+    <div class="card mb-3">
+      <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center">
+
+              <h5>
+                  💰 1 vs 1 Bets
+              </h5>
+
+              <button
+                  class="btn btn-sm btn-success"
+                  data-bs-toggle="modal"
+                  data-bs-target="#betModal">
+
+                  New Bet
+
+              </button>
+
+          </div>
+
+          <div id="betContainer">
+
+              <p class="text-secondary">
+                  No active bets
+              </p>
+
+          </div>
+
+      </div>
+  </div>
+
     <!-- Player Career Stats -->
     <div class="card mt-3">
         <div class="card-body">
@@ -206,6 +238,107 @@
         </div>
     </div>
 </div>
+
+<!-- New Bet Modal -->
+ <div class="modal fade" id="betModal" tabindex="-1">
+
+    <div class="modal-dialog">
+
+    <div class="modal-content">
+
+    <div class="modal-header">
+
+    <h5 class="modal-title">
+
+    Create Bet
+
+    </h5>
+
+    <button
+    class="btn-close"
+    data-bs-dismiss="modal">
+    </button>
+
+    </div>
+
+    <div class="modal-body">
+
+    <div class="mb-3">
+
+    <label class="form-label">
+
+    Player A
+
+    </label>
+
+    <select
+    id="betPlayerA"
+    class="form-select">
+
+    </select>
+
+    </div>
+
+    <div class="mb-3">
+
+    <label class="form-label">
+
+    Player B
+
+    </label>
+
+    <select
+    id="betPlayerB"
+    class="form-select">
+
+    </select>
+
+    </div>
+
+    <div class="mb-3">
+
+    <label class="form-label">
+
+    Stake Per Point ($)
+
+    </label>
+
+    <input
+    type="number"
+    class="form-control"
+    id="betStake"
+    value="10">
+
+    </div>
+
+    </div>
+
+    <div class="modal-footer">
+
+    <button
+    class="btn btn-secondary"
+    data-bs-dismiss="modal">
+
+    Close
+
+    </button>
+
+    <button
+    class="btn btn-primary"
+    onclick="createBet()">
+
+    Save Bet
+
+    </button>
+
+    </div>
+
+    </div>
+
+    </div>
+
+</div>
+
 
 <!-- Weekly History Modal -->
 <div class="modal fade" id="weeklyHistoryModal" tabindex="-1">
@@ -394,6 +527,9 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await fetchUsers();
     await fetchGames();
+
+    populateBetPlayers();
+    renderBets();
     
     renderPlayerCheckboxes(document.getElementById('playerSelectModal'));
     renderRecentGames(document.getElementById('recentGamesBody'));

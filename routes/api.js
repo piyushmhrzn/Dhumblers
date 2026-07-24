@@ -8,6 +8,7 @@ const router = express.Router();
 
 const User = require('../models/User');
 const Game = require('../models/Game');
+const Bet = require('../models/Bet');
 
 // ────────────────────────────────────────────────
 // 1. MIDDLEWARE - Authentication / Authorization
@@ -284,6 +285,57 @@ router.put('/games/ongoing/round', async (req, res) => {
             game.markModified('players');
             game.markModified('eliminated');
 
+            //----------------------------------------------------
+            // Settle Bets
+            //----------------------------------------------------
+
+            const bets = await Bet.find({
+                gameId: game.id,
+                status: 'pending'
+            });
+
+            for (const bet of bets) {
+
+                const playerA = game.players.find(p => p.id === bet.playerA);
+                const playerB = game.players.find(p => p.id === bet.playerB);
+
+                if (!playerA || !playerB)
+                    continue;
+
+                bet.playerAPoints = playerA.points;
+                bet.playerBPoints = playerB.points;
+
+                const diff = Math.abs(
+                    playerA.points - playerB.points
+                );
+
+                bet.difference = diff;
+
+                if (playerA.points > playerB.points) {
+
+                    bet.winner = playerA.id;
+                    bet.payout = diff * bet.stake;
+                    bet.status = 'settled';
+
+                }
+                else if (playerB.points > playerA.points) {
+
+                    bet.winner = playerB.id;
+                    bet.payout = diff * bet.stake;
+                    bet.status = 'settled';
+
+                }
+                else {
+
+                    bet.status = 'draw';
+                    bet.payout = 0;
+
+                }
+
+                await bet.save();
+
+            }
+
             game.status = 'completed';
         }
 
@@ -317,6 +369,110 @@ router.delete('/games/ongoing', async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
+});
+
+
+// ────────────────────────────────────────────────
+// 4. BETS
+// ────────────────────────────────────────────────
+/**
+ * GET /api/bets/:gameId
+ */
+router.get('/bets/:gameId', async (req, res) => {
+
+    try {
+
+        const bets = await Bet.find({
+            gameId: req.params.gameId
+        }).sort('id');
+
+        res.json(bets);
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
+});
+
+/**
+ * POST /api/bets
+ */
+router.post('/bets', async (req, res) => {
+
+    try {
+
+        const {
+            gameId,
+            playerA,
+            playerB,
+            stake
+        } = req.body;
+
+        if (playerA === playerB) {
+            return res.status(400).json({
+                error: 'Players must be different'
+            });
+        }
+
+        if (stake <= 0) {
+            return res.status(400).json({
+                error: 'Invalid stake'
+            });
+        }
+
+        const bet = new Bet({
+            gameId,
+            playerA,
+            playerB,
+            stake
+        });
+
+        await bet.save();
+
+        res.json(bet);
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
+});
+
+/**
+ * GET /api/bets/game/current
+ */
+router.get('/bets/game/current', async (req, res) => {
+
+    try {
+
+        const game = await Game.findOne({
+            status: 'ongoing'
+        });
+
+        if (!game)
+            return res.json([]);
+
+        const bets = await Bet.find({
+            gameId: game.id
+        });
+
+        res.json(bets);
+
+    } catch (err) {
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
 });
 
 module.exports = router;

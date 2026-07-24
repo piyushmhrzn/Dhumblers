@@ -63,6 +63,18 @@ async function fetchOngoingGame() {
     return currentGame;
 }
 
+/**
+ * Fetches all bets for the current game (if any)
+ * @returns 
+ */
+async function fetchBets() {
+
+    const res = await fetch('/api/bets/game/current');
+
+    return await res.json();
+
+}
+
 
 // ────────────────────────────────────────────────
 // 3. DATA ACCESS & UTILITY HELPERS
@@ -2055,6 +2067,171 @@ function renderLiveGame(game) {
     container.innerHTML = html;
 }
 
+/**
+ * Bets
+ */
+async function populateBetPlayers() {
+
+    const game = await fetchOngoingGame();
+
+    if (!game)
+        return;
+
+    const a = document.getElementById('betPlayerA');
+    const b = document.getElementById('betPlayerB');
+
+    a.innerHTML = '';
+    b.innerHTML = '';
+
+    game.players.forEach(player => {
+
+        const user = users.find(u => u.id === player.id);
+
+        const option1 = document.createElement('option');
+        option1.value = player.id;
+        option1.textContent = user.name;
+
+        const option2 = option1.cloneNode(true);
+
+        a.appendChild(option1);
+        b.appendChild(option2);
+
+    });
+
+}
+
+async function renderBets() {
+
+    const bets = await fetchBets();
+
+    const container = document.getElementById('betContainer');
+
+    if (!container)
+        return;
+
+    if (!bets.length) {
+
+        container.innerHTML =
+            '<p class="text-secondary">No active bets</p>';
+
+        return;
+
+    }
+
+    container.innerHTML = '';
+
+    bets.forEach(bet => {
+
+        const playerA = users.find(u => u.id === bet.playerA);
+        const playerB = users.find(u => u.id === bet.playerB);
+
+        container.innerHTML += `
+
+        <div class="border rounded p-2 mb-2">
+
+            <strong>
+
+            ${playerA.name}
+
+            vs
+
+            ${playerB.name}
+
+            </strong>
+
+            <br>
+
+            Stake:
+
+            $${bet.stake}
+
+            / point
+
+            <br>
+
+            Status:
+
+            <span class="badge bg-${bet.status === 'pending'
+                ? 'warning'
+                : bet.status === 'settled'
+                    ? 'success'
+                    : 'secondary'
+            }">
+
+            ${bet.status}
+
+            </span>
+
+        </div>
+
+        `;
+
+    });
+
+}
+
+async function createBet() {
+
+    const game = await fetchOngoingGame();
+
+    if (!game) {
+
+        alert('No active game');
+
+        return;
+
+    }
+
+    const body = {
+
+        gameId: game.id,
+
+        playerA: Number(
+            document.getElementById('betPlayerA').value
+        ),
+
+        playerB: Number(
+            document.getElementById('betPlayerB').value
+        ),
+
+        stake: Number(
+            document.getElementById('betStake').value
+        )
+
+    };
+
+    const res = await fetch('/api/bets', {
+
+        method: 'POST',
+
+        headers: {
+
+            'Content-Type': 'application/json'
+
+        },
+
+        body: JSON.stringify(body)
+
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+
+        alert(data.error);
+
+        return;
+
+    }
+
+    bootstrap.Modal
+        .getInstance(document.getElementById('betModal'))
+        .hide();
+
+    renderBets();
+
+}
+
 
 /**
  * Initializes Socket.IO connection and sets up real-time game updates
@@ -2181,6 +2358,7 @@ function initLiveSocket() {
         // ─────────────────────────────
         currentGame = game;
         renderLiveGame(game);
+        renderBets();
     });
 }
 
