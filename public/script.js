@@ -185,6 +185,7 @@ function showGif(type, playerName = "", customDuration = null) {
     const highGif = document.getElementById("highGif");
     const nearElimGif = document.getElementById("nearElimGif");
     const winnerGif = document.getElementById("winnerGif");
+    const santosh = document.getElementById("santoshGif");
 
     if (!overlay) return;
 
@@ -217,6 +218,10 @@ function showGif(type, playerName = "", customDuration = null) {
         case "nearElim":
             activeGif = nearElimGif;
             duration = duration || 10000;
+            break;
+        case "santosh":
+            activeGif = santoshGif;
+            duration = duration || 8000;
             break;
         case "winner":
             activeGif = winnerGif;
@@ -1793,6 +1798,11 @@ async function submitRoundScores() {
         const totalPlayers = Object.keys(lastRound).length;
         const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
+        // SANTOSH (>44)
+        const santosh = Object.entries(lastRound)
+            .filter(([_, score]) => score > 44)
+            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
         // 4. THUKKA (>40)
         const highScorers = Object.entries(lastRound)
             .filter(([_, score]) => score > 40)
@@ -1845,6 +1855,16 @@ async function submitRoundScores() {
             const name = getUserById(parseInt(scorerId))?.name || "Legend";
 
             showGif("funny", `${name} ji wah kya khela! 😂`);
+        }
+
+        else if (santosh.length > 0) {
+            playSound("santoshSound");
+
+            const text = santosh.length === 1
+                ? `${santosh[0]} ji ye hey santosh khela 😂`
+                : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
+
+            showGif("santosh", text);
         }
 
         else if (highScorers.length > 0) {
@@ -2529,22 +2549,29 @@ function initLiveSocket() {
             const totalPlayers = Object.keys(lastRound).length;
             const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
+            // SANTOSH (>44)
+            const santosh = Object.entries(lastRound)
+                .filter(([_, score]) => score > 44)
+                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
             // 3. THUKKA (>40)
             const highScorers = Object.entries(lastRound)
                 .filter(([_, score]) => score > 40)
                 .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
-            // 4. NEAR ELIMINATION
+            // HIGH SCORER
             const highScorerIds = Object.entries(lastRound)
                 .filter(([_, score]) => score > 40)
                 .map(([id]) => parseInt(id));
 
+            // 4. NEAR ELIMINATION
             const nearElimPlayers = game.players.filter(p => {
                 if (p.status !== 'active') return false;
                 if (highScorerIds.includes(p.id)) return false;
                 return p.total >= (game.elimScore - 15);
             });
 
+            // 5. Danger
             const justEnteredDanger = nearElimPlayers.some(p => {
                 const oldP = oldGame.players.find(o => o.id === p.id);
                 return oldP && oldP.total < (game.elimScore - 15);
@@ -2570,6 +2597,17 @@ function initLiveSocket() {
                 const name = getUserById(parseInt(scorerId))?.name || "Legend";
 
                 showGif("funny", `${name} ji wah kya khela! 😂`);
+            }
+
+            else if (santosh.length > 0) {
+                playSound("santoshSound");
+
+                const text = santosh.length === 1
+                    ? `${santosh[0]} ji ye hey santosh khela 😂`
+                    : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
+
+
+                showGif("santosh", text);
             }
 
             else if (highScorers.length > 0) {
@@ -2614,7 +2652,7 @@ let audioUnlocked = false;
 document.addEventListener("click", () => {
     if (audioUnlocked) return;
 
-    ["elimSound", "funnySound", "highScoreSound", "nearElimSound"].forEach(id => {
+    ["elimSound", "funnySound", "highScoreSound", "nearElimSound", "santoshSound"].forEach(id => {
         const audio = document.getElementById(id);
         if (audio) {
             audio.muted = true;
