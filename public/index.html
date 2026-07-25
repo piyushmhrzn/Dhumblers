@@ -112,13 +112,8 @@
                   💰 1 vs 1 Bets
               </h5>
 
-              <button
-                  class="btn btn-sm btn-success"
-                  data-bs-toggle="modal"
-                  data-bs-target="#betModal">
-
+              <button class="btn btn-sm btn-success" data-bs-toggle="modal"  data-bs-target="#betModal">
                   New Bet
-
               </button>
 
           </div>
@@ -195,6 +190,70 @@
         </div>
     </div>
 
+    <!-- Betting History -->
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <h5>
+                💰 Betting History
+            </h5>
+
+            <div class="table-responsive">
+
+                <table class="table table-striped">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>S.N.</th>
+                            <th>Date</th>
+                            <th>Match</th>
+                            <th>Winner</th>
+                            <th>Stake</th>
+                            <th>Payout</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="betHistoryBody"></tbody>
+
+                </table>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+
+                <button
+                    id="betPrevPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(-1)"
+                    disabled>
+
+                    Previous
+
+                </button>
+
+                <span id="betPageInfo">
+
+                    Page 1 of 1
+
+                </span>
+
+                <button
+                    id="betNextPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(1)">
+
+                    Next
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <!-- Loading overlay (shown when starting game) -->
@@ -241,102 +300,57 @@
 
 <!-- New Bet Modal -->
  <div class="modal fade" id="betModal" tabindex="-1">
-
     <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
 
-    <div class="modal-content">
+          <h5 class="modal-title">
+            Create Bet
+          </h5>
 
-    <div class="modal-header">
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 
-    <h5 class="modal-title">
+        </div>
 
-    Create Bet
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">
+              Player A
+            </label>
 
-    </h5>
+            <select id="betPlayerA" class="form-select"></select>
+          </div>
 
-    <button
-    class="btn-close"
-    data-bs-dismiss="modal">
-    </button>
+          <div class="mb-3">
+            <label class="form-label">
+              Player B
+            </label>
 
+            <select id="betPlayerB" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Stake Per Point ($)
+            </label>
+
+            <input type="number" class="form-control" id="betStake" value="1">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+
+          <button class="btn btn-primary" onclick="createBet()">
+            Save Bet
+          </button>
+
+        </div>
+      </div>
     </div>
-
-    <div class="modal-body">
-
-    <div class="mb-3">
-
-    <label class="form-label">
-
-    Player A
-
-    </label>
-
-    <select
-    id="betPlayerA"
-    class="form-select">
-
-    </select>
-
-    </div>
-
-    <div class="mb-3">
-
-    <label class="form-label">
-
-    Player B
-
-    </label>
-
-    <select
-    id="betPlayerB"
-    class="form-select">
-
-    </select>
-
-    </div>
-
-    <div class="mb-3">
-
-    <label class="form-label">
-
-    Stake Per Point ($)
-
-    </label>
-
-    <input
-    type="number"
-    class="form-control"
-    id="betStake"
-    value="10">
-
-    </div>
-
-    </div>
-
-    <div class="modal-footer">
-
-    <button
-    class="btn btn-secondary"
-    data-bs-dismiss="modal">
-
-    Close
-
-    </button>
-
-    <button
-    class="btn btn-primary"
-    onclick="createBet()">
-
-    Save Bet
-
-    </button>
-
-    </div>
-
-    </div>
-
-    </div>
-
 </div>
 
 
@@ -527,6 +541,7 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await fetchUsers();
     await fetchGames();
+    await fetchBetHistory();
 
     populateBetPlayers();
     renderBets();
@@ -537,7 +552,8 @@
     renderWeeklyWinner(document.getElementById('weeklyWinner'));
     renderMonthlyWinners(document.getElementById('monthlyWinners'));
     renderCareerStats(document.getElementById('careerStatsBody'));
-
+    renderBetHistory();
+    
     initLiveSocket();
 
     const ongoing = await fetchOngoingGame();

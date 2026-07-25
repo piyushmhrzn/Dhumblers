@@ -253,9 +253,19 @@ router.put('/games/ongoing/round', async (req, res) => {
             const n = game.players.length;
             let pointsArr = [];
             let pts = n + 1;
+
             for (let i = 0; i < n; i++) {
-                pointsArr.push(pts);
-                pts -= (i === 0 ? 2 : 1); // first place gets bigger gap
+                // Same final score = same points
+                if (i > 0 && rankings[i].total === rankings[i - 1].total) {
+                    pointsArr.push(pointsArr[i - 1]);
+                } else {
+                    pointsArr.push(pts);
+                }
+
+                // Only reduce points when NOT tied
+                if (i === 0 || rankings[i].total !== rankings[i - 1].total) {
+                    pts -= (i === 0 ? 2 : 1);
+                }
             }
 
             // Award points & update user stats
@@ -356,25 +366,89 @@ router.put('/games/ongoing/round', async (req, res) => {
  * Resets live scoreboard
  */
 router.delete('/games/ongoing', async (req, res) => {
+
     try {
-        const game = await Game.findOneAndDelete({ status: 'ongoing' });
+
+        const game = await Game.findOneAndDelete({
+            status: 'ongoing'
+        });
+
         if (!game) {
-            return res.status(404).json({ error: 'No ongoing game' });
+            return res.status(404).json({
+                error: 'No ongoing game'
+            });
         }
 
-        // Notify clients that no game is active
+        // Delete ONLY pending bets belonging to this cancelled game.
+        // Settled/draw bets must remain permanently in history.
+        await Bet.deleteMany({
+            gameId: game.id,
+            status: 'pending'
+        });
+
+        // Notify clients that there is no active game.
         req.app.get('io').emit('gameUpdate', null);
 
-        res.json({ message: 'Game cancelled' });
+        res.json({
+            message: 'Game cancelled'
+        });
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+
+        console.error('CANCEL GAME ERROR:', err);
+
+        res.status(500).json({
+            error: err.message
+        });
+
     }
+
 });
 
 
 // ────────────────────────────────────────────────
 // 4. BETS
 // ────────────────────────────────────────────────
+
+/**
+ * GET /api/bets/history
+ * Returns settled bets with pagination
+ */
+router.get('/bets/history', async (req, res) => {
+
+    try {
+        const page = Number(req.query.page) || 1;
+        const limit = 5;
+
+        const total = await Bet.countDocuments({
+            status: 'settled'
+        });
+
+        const bets = await Bet.find({
+            status: 'settled'
+        })
+            .sort({ id: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.json({
+            bets,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+
+    } catch (err) {
+
+        console.error("BET HISTORY ERROR:", err);
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
+});
+
 /**
  * GET /api/bets/:gameId
  */
@@ -400,6 +474,7 @@ router.get('/bets/:gameId', async (req, res) => {
 
 /**
  * POST /api/bets
+ * Create a bet for the current ongoing game
  */
 router.post('/bets', async (req, res) => {
 
@@ -412,23 +487,107 @@ router.post('/bets', async (req, res) => {
             stake
         } = req.body;
 
+        // ─────────────────────────────────────────
+        // Validate input
+        // ─────────────────────────────────────────
+
+        if (!gameId || !playerA || !playerB) {
+            return res.status(400).json({
+                error: 'Game and both players are required'
+            });
+        }
+
         if (playerA === playerB) {
             return res.status(400).json({
                 error: 'Players must be different'
             });
         }
 
-        if (stake <= 0) {
+        if (!Number.isFinite(stake) || stake <= 0) {
             return res.status(400).json({
                 error: 'Invalid stake'
             });
         }
 
+        // ─────────────────────────────────────────
+        // Get ONLY the ongoing game
+        // ─────────────────────────────────────────
+
+        const game = await Game.findOne({
+            id: gameId,
+            status: 'ongoing'
+        });
+
+        if (!game) {
+            return res.status(404).json({
+                error: 'Game not found or is no longer ongoing'
+            });
+        }
+
+        // ─────────────────────────────────────────
+        // Verify both players belong to this game
+        // ─────────────────────────────────────────
+
+        const playerAExists = game.players.some(
+            p => p.id === playerA
+        );
+
+        const playerBExists = game.players.some(
+            p => p.id === playerB
+        );
+
+        if (!playerAExists || !playerBExists) {
+            return res.status(400).json({
+                error: 'Both players must belong to the current game'
+            });
+        }
+
+        // ─────────────────────────────────────────
+        // Betting closes after first round
+        // ─────────────────────────────────────────
+
+        if (game.rounds.length > 0) {
+            return res.status(400).json({
+                error: 'Betting is closed once the game has started.'
+            });
+        }
+
+        // ─────────────────────────────────────────
+        // Prevent duplicate PENDING bet
+        // for same player pair in THIS game
+        // ─────────────────────────────────────────
+
+        const existing = await Bet.findOne({
+            gameId: game.id,
+            status: 'pending',
+            $or: [
+                {
+                    playerA: playerA,
+                    playerB: playerB
+                },
+                {
+                    playerA: playerB,
+                    playerB: playerA
+                }
+            ]
+        });
+
+        if (existing) {
+            return res.status(400).json({
+                error: 'Bet already exists for these players in this game.'
+            });
+        }
+
+        // ─────────────────────────────────────────
+        // Create bet
+        // ─────────────────────────────────────────
+
         const bet = new Bet({
-            gameId,
+            gameId: game.id,
             playerA,
             playerB,
-            stake
+            stake,
+            status: 'pending'
         });
 
         await bet.save();
@@ -436,6 +595,8 @@ router.post('/bets', async (req, res) => {
         res.json(bet);
 
     } catch (err) {
+
+        console.error('CREATE BET ERROR:', err);
 
         res.status(500).json({
             error: err.message
@@ -447,23 +608,79 @@ router.post('/bets', async (req, res) => {
 
 /**
  * GET /api/bets/game/current
+ *
+ * Returns bets for the game that should currently
+ * be represented in the 1 vs 1 Bets panel.
+ *
+ * Priority:
+ *
+ * 1. Ongoing game
+ * 2. Otherwise most recently completed game
+ * 3. Otherwise []
  */
 router.get('/bets/game/current', async (req, res) => {
 
     try {
 
-        const game = await Game.findOne({
+        // First priority: ongoing game
+        let game = await Game.findOne({
             status: 'ongoing'
         });
 
-        if (!game)
+        // If there is no ongoing game,
+        // show the most recently completed game.
+        if (!game) {
+
+            game = await Game.findOne({
+                status: 'completed'
+            }).sort('-id');
+
+        }
+
+        // No games at all
+        if (!game) {
             return res.json([]);
+        }
 
         const bets = await Bet.find({
             gameId: game.id
-        });
+        }).sort('id');
 
         res.json(bets);
+
+    } catch (err) {
+
+        console.error('CURRENT BETS ERROR:', err);
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    }
+
+});
+
+/**
+ * DELETE /api/bets/:id
+ * Cancel a bet
+ */
+router.delete('/bets/:id', async (req, res) => {
+
+    try {
+
+        const bet = await Bet.findOneAndDelete({
+            id: Number(req.params.id)
+        });
+
+        if (!bet) {
+            return res.status(404).json({
+                error: 'Bet not found'
+            });
+        }
+
+        res.json({
+            message: 'Bet cancelled'
+        });
 
     } catch (err) {
 
