@@ -203,6 +203,8 @@ router.put('/games/ongoing/round', async (req, res) => {
             return res.status(400).json({ error: 'At least one score >0' });
         }
 
+        const elimOrder = game.eliminated.length + 1;
+
         // ── Update player totals & check eliminations ───────
         game.players.forEach(p => {
             if (p.status === 'active') {
@@ -210,7 +212,7 @@ router.put('/games/ongoing/round', async (req, res) => {
 
                 if (p.total >= game.elimScore) {
                     p.status = 'eliminated';
-                    p.elimOrder = game.eliminated.length + 1;
+                    p.elimOrder = elimOrder;
 
                     game.eliminated.push({
                         id: p.id,
@@ -256,14 +258,22 @@ router.put('/games/ongoing/round', async (req, res) => {
 
             for (let i = 0; i < n; i++) {
                 // Same final score = same points
-                if (i > 0 && rankings[i].total === rankings[i - 1].total) {
+                if (
+                    i > 0 &&
+                    rankings[i].total === rankings[i - 1].total &&
+                    rankings[i].elimOrder === rankings[i - 1].elimOrder
+                ) {
                     pointsArr.push(pointsArr[i - 1]);
                 } else {
                     pointsArr.push(pts);
                 }
 
                 // Only reduce points when NOT tied
-                if (i === 0 || rankings[i].total !== rankings[i - 1].total) {
+                if (
+                    i === 0 ||
+                    rankings[i].total !== rankings[i - 1].total ||
+                    rankings[i].elimOrder !== rankings[i - 1].elimOrder
+                ) {
                     pts -= (i === 0 ? 2 : 1);
                 }
             }

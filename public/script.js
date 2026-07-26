@@ -225,7 +225,7 @@ function showGif(type, playerName = "", customDuration = null) {
             break;
         case "winner":
             activeGif = winnerGif;
-            duration = duration || 14000;
+            duration = duration || 10000;
             break;
         default:
             duration = duration || 10000;
@@ -1912,7 +1912,7 @@ function showWinner() {
 
     // 🔊 NEW: Winner celebration
     playSound("winnerSound");
-    // showGif("winner", `${winnerName} is the WINNER 👑🔥`, 13000);
+    // showGif("winner", `${winnerName} is the WINNER 👑🔥`, 10000);
 
     document.getElementById('winnerBanner').innerHTML = `
         <div class="alert alert-success text-center mb-4" role="alert">
