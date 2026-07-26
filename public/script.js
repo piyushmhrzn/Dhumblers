@@ -1798,15 +1798,15 @@ async function submitRoundScores() {
         const totalPlayers = Object.keys(lastRound).length;
         const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
-        // SANTOSH (>44)
+        // SANTOSH (>40)
         const santosh = Object.entries(lastRound)
-            .filter(([_, score]) => score > 44)
+            .filter(([_, score]) => score > 40)
             .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
         // 4. THUKKA (>40)
-        const highScorers = Object.entries(lastRound)
-            .filter(([_, score]) => score > 40)
-            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+        // const highScorers = Object.entries(lastRound)
+        //     .filter(([_, score]) => score > 40)
+        //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
         // 5. NEAR ELIMINATION
         const highScorerIds = Object.entries(lastRound)
@@ -1867,15 +1867,15 @@ async function submitRoundScores() {
             showGif("santosh", text);
         }
 
-        else if (highScorers.length > 0) {
-            playSound("highScoreSound");
+        // else if (highScorers.length > 0) {
+        //     playSound("highScoreSound");
 
-            const text = highScorers.length === 1
-                ? `${highScorers[0]} ji wah ultra-legend honi 😂`
-                : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
+        //     const text = highScorers.length === 1
+        //         ? `${highScorers[0]} ji wah ultra-legend honi 😂`
+        //         : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
 
-            showGif("high", text);
-        }
+        //     showGif("high", text);
+        // }
 
         else if (justEnteredDanger) {
             playSound("nearElimSound");
@@ -2549,15 +2549,15 @@ function initLiveSocket() {
             const totalPlayers = Object.keys(lastRound).length;
             const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
-            // SANTOSH (>44)
+            // SANTOSH (>40)
             const santosh = Object.entries(lastRound)
-                .filter(([_, score]) => score > 44)
+                .filter(([_, score]) => score > 40)
                 .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
             // 3. THUKKA (>40)
-            const highScorers = Object.entries(lastRound)
-                .filter(([_, score]) => score > 40)
-                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+            // const highScorers = Object.entries(lastRound)
+            //     .filter(([_, score]) => score > 40)
+            //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
             // HIGH SCORER
             const highScorerIds = Object.entries(lastRound)
@@ -2610,15 +2610,15 @@ function initLiveSocket() {
                 showGif("santosh", text);
             }
 
-            else if (highScorers.length > 0) {
-                playSound("highScoreSound");
+            // else if (highScorers.length > 0) {
+            //     playSound("highScoreSound");
 
-                const text = highScorers.length === 1
-                    ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
-                    : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
+            //     const text = highScorers.length === 1
+            //         ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
+            //         : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
 
-                showGif("high", text);
-            }
+            //     showGif("high", text);
+            // }
 
             else if (justEnteredDanger) {
                 playSound("nearElimSound");
