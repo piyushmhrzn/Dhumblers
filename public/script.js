@@ -185,7 +185,7 @@ function showGif(type, playerName = "", customDuration = null) {
     const highGif = document.getElementById("highGif");
     const nearElimGif = document.getElementById("nearElimGif");
     const winnerGif = document.getElementById("winnerGif");
-    const santosh = document.getElementById("santoshGif");
+    // const santosh = document.getElementById("santoshGif");
 
     if (!overlay) return;
 
@@ -219,10 +219,10 @@ function showGif(type, playerName = "", customDuration = null) {
             activeGif = nearElimGif;
             duration = duration || 10000;
             break;
-        case "santosh":
-            activeGif = santoshGif;
-            duration = duration || 8000;
-            break;
+        // case "santosh":
+        //     activeGif = santoshGif;
+        //     duration = duration || 10000;
+        //     break;
         case "winner":
             activeGif = winnerGif;
             duration = duration || 10000;
@@ -1799,14 +1799,14 @@ async function submitRoundScores() {
         const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
         // SANTOSH (>40)
-        const santosh = Object.entries(lastRound)
-            .filter(([_, score]) => score > 40)
-            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
-
-        // 4. THUKKA (>40)
-        // const highScorers = Object.entries(lastRound)
+        // const santosh = Object.entries(lastRound)
         //     .filter(([_, score]) => score > 40)
         //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
+        // 4. THUKKA (>40)
+        const highScorers = Object.entries(lastRound)
+            .filter(([_, score]) => score > 40)
+            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
         // 5. NEAR ELIMINATION
         const highScorerIds = Object.entries(lastRound)
@@ -1857,25 +1857,25 @@ async function submitRoundScores() {
             showGif("funny", `${name} ji wah kya khela! 😂`);
         }
 
-        else if (santosh.length > 0) {
-            playSound("santoshSound");
+        // else if (santosh.length > 0) {
+        //     playSound("santoshSound");
 
-            const text = santosh.length === 1
-                ? `${santosh[0]} ji ye hey santosh khela 😂`
-                : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
+        //     const text = santosh.length === 1
+        //         ? `${santosh[0]} ji ye hey santosh khela 😂`
+        //         : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
 
-            showGif("santosh", text);
-        }
-
-        // else if (highScorers.length > 0) {
-        //     playSound("highScoreSound");
-
-        //     const text = highScorers.length === 1
-        //         ? `${highScorers[0]} ji wah ultra-legend honi 😂`
-        //         : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
-
-        //     showGif("high", text);
+        //     showGif("santosh", text);
         // }
+
+        else if (highScorers.length > 0) {
+            playSound("highScoreSound");
+
+            const text = highScorers.length === 1
+                ? `${highScorers[0]} ji wah ultra-legend honi 😂`
+                : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
+
+            showGif("high", text);
+        }
 
         else if (justEnteredDanger) {
             playSound("nearElimSound");
@@ -2015,8 +2015,8 @@ function renderLiveGame(game) {
     // Calculate Streaks
     // ─────────────────────────────────────
 
-    let hotText = "Need 3 rounds";
-    let coldText = "Need 3 rounds";
+    let hotText = "Loading...";
+    let coldText = "Loading...";
 
     if (game.rounds.length >= 3) {
 
@@ -2068,11 +2068,7 @@ function renderLiveGame(game) {
     <div class="d-flex justify-content-between mb-3">
 
         <span class="badge bg-danger fs-6">
-            🤡 Panauti: ${hotText}
-        </span>
-
-        <span class="badge bg-success fs-6">
-            🍸 Chillax: ${coldText}
+            🤡 Panauti Streak: ${hotText}
         </span>
 
     </div>
@@ -2710,14 +2706,14 @@ function initLiveSocket() {
             const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
             // SANTOSH (>40)
-            const santosh = Object.entries(lastRound)
-                .filter(([_, score]) => score > 40)
-                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
-
-            // 3. THUKKA (>40)
-            // const highScorers = Object.entries(lastRound)
+            // const santosh = Object.entries(lastRound)
             //     .filter(([_, score]) => score > 40)
             //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
+
+            // 3. THUKKA (>40)
+            const highScorers = Object.entries(lastRound)
+                .filter(([_, score]) => score > 40)
+                .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
             // HIGH SCORER
             const highScorerIds = Object.entries(lastRound)
@@ -2759,26 +2755,26 @@ function initLiveSocket() {
                 showGif("funny", `${name} ji wah kya khela! 😂`);
             }
 
-            else if (santosh.length > 0) {
-                playSound("santoshSound");
+            // else if (santosh.length > 0) {
+            //     playSound("santoshSound");
 
-                const text = santosh.length === 1
-                    ? `${santosh[0]} ji ye hey santosh khela 😂`
-                    : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
+            //     const text = santosh.length === 1
+            //         ? `${santosh[0]} ji ye hey santosh khela 😂`
+            //         : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
 
 
-                showGif("santosh", text);
-            }
-
-            // else if (highScorers.length > 0) {
-            //     playSound("highScoreSound");
-
-            //     const text = highScorers.length === 1
-            //         ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
-            //         : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
-
-            //     showGif("high", text);
+            //     showGif("santosh", text);
             // }
+
+            else if (highScorers.length > 0) {
+                playSound("highScoreSound");
+
+                const text = highScorers.length === 1
+                    ? `${highScorers[0]} ji wah ultra-legend khiladi 😂`
+                    : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
+
+                showGif("high", text);
+            }
 
             else if (justEnteredDanger) {
                 playSound("nearElimSound");
