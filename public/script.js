@@ -1972,10 +1972,14 @@ function renderLiveGame(game) {
 
     if (!container) return;
 
-    // ── No game active ───────────────────────────
+    // ─────────────────────────────────────
+    // No active game
+    // ─────────────────────────────────────
     if (!game || game.status !== "ongoing") {
 
-        container.innerHTML = `<p class="text-warning">No ongoing game</p>`;
+        container.innerHTML = `
+            <p class="text-warning">No ongoing game</p>
+        `;
 
         dot?.classList.add("d-none");
         bolt?.classList.remove("d-none");
@@ -1986,36 +1990,109 @@ function renderLiveGame(game) {
         return;
     }
 
-    // ── Live indicators ──────────────────────────
+    // ─────────────────────────────────────
+    // Live Indicators
+    // ─────────────────────────────────────
     dot?.classList.remove("d-none");
     bolt?.classList.add("d-none");
 
-    if (badge) badge.innerText = "Elim: " + game.elimScore;
+    if (badge)
+        badge.innerText = "Elim: " + game.elimScore;
 
-    // ── Current round display ────────────────────
     const currentRound = game.rounds.length + 1;
 
-    if (roundEl) {
+    if (roundEl)
         roundEl.innerText = `Round ${currentRound}`;
-    }
 
-    // ── Previous round scores ────────────────────
     const lastRound = game.rounds[game.rounds.length - 1] || {};
 
-    // ── Sort players by lowest total (best position) ──
-    const sortedPlayers = [...game.players].sort((a, b) => (a.total || 0) - (b.total || 0));
+    // Sort by lowest total
+    const sortedPlayers = [...game.players].sort(
+        (a, b) => (a.total || 0) - (b.total || 0)
+    );
+
+    // ─────────────────────────────────────
+    // Calculate Streaks
+    // ─────────────────────────────────────
+
+    let hotText = "Need 3 rounds";
+    let coldText = "Need 3 rounds";
+
+    if (game.rounds.length >= 3) {
+
+        const last3 = game.rounds.slice(-3);
+
+        const totals = {};
+
+        game.players.forEach(p => totals[p.id] = 0);
+
+        last3.forEach(round => {
+
+            Object.entries(round).forEach(([id, score]) => {
+
+                totals[id] += score;
+
+            });
+
+        });
+
+        let hottest = null;
+        let coldest = null;
+
+        Object.entries(totals).forEach(([id, total]) => {
+
+            id = Number(id);
+
+            if (!hottest || total > hottest.total)
+                hottest = { id, total };
+
+            if (!coldest || total < coldest.total)
+                coldest = { id, total };
+
+        });
+
+        hotText =
+            `${getUserById(hottest.id)?.name || "Unknown"} (${hottest.total})`;
+
+        coldText =
+            `${getUserById(coldest.id)?.name || "Unknown"} (${coldest.total})`;
+
+    }
+
+    // ─────────────────────────────────────
+    // HTML
+    // ─────────────────────────────────────
 
     let html = `
-        <div class="table-responsive">
+
+    <div class="d-flex justify-content-between mb-3">
+
+        <span class="badge bg-danger fs-6">
+            🤡 Panauti: ${hotText}
+        </span>
+
+        <span class="badge bg-success fs-6">
+            🍸 Chillax: ${coldText}
+        </span>
+
+    </div>
+
+    <div class="table-responsive">
+
         <table class="table table-bordered table-sm">
-        <thead>
-            <tr>
-                <th>Player</th>
-                <th>Total</th>
-                <th>Last Round</th>
-            </tr>
-        </thead>
-        <tbody>
+
+            <thead>
+
+                <tr>
+                    <th>Player</th>
+                    <th>Total</th>
+                    <th>Last Round</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
     `;
 
     sortedPlayers.forEach(p => {
@@ -2028,11 +2105,8 @@ function renderLiveGame(game) {
         const prevDisplay =
             prevScore === null
                 ? ""
-                : `<small>
-                (${prevScore >= 0 ? "+" : ""}${prevScore})
-              </small>`;
+                : `<small>(${prevScore >= 0 ? "+" : ""}${prevScore})</small>`;
 
-        // ── Danger thresholds ─────────────────────
         const nearDanger = total >= game.elimScore - 15;
         const extremeDanger = total > game.elimScore - 5;
 
@@ -2041,54 +2115,140 @@ function renderLiveGame(game) {
         let statusEmoji = "";
 
         if (p.status === "active") {
-            if (extremeDanger) {
+
+            if (extremeDanger)
                 dangerEmoji = " 💀";
-            } else if (nearDanger) {
+
+            else if (nearDanger)
                 dangerEmoji = " 🪽";
-            }
         }
 
-        // ── Round performance emoji ───────────────
-        // Winner
-        if (p.elimOrder === -1) {
+        if (p.elimOrder === -1)
             statusEmoji = " 👑";
-        }
-        // Eliminated
-        else if (p.status !== "active") {
+
+        else if (p.status !== "active")
             statusEmoji = " 🪦";
-        }
 
         if (prevScore !== null) {
 
-            if (prevScore > 40) {
+            if (prevScore > 40)
                 roundEmoji = " 🤡";
-            } else if (prevScore >= 40) {
+
+            else if (prevScore >= 40)
                 roundEmoji = " 😭";
-            } else if (prevScore >= 30) {
+
+            else if (prevScore >= 30)
                 roundEmoji = " 😵‍💫";
-            } else if (prevScore >= 20) {
+
+            else if (prevScore >= 20)
                 roundEmoji = " 😰";
-            } else if (prevScore >= 1 && prevScore <= 4) {
+
+            else if (prevScore >= 1 && prevScore <= 4)
                 roundEmoji = " 😎";
-            }
         }
 
         html += `
-        <tr class="${p.status !== 'active' ? 'table-secondary' : ''}">
-            <td>${name} ${dangerEmoji} ${roundEmoji} ${statusEmoji}</td>
-            <td><strong>${total}</strong></td>
-            <td>${prevDisplay} </td>
+
+        <tr class="${p.status !== "active" ? "table-secondary" : ""}">
+
+            <td>
+
+                ${name}
+                ${dangerEmoji}
+                ${roundEmoji}
+                ${statusEmoji}
+
+            </td>
+
+            <td>
+                <strong>${total}</strong>
+            </td>
+
+            <td>
+                ${prevDisplay}
+            </td>
+
         </tr>
-    `;
+
+        `;
+
     });
 
     html += `
-        </tbody>
+
+            </tbody>
+
         </table>
-        </div>
+
+    </div>
+
     `;
 
     container.innerHTML = html;
+}
+
+/**
+ * Update streaks (hot/cold players) based on the last 3 rounds of the current game
+ */
+function updateStreaks(game) {
+
+    if (!game || game.rounds.length === 0)
+        return;
+
+    const hotEl = document.getElementById("hotPlayer");
+    const coldEl = document.getElementById("coldPlayer");
+
+    if (!hotEl || !coldEl)
+        return;
+
+    // Last 3 rounds (or fewer if game just started)
+    const lastRounds = game.rounds.slice(-3);
+
+    const totals = {};
+
+    game.players.forEach(player => {
+        totals[player.id] = 0;
+    });
+
+    lastRounds.forEach(round => {
+
+        Object.entries(round).forEach(([id, score]) => {
+
+            totals[id] += score;
+
+        });
+
+    });
+
+    let hottest = null;
+    let coldest = null;
+
+    Object.entries(totals).forEach(([id, total]) => {
+
+        id = Number(id);
+
+        if (!hottest || total > hottest.total) {
+            hottest = {
+                id,
+                total
+            };
+        }
+
+        if (!coldest || total < coldest.total) {
+            coldest = {
+                id,
+                total
+            };
+        }
+
+    });
+
+    hotEl.innerHTML =
+        `🤡 <strong>${getUserById(hottest.id).name}</strong> (${hottest.total})`;
+
+    coldEl.innerHTML =
+        `🍸 <strong>${getUserById(coldest.id).name}</strong> (${coldest.total})`;
+
 }
 
 // ────────────────────────────────────────────────
