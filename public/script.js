@@ -1278,11 +1278,20 @@ function showWeeklyHistory() {
             getAllGamePlayers(g).forEach(p => {
 
                 if (!stats[p.id]) {
-                    stats[p.id] = { points: 0, games: 0 };
+                    stats[p.id] = {
+                        points: 0,
+                        games: 0,
+                        wins: 0
+                    };
                 }
 
                 stats[p.id].points += p.points || 0;
                 stats[p.id].games += 1;
+
+                // Count wins
+                if (p.elimOrder === -1) {
+                    stats[p.id].wins += 1;
+                }
             });
         }
     });
@@ -1291,9 +1300,24 @@ function showWeeklyHistory() {
         .map(([id, s]) => ({
             name: getUserById(parseInt(id))?.name || "Unknown",
             points: s.points,
-            games: s.games
+            games: s.games,
+            wins: s.wins
         }))
-        .sort((a, b) => b.points - a.points || a.games - b.games);
+        .sort((a, b) => {
+
+            // 1. Higher points first
+            if (b.points !== a.points) {
+                return b.points - a.points;
+            }
+
+            // 2. Higher wins first
+            if (b.wins !== a.wins) {
+                return b.wins - a.wins;
+            }
+
+            // 3. Fewer games first
+            return a.games - b.games;
+        });
 
     leaderboard.forEach((p, i) => {
         const tr = document.createElement("tr");
@@ -1303,12 +1327,16 @@ function showWeeklyHistory() {
             <td>${p.name}</td>
             <td>${p.points}</td>
             <td>${p.games}</td>
+            <td>${p.wins}</td>
         `;
 
         tbody.appendChild(tr);
     });
 
-    const modal = new bootstrap.Modal(document.getElementById("weeklyHistoryModal"));
+    const modal = new bootstrap.Modal(
+        document.getElementById("weeklyHistoryModal")
+    );
+
     modal.show();
 }
 
@@ -1325,9 +1353,11 @@ function renderWeeklyWinner(el) {
         const today = new Date();
         const day = today.getDay();
         const diff = (day === 0 ? -6 : 1 - day);
+
         const monday = new Date(today);
         monday.setDate(today.getDate() + diff);
         monday.setHours(0, 0, 0, 0);
+
         return monday;
     }
 
@@ -1336,6 +1366,7 @@ function renderWeeklyWinner(el) {
         const sunday = new Date(monday);
         sunday.setDate(monday.getDate() + 6);
         sunday.setHours(23, 59, 59, 999);
+
         return sunday;
     }
 
@@ -1360,45 +1391,90 @@ function renderWeeklyWinner(el) {
 
     weeklyGames.forEach(g => {
         getAllGamePlayers(g).forEach(p => {
+
             const pts = p.points || 0;
+
+            // KEEP EXISTING FUNCTIONALITY
             if (pts > 0) {
+
                 if (!weeklyStats[p.id]) {
-                    weeklyStats[p.id] = { points: 0, games: 0 };
+                    weeklyStats[p.id] = {
+                        points: 0,
+                        games: 0,
+                        wins: 0
+                    };
                 }
+
                 weeklyStats[p.id].points += pts;
                 weeklyStats[p.id].games += 1;
+
+                // Count wins
+                if (p.elimOrder === -1) {
+                    weeklyStats[p.id].wins += 1;
+                }
             }
         });
     });
 
     if (Object.keys(weeklyStats).length === 0) {
-        el.innerHTML = `<br><strong>Current Week:</strong> No games played yet (Ends ${endFormatted})<br>`;
+        el.innerHTML = `
+            <br>
+            <strong>Current Week:</strong>
+            No games played yet (Ends ${endFormatted})
+            <br>
+        `;
         return;
     }
 
     // Find top performer(s)
     let maxPoints = -1;
+    let maxWins = -1;
     let minGames = Infinity;
 
     Object.values(weeklyStats).forEach(stats => {
+
+        // 1. Higher points
         if (stats.points > maxPoints) {
             maxPoints = stats.points;
+            maxWins = stats.wins;
             minGames = stats.games;
-        } else if (stats.points === maxPoints && stats.games < minGames) {
+        }
+
+        // 2. Same points -> higher wins
+        else if (
+            stats.points === maxPoints &&
+            stats.wins > maxWins
+        ) {
+            maxWins = stats.wins;
+            minGames = stats.games;
+        }
+
+        // 3. Same points + wins -> fewer games
+        else if (
+            stats.points === maxPoints &&
+            stats.wins === maxWins &&
+            stats.games < minGames
+        ) {
             minGames = stats.games;
         }
     });
 
     const winners = [];
+
     Object.entries(weeklyStats).forEach(([id, stats]) => {
-        if (stats.points === maxPoints && stats.games === minGames) {
+
+        if (
+            stats.points === maxPoints &&
+            stats.wins === maxWins &&
+            stats.games === minGames
+        ) {
             const name = getUserById(parseInt(id))?.name || 'Unknown';
             winners.push(name);
         }
     });
 
-    let winnerText = winners.length === 1
-        ? `${winners[0]} (${maxPoints} points, ${minGames} games)`
+    const winnerText = winners.length === 1
+        ? `${winners[0]} (${maxPoints} points)`
         : `${winners.join(' & ')} (${maxPoints} points)`;
 
     el.innerHTML = `
@@ -1414,6 +1490,7 @@ function renderWeeklyWinner(el) {
     `;
 }
 
+
 /**
  * ---------------------- RENDERS MONTHLY LEADERBOARD ----------------------
  * @param {HTMLElement} container - container for monthly winners list
@@ -1425,26 +1502,37 @@ function renderMonthlyWinners(container) {
 
     games.forEach(game => {
         const d = new Date(game.date);
-        const monthKey = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        const monthKey = d.toLocaleString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
 
         if (!monthlyStats[monthKey]) {
             monthlyStats[monthKey] = {};
         }
 
         getAllGamePlayers(game).forEach(p => {
-            const pts = p.points || 0;
-            if (pts > 0) {
-                if (!monthlyStats[monthKey][p.id]) {
-                    monthlyStats[monthKey][p.id] = { points: 0, games: 0 };
-                }
-                monthlyStats[monthKey][p.id].points += pts;
-                monthlyStats[monthKey][p.id].games += 1;
+            if (!monthlyStats[monthKey][p.id]) {
+                monthlyStats[monthKey][p.id] = {
+                    points: 0,
+                    games: 0,
+                    wins: 0
+                };
+            }
+
+            // Count every game played
+            monthlyStats[monthKey][p.id].points += p.points || 0;
+            monthlyStats[monthKey][p.id].games += 1;
+
+            // Count wins
+            if (p.elimOrder === -1) {
+                monthlyStats[monthKey][p.id].wins += 1;
             }
         });
     });
 
     const sortedMonths = Object.keys(monthlyStats)
-        .sort((a, b) => new Date(b) - new Date(a)); // newest first
+        .sort((a, b) => new Date(b) - new Date(a));
 
     const monthsToShow = sortedMonths.slice(0, 6);
 
@@ -1456,28 +1544,39 @@ function renderMonthlyWinners(container) {
         monthsToShow.forEach(monthKey => {
             const statsMap = monthlyStats[monthKey];
 
-            let maxPoints = -1;
-            let minGames = Infinity;
+            // Find the best ranking
+            const rankedPlayers = Object.entries(statsMap)
+                .sort(([, a], [, b]) => {
+                    // 1. Higher points first
+                    if (b.points !== a.points) {
+                        return b.points - a.points;
+                    }
 
-            Object.values(statsMap).forEach(stats => {
-                if (stats.points > maxPoints) {
-                    maxPoints = stats.points;
-                    minGames = stats.games;
-                } else if (stats.points === maxPoints && stats.games < minGames) {
-                    minGames = stats.games;
-                }
-            });
+                    // 2. Higher wins first
+                    if (b.wins !== a.wins) {
+                        return b.wins - a.wins;
+                    }
 
-            const winners = [];
-            Object.entries(statsMap).forEach(([id, stats]) => {
-                if (stats.points === maxPoints && stats.games === minGames) {
-                    winners.push(getUserById(parseInt(id))?.name || 'Unknown');
-                }
-            });
+                    // 3. Fewer games first
+                    return a.games - b.games;
+                });
+
+            const best = rankedPlayers[0][1];
+
+            // Include everyone who is tied on ALL three criteria
+            const winners = rankedPlayers
+                .filter(([, stats]) =>
+                    stats.points === best.points &&
+                    stats.wins === best.wins &&
+                    stats.games === best.games
+                )
+                .map(([id]) =>
+                    getUserById(parseInt(id))?.name || 'Unknown'
+                );
 
             const winnerText = winners.length === 1
-                ? `${winners[0]} (${maxPoints} points)`
-                : `${winners.join(' & ')} (${maxPoints} points)`;
+                ? `${winners[0]} (${best.points} points)`
+                : `${winners.join(' & ')} (${best.points} points)`;
 
             html += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -1491,13 +1590,14 @@ function renderMonthlyWinners(container) {
                         View
                     </button>
                 </li>
-                            `;
+            `;
         });
     }
 
     html += '</ul>';
     container.innerHTML = html;
 }
+
 
 /**
  * ---------------------- SHOWS DETAILED MONTHLY LEADERBOARD HISTORY ----------------------
@@ -1516,20 +1616,29 @@ function showMonthHistory(monthKey) {
     games.forEach(g => {
 
         const d = new Date(g.date);
-        const key = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+        const key = d.toLocaleString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
 
         if (key === monthKey) {
 
             getAllGamePlayers(g).forEach(p => {
 
                 if (!stats[p.id]) {
-                    stats[p.id] = { points: 0, games: 0, wins: 0 };
+                    stats[p.id] = {
+                        points: 0,
+                        games: 0,
+                        wins: 0
+                    };
                 }
 
                 stats[p.id].points += p.points || 0;
                 stats[p.id].games += 1;
 
-                if (p.elimOrder === -1) stats[p.id].wins += 1;
+                if (p.elimOrder === -1) {
+                    stats[p.id].wins += 1;
+                }
 
             });
 
@@ -1547,10 +1656,14 @@ function showMonthHistory(monthKey) {
         .sort((a, b) => {
 
             // 1. Higher points first
-            if (b.points !== a.points) return b.points - a.points;
+            if (b.points !== a.points) {
+                return b.points - a.points;
+            }
 
             // 2. Higher wins first
-            if (b.wins !== a.wins) return b.wins - a.wins;
+            if (b.wins !== a.wins) {
+                return b.wins - a.wins;
+            }
 
             // 3. Fewer games first
             return a.games - b.games;
@@ -1573,9 +1686,13 @@ function showMonthHistory(monthKey) {
 
     });
 
-    const modal = new bootstrap.Modal(document.getElementById("monthHistoryModal"));
+    const modal = new bootstrap.Modal(
+        document.getElementById("monthHistoryModal")
+    );
+
     modal.show();
 }
+
 
 /**
  * ---------------------- RENDER PLAYER CAREER STATISTICS TABLE ----------------------
