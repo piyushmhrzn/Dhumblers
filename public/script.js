@@ -1490,11 +1490,13 @@ function renderWeeklyWinner(el) {
     `;
 }
 
-
 /**
  * ---------------------- RENDERS MONTHLY LEADERBOARD ----------------------
  * @param {HTMLElement} container - container for monthly winners list
  */
+let monthlyWinnersPage = 1;
+const MONTHS_PER_PAGE = 5;
+
 function renderMonthlyWinners(container) {
     if (!container) return;
 
@@ -1534,7 +1536,23 @@ function renderMonthlyWinners(container) {
     const sortedMonths = Object.keys(monthlyStats)
         .sort((a, b) => new Date(b) - new Date(a));
 
-    const monthsToShow = sortedMonths.slice(0, 6);
+    // ── Pagination ───────────────────────────────
+    const totalPages = Math.max(
+        1,
+        Math.ceil(sortedMonths.length / MONTHS_PER_PAGE)
+    );
+
+    // Make sure page is still valid if data changes
+    monthlyWinnersPage = Math.min(monthlyWinnersPage, totalPages);
+    monthlyWinnersPage = Math.max(monthlyWinnersPage, 1);
+
+    const startIndex =
+        (monthlyWinnersPage - 1) * MONTHS_PER_PAGE;
+
+    const monthsToShow = sortedMonths.slice(
+        startIndex,
+        startIndex + MONTHS_PER_PAGE
+    );
 
     let html = '<ul class="list-group list-group-flush mt-2">';
 
@@ -1595,9 +1613,57 @@ function renderMonthlyWinners(container) {
     }
 
     html += '</ul>';
+
+    // ── Pagination controls ──────────────────────
+    if (sortedMonths.length > MONTHS_PER_PAGE) {
+        html += `
+            <div class="d-flex justify-content-between align-items-center mt-3">
+
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="changeMonthlyWinnersPage(-1)"
+                    ${monthlyWinnersPage === 1 ? 'disabled' : ''}>
+                    ← New
+                </button>
+
+                <span class="small text-secondary">
+                    Page ${monthlyWinnersPage} of ${totalPages}
+                </span>
+
+                <button
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="changeMonthlyWinnersPage(1)"
+                    ${monthlyWinnersPage === totalPages ? 'disabled' : ''}>
+                    Old →
+                </button>
+
+            </div>
+        `;
+    }
+
     container.innerHTML = html;
 }
 
+
+/**
+ * ---------------------- CHANGES MONTHLY WINNERS PAGE ----------------------
+ */
+function changeMonthlyWinnersPage(direction) {
+
+    monthlyWinnersPage += direction;
+
+    // Keep page within valid range
+    if (monthlyWinnersPage < 1) {
+        monthlyWinnersPage = 1;
+    }
+
+    // Re-render the monthly winners
+    const container = document.getElementById("monthlyWinners");
+
+    if (container) {
+        renderMonthlyWinners(container);
+    }
+}
 
 /**
  * ---------------------- SHOWS DETAILED MONTHLY LEADERBOARD HISTORY ----------------------
