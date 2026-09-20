@@ -102,6 +102,33 @@
         </div>
     </div>
 
+    <!-- 1 vs 1 Bets -->
+    <div class="card mb-3">
+      <div class="card-body">
+
+          <div class="d-flex justify-content-between align-items-center">
+
+              <h5>
+                  💰 1 vs 1 Bets
+              </h5>
+
+              <button class="btn btn-sm btn-success" data-bs-toggle="modal"  data-bs-target="#betModal">
+                  New Bet
+              </button>
+
+          </div>
+
+          <div id="betContainer">
+
+              <p class="text-secondary">
+                  No active bets
+              </p>
+
+          </div>
+
+      </div>
+  </div>
+
     <!-- Player Career Stats -->
     <div class="card mt-3">
         <div class="card-body">
@@ -163,6 +190,103 @@
         </div>
     </div>
 
+    <!-- ==================== YEARLY HISTORY ==================== -->
+  <div class="card mt-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 text-white">📅 Yearly History</h5>
+          <select id="yearSelect" class="form-select form-select-sm" style="width: auto;" onchange="renderYearlyHistory()">
+              <!-- years will be filled by JS -->
+          </select>
+      </div>
+      <div class="card-body p-3">
+          <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                  <thead>
+                      <tr>
+                          <th>Player</th>
+                          <th>Points</th>
+                          <th>Games</th>
+                          <th>Avg</th>
+                          <th>1st</th>
+                          <th>2nd</th>
+                          <th>3rd</th>
+                          <th>Win%</th>
+                          <th>Rival</th>
+                          <th>Nemesis</th>
+                      </tr>
+                  </thead>
+                  <tbody id="yearlyHistoryBody">
+                      <!-- filled by JS -->
+                  </tbody>
+              </table>
+          </div>
+      </div>
+  </div>
+
+    <!-- Betting History -->
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <h5>
+                💰 Betting History
+            </h5>
+
+            <div class="table-responsive">
+
+                <table class="table table-striped">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>S.N.</th>
+                            <th>Date</th>
+                            <th>Match</th>
+                            <th>Winner</th>
+                            <th>Stake</th>
+                            <th>Payout</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="betHistoryBody"></tbody>
+
+                </table>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+
+                <button
+                    id="betPrevPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(-1)"
+                    disabled>
+
+                    Previous
+
+                </button>
+
+                <span id="betPageInfo">
+
+                    Page 1 of 1
+
+                </span>
+
+                <button
+                    id="betNextPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(1)">
+
+                    Next
+
+                </button>
+
+            </div>
+
+        </div>
+    </div>
 </div>
 
 <!-- Loading overlay (shown when starting game) -->
@@ -204,6 +328,61 @@
                 <button type="button" class="btn btn-primary btn-sm" onclick="startGameFromModal()">Start Game</button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- New Bet Modal -->
+ <div class="modal fade" id="betModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+
+          <h5 class="modal-title">
+            Create Bet
+          </h5>
+
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">
+              Player A
+            </label>
+
+            <select id="betPlayerA" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Player B
+            </label>
+
+            <select id="betPlayerB" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Stake Per Point ($)
+            </label>
+
+            <input type="number" class="form-control" id="betStake" value="1">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+
+          <button class="btn btn-primary" onclick="createBet()">
+            Save Bet
+          </button>
+
+        </div>
+      </div>
     </div>
 </div>
 
@@ -407,6 +586,10 @@
   document.addEventListener('DOMContentLoaded', async () => {
     await fetchUsers();
     await fetchGames();
+    await fetchBetHistory();
+
+    populateBetPlayers();
+    renderBets();
     
     renderPlayerCheckboxes(document.getElementById('playerSelectModal'));
     renderRecentGames(document.getElementById('recentGamesBody'));
@@ -414,6 +597,7 @@
     renderWeeklyWinner(document.getElementById('weeklyWinner'));
     renderMonthlyWinners(document.getElementById('monthlyWinners'));
     renderCareerStats(document.getElementById('careerStatsBody'));
+    renderBetHistory();
     
     initYearlyHistory();
     initLiveSocket();

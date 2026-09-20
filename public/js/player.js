@@ -107,6 +107,7 @@ function determinePlayerType(stats, avgPoints) {
     return types.slice(0, 3).join(" • ");
 }
 
+// Show tier info modal
 function showTierInfo(tierText) {
     const title = document.getElementById("tierDetailTitle");
     const body = document.getElementById("tierDetailBody");
@@ -405,34 +406,25 @@ function showPlayerStats(userId) {
             </div>
 
             <div class="col-6 col-md-3 mb-2">
-                <h6>⭐ Total Points</h6>
-                <p class="fw-bold">${stats.totalPoints}</p>
+                <h6>⭐ Points per Game</h6>
+                <p class="fw-bold">${avgPoints}</p>
             </div>
 
         </div>
 
+        <hr>
+
         <div class="row text-center mb-3">
 
-            <div class="col-6 col-md-3 mb-2">
+            <div class="col-6 col-md-6 mb-2">
                 <h6>🥈 2nd Places</h6>
                 <p class="fw-bold">${stats.seconds}</p>
             </div>
 
-            <div class="col-6 col-md-3 mb-2">
+            <div class="col-6 col-md-6 mb-2">
                 <h6>🥉 3rd Places</h6>
                 <p class="fw-bold">${stats.thirds}</p>
             </div>
-
-            <div class="col-6 col-md-3 mb-2">
-                <h6>🚨 Highest Score</h6>
-                <p class="font-weight-bold">${stats.highestRoundScore}</p>
-            </div>
-
-            <div class="col-6 col-md-3 mb-2">
-                <h6>🎯 Avg Points/Game</h6>
-                <p class="fw-bold">${avgPoints}</p>
-            </div>
-
         </div>
 
         <hr>
@@ -480,6 +472,7 @@ function showPlayerStats(userId) {
     modal.show();
 }
 
+/* Get rivalry stats */
 function getRivalry(userId) {
 
     const record = {};
@@ -665,6 +658,7 @@ function getRivalry(userId) {
     };
 }
 
+/* Get nemesis stats */
 function getNemesis(userId) {
 
     const record = {};
@@ -734,5 +728,127 @@ function getNemesis(userId) {
         nemesisStats: nemesis
             ? `${nemesis.losses} losses in ${nemesis.finalsPlayed} finals`
             : null
+    };
+}
+
+/**
+ * Rival calculated only from games of a specific year
+ */
+function getRivalryForYear(userId, year) {
+    const yearGames = getGamesByYear(year);
+    const record = {};
+
+    yearGames.forEach(g => {
+        const players = getAllGamePlayers(g);
+        const me = players.find(p => p.id === userId);
+        if (!me) return;
+
+        const totalPlayers = players.length;
+        const myRank = me.elimOrder === -1 ? 1 : totalPlayers - me.elimOrder + 1;
+
+        players.forEach(op => {
+            if (op.id === userId) return;
+
+            if (!record[op.id]) {
+                record[op.id] = { finalsPlayed: 0, wins: 0, losses: 0 };
+            }
+
+            const r = record[op.id];
+
+            // Only count completed games for finals
+            if (g.status === "completed") {
+                const finalists = players
+                    .map(p => ({
+                        ...p,
+                        rank: p.elimOrder === -1 ? 1 : totalPlayers - p.elimOrder + 1
+                    }))
+                    .sort((a, b) => a.rank - b.rank)
+                    .slice(0, 2);
+
+                if (finalists.length === 2 &&
+                    finalists.some(p => p.id === userId) &&
+                    finalists.some(p => p.id === op.id)) {
+
+                    r.finalsPlayed++;
+                    const meFinal = finalists.find(p => p.id === userId);
+                    const opFinal = finalists.find(p => p.id === op.id);
+
+                    if (meFinal.rank < opFinal.rank) r.wins++;
+                    else r.losses++;
+                }
+            }
+        });
+    });
+
+    // Find the closest rival (most balanced finals)
+    let bestId = null;
+    let bestScore = -Infinity;
+
+    Object.entries(record).forEach(([id, r]) => {
+        const total = r.wins + r.losses;
+        if (total < 1) return;
+
+        const balance = 1 - Math.abs(r.wins - r.losses) / total;
+        const score = balance * r.finalsPlayed;
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestId = id;
+        }
+    });
+
+    return {
+        rival: bestId ? getUserById(parseInt(bestId))?.name : null
+    };
+}
+
+/**
+ * Nemesis calculated only from games of a specific year
+ */
+function getNemesisForYear(userId, year) {
+    const yearGames = getGamesByYear(year);
+    const record = {};
+
+    yearGames.forEach(g => {
+        if (g.status !== "completed") return;
+
+        const players = getAllGamePlayers(g);
+        const finalists = players
+            .map(p => ({
+                ...p,
+                rank: p.elimOrder === -1 ? 1 : players.length - p.elimOrder + 1
+            }))
+            .sort((a, b) => a.rank - b.rank)
+            .slice(0, 2);
+
+        if (finalists.length < 2) return;
+
+        const me = finalists.find(p => p.id === userId);
+        if (!me) return;
+
+        const opponent = finalists.find(p => p.id !== userId);
+        if (!opponent) return;
+
+        if (!record[opponent.id]) {
+            record[opponent.id] = { losses: 0 };
+        }
+
+        if (me.rank > opponent.rank) {
+            record[opponent.id].losses++;
+        }
+    });
+
+    let nemesisId = null;
+    let maxLosses = -1;
+
+    Object.entries(record).forEach(([id, r]) => {
+        if (r.losses > maxLosses) {
+            maxLosses = r.losses;
+            nemesisId = id;
+        }
+    });
+
+    return {
+        nemesis: nemesisId ? getUserById(parseInt(nemesisId))?.name : null
     };
 }

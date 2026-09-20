@@ -88,7 +88,8 @@ function changePage(delta) {
 
 /**
  * ---------------------- RENDERS MONTHLY LEADERBOARD ----------------------
- * Points automatically reset every month
+ * Points still reset every month
+ * Tier badge is calculated from the CURRENT YEAR only
  */
 function renderLeaderboard(tbody) {
     if (!tbody) return;
@@ -112,16 +113,12 @@ function renderLeaderboard(tbody) {
 
     // Step 2: add monthly game stats
     games.forEach(g => {
-
         const d = new Date(g.date);
 
         if (d.getMonth() === month && d.getFullYear() === year) {
-
             getAllGamePlayers(g).forEach(p => {
-
                 stats[p.id].points += p.points || 0;
                 stats[p.id].games += 1;
-
                 if (p.elimOrder === -1) stats[p.id].wins += 1;
             });
         }
@@ -133,17 +130,14 @@ function renderLeaderboard(tbody) {
             const userId = parseInt(id);
             const name = getUserById(userId)?.name || 'Unknown';
 
-            const lifetime = getLifetimeStats(userId);
-
+            // === NEW: Tier is calculated from CURRENT YEAR ===
+            const yearStats = getYearStats(userId, year);
             const tempStats = {
-                games: lifetime.games,
-                wins: lifetime.wins,
+                games: yearStats.games,
+                wins: yearStats.wins,
                 currentWinStreak: 0
             };
-
-            const avgPoints = lifetime.avgPoints;
-
-            const fullType = determinePlayerType(tempStats, avgPoints);
+            const fullType = determinePlayerType(tempStats, yearStats.avgPoints);
             const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
 
             return {
@@ -156,27 +150,23 @@ function renderLeaderboard(tbody) {
             };
         })
         .sort((a, b) => {
-
             // 1. Higher points first
             if (b.points !== a.points) return b.points - a.points;
-
             // 2. Higher wins first
             if (b.wins !== a.wins) return b.wins - a.wins;
-
             // 3. Fewer games first
             return a.games - b.games;
-
         });
 
-    // If no games this month, show message
+    // If no games this month
     if (leaderboard.length === 0) {
         tbody.innerHTML = `
-        <tr>
-            <td colspan="4" class="text-center text-white">
-                No games played this month
-            </td>
-        </tr>
-    `;
+            <tr>
+                <td colspan="4" class="text-center text-white">
+                    No games played this month
+                </td>
+            </tr>
+        `;
         return;
     }
 
@@ -712,35 +702,30 @@ function showMonthHistory(monthKey) {
 
 /**
  * ---------------------- RENDER PLAYER CAREER STATISTICS TABLE ----------------------
- * @param {HTMLElement} tbody - the tbody element to render stats in
+ * Now uses CURRENT YEAR data only (resets every January)
  */
 function renderCareerStats(tbody) {
 
     if (!tbody) return;
     tbody.innerHTML = '';
 
+    const currentYear = new Date().getFullYear();
+
     const userStats = users.map(u => {
 
-        let gamesPlayed = 0;
-        let wins = 0;
-        let totalPoints = 0;
+        // === NEW: Only count games from current year ===
+        const yearStats = getYearStats(u.id, currentYear);
 
-        games.forEach(g => {
-            const player = getAllGamePlayers(g).find(p => p.id === u.id);
-            if (player) {
-                gamesPlayed++;
-                totalPoints += player.points || 0;
-                if (player.elimOrder === -1) wins++;
-            }
-        });
+        const gamesPlayed = yearStats.games;
+        const wins = yearStats.wins;
+        const totalPoints = yearStats.totalPoints;
+        const avgPoints = yearStats.avgPoints;
 
-        // Calculate win rate and average points
         const winRate = gamesPlayed ? (wins / gamesPlayed) : 0;
         const winPct = gamesPlayed ? (winRate * 100).toFixed(1) : 0;
-        const avgPoints = gamesPlayed ? (totalPoints / gamesPlayed) : 0;
         const avgPointsDisplay = avgPoints.toFixed(2);
 
-        // Tier calculation
+        // Tier calculation (current year)
         const tempStats = {
             games: gamesPlayed,
             wins: wins,
@@ -750,7 +735,7 @@ function renderCareerStats(tbody) {
         const fullType = determinePlayerType(tempStats, avgPoints);
         const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
 
-        // ✅ NEW: progress object
+        // Progress towards next tier (current year)
         const progressData = getTierProgress(winRate, avgPoints);
 
         return {
@@ -765,7 +750,7 @@ function renderCareerStats(tbody) {
         };
     });
 
-    // Sort
+    // Sort by total points this year
     userStats.sort((a, b) => b.totalPoints - a.totalPoints);
 
     // Render
@@ -773,7 +758,7 @@ function renderCareerStats(tbody) {
 
         const tr = document.createElement('tr');
         tr.style.cursor = "pointer";
-        tr.onclick = () => showPlayerStats(u.id);
+        tr.onclick = () => showPlayerStats(u.id);   // still opens ALL-TIME popup
         tr.classList.add("clickable-row");
 
         tr.innerHTML = `
@@ -787,7 +772,6 @@ function renderCareerStats(tbody) {
 
                     <div class="progress mt-1" style="height:6px;">
                         <div class="progress-bar" style="width:${u.progressData.progress}%">
-
                         </div>
                     </div>
 
@@ -818,6 +802,152 @@ function renderCareerStats(tbody) {
             </td>
         `;
 
+        tbody.appendChild(tr);
+    });
+}
+
+/**
+ * Fills the year dropdown and renders the first (newest) year
+ */
+function initYearlyHistory() {
+    const select = document.getElementById("yearSelect");
+    if (!select) return;
+
+    const years = getAvailableYears();
+    select.innerHTML = '';
+
+    if (years.length === 0) {
+        select.innerHTML = `<option>No data yet</option>`;
+        return;
+    }
+
+    years.forEach(year => {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        select.appendChild(option);
+    });
+
+    // Render the newest year by default
+    renderYearlyHistory();
+}
+
+/**
+ * Main function that builds the Yearly History table
+ */
+function renderYearlyHistory() {
+    const tbody = document.getElementById("yearlyHistoryBody");
+    const select = document.getElementById("yearSelect");
+    if (!tbody || !select) return;
+
+    const year = parseInt(select.value);
+    tbody.innerHTML = '';
+
+    // Collect stats for every player in that year
+    const statsMap = {};
+
+    users.forEach(u => {
+        statsMap[u.id] = {
+            id: u.id,
+            name: u.name,
+            points: 0,
+            games: 0,
+            wins: 0,      // 1st places
+            seconds: 0,   // 2nd places
+            thirds: 0,    // 3rd places
+            totalPoints: 0
+        };
+    });
+
+    const yearGames = getGamesByYear(year);
+
+    yearGames.forEach(g => {
+        const players = getAllGamePlayers(g);
+        const totalPlayers = players.length;
+
+        players.forEach(p => {
+            if (!statsMap[p.id]) return;
+
+            statsMap[p.id].games++;
+            statsMap[p.id].points += p.points || 0;
+            statsMap[p.id].totalPoints += p.points || 0;
+
+            // Calculate finish position
+            const finish = p.elimOrder === -1
+                ? 1
+                : totalPlayers - p.elimOrder + 1;
+
+            if (finish === 1) statsMap[p.id].wins++;
+            if (finish === 2) statsMap[p.id].seconds++;
+            if (finish === 3) statsMap[p.id].thirds++;
+        });
+    });
+
+    // Convert to array and calculate extra fields
+    const leaderboard = Object.values(statsMap)
+        .filter(s => s.games > 0)
+        .map(s => {
+            const avg = s.games ? (s.totalPoints / s.games) : 0;
+            const winRate = s.games ? (s.wins / s.games) : 0;
+
+            // Tier for this year
+            const tempStats = {
+                games: s.games,
+                wins: s.wins,
+                currentWinStreak: 0
+            };
+            const fullType = determinePlayerType(tempStats, avg);
+            const tier = fullType.split(" • ").pop() || "🪵 Wood";
+
+            // Rival & Nemesis for this specific year
+            const rivalry = getRivalryForYear(s.id, year);
+            const nemesis = getNemesisForYear(s.id, year);
+
+            return {
+                ...s,
+                avg: avg.toFixed(2),
+                winPct: (winRate * 100).toFixed(1),
+                tier,
+                rival: rivalry.rival || "—",
+                nemesis: nemesis.nemesis || "—"
+            };
+        })
+        .sort((a, b) => {
+            // Same sorting as other leaderboards
+            if (b.points !== a.points) return b.points - a.points;
+            if (b.wins !== a.wins) return b.wins - a.wins;
+            return a.games - b.games;
+        });
+
+    // Render rows
+    if (leaderboard.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="10" class="text-center text-muted py-4">
+                    No games played in ${year}
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    leaderboard.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <strong>${p.name}</strong>
+                <span class="tier-badge ms-1">${p.tier}</span>
+            </td>
+            <td>${p.points}</td>
+            <td>${p.games}</td>
+            <td>${p.avg}</td>
+            <td>${p.wins}</td>
+            <td>${p.seconds}</td>
+            <td>${p.thirds}</td>
+            <td>${p.winPct}%</td>
+            <td>${p.rival}</td>
+            <td>${p.nemesis}</td>
+        `;
         tbody.appendChild(tr);
     });
 }

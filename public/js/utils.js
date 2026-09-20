@@ -55,3 +55,46 @@ function formatDate(dateStr) {
         hour12: true
     }).replace(',', '');
 }
+
+/**
+ * Returns all games that happened in a specific year
+ */
+function getGamesByYear(year) {
+    return games.filter(g => new Date(g.date).getFullYear() === year);
+}
+
+/**
+ * Returns the list of years that have at least one game (newest first)
+ */
+function getAvailableYears() {
+    const years = new Set();
+    games.forEach(g => years.add(new Date(g.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a);
+}
+
+/**
+ * Calculates year-based stats for a player (used for tier calculation)
+ */
+function getYearStats(userId, year) {
+    const yearGames = getGamesByYear(year);
+
+    let gamesPlayed = 0;
+    let wins = 0;
+    let totalPoints = 0;
+
+    yearGames.forEach(g => {
+        const player = getAllGamePlayers(g).find(p => p.id === userId);
+        if (player) {
+            gamesPlayed++;
+            totalPoints += player.points || 0;
+            if (player.elimOrder === -1) wins++;
+        }
+    });
+
+    return {
+        games: gamesPlayed,
+        wins,
+        avgPoints: gamesPlayed ? totalPoints / gamesPlayed : 0,
+        totalPoints
+    };
+}
