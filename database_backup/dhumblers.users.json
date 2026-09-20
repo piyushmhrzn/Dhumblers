@@ -1,0 +1,99 @@
+[{
+  "_id": {
+    "$oid": "69a8c0d5e314e164061713af"
+  },
+  "name": "Piyush",
+  "totalPoints": 849,
+  "gamesPlayed": 237,
+  "maxPossible": 1446,
+  "id": 1,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8c13aa896629e5d9d0da0"
+  },
+  "name": "Santosh",
+  "totalPoints": 1022,
+  "gamesPlayed": 353,
+  "maxPossible": 2058,
+  "id": 2,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8c6e2739552ede9c2a1f1"
+  },
+  "name": "Biplab",
+  "totalPoints": 690,
+  "gamesPlayed": 202,
+  "maxPossible": 1220,
+  "id": 3,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8e0195407836054225633"
+  },
+  "name": "Bhima",
+  "totalPoints": 906,
+  "gamesPlayed": 275,
+  "maxPossible": 1658,
+  "id": 4,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8e01e5407836054225638"
+  },
+  "name": "Januka",
+  "totalPoints": 936,
+  "gamesPlayed": 291,
+  "maxPossible": 1765,
+  "id": 5,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8e02f540783605422563d"
+  },
+  "name": "Bibek",
+  "totalPoints": 616,
+  "gamesPlayed": 186,
+  "maxPossible": 1121,
+  "id": 6,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69a8e0ff5407836054225642"
+  },
+  "name": "Buwa",
+  "totalPoints": 767,
+  "gamesPlayed": 260,
+  "maxPossible": 1545,
+  "id": 7,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69ae03c210a731c94a8d6d9b"
+  },
+  "name": "Seesam",
+  "totalPoints": 95,
+  "gamesPlayed": 25,
+  "maxPossible": 135,
+  "id": 8,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "69b4b98fa232d8af6be0987c"
+  },
+  "name": "Shreedhar",
+  "totalPoints": 11,
+  "gamesPlayed": 3,
+  "maxPossible": 20,
+  "id": 9,
+  "__v": 0
+}]
