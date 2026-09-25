@@ -333,13 +333,17 @@ function initLiveSocket() {
 
             // ───────── DETECTIONS ─────────
 
+            // --------------------------------------------------------------------------------
             // 1. ELIMINATION
+            // --------------------------------------------------------------------------------
             const newlyEliminated = game.players.filter(p => {
                 const oldP = oldGame.players.find(o => o.id === p.id);
                 return oldP && oldP.status === "active" && p.status === "eliminated";
             });
 
+            // --------------------------------------------------------------------------------
             // 2. FUNNY (40-0)
+            // --------------------------------------------------------------------------------
             let fortyCount = 0;
             let zeroCount = 0;
 
@@ -351,29 +355,26 @@ function initLiveSocket() {
             const totalPlayers = Object.keys(lastRound).length;
             const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
-            // SANTOSH (>40)
-            // const santosh = Object.entries(lastRound)
-            //     .filter(([_, score]) => score > 40)
-            //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
-
-            // 3. THUKKA (>40)
+            // --------------------------------------------------------------------------------
+            // 3. HIGH SCORE (40+) Players scoring more than 40 in the round
+            // --------------------------------------------------------------------------------
             const highScorers = Object.entries(lastRound)
                 .filter(([_, score]) => score > 40)
                 .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
-            // HIGH SCORER
             const highScorerIds = Object.entries(lastRound)
                 .filter(([_, score]) => score > 40)
                 .map(([id]) => parseInt(id));
 
-            // 4. NEAR ELIMINATION
+            // --------------------------------------------------------------------------------
+            // 4. NEAR ELIMINATION (within 15 points of elimScore)
+            // --------------------------------------------------------------------------------
             const nearElimPlayers = game.players.filter(p => {
                 if (p.status !== 'active') return false;
                 if (highScorerIds.includes(p.id)) return false;
                 return p.total >= (game.elimScore - 15);
             });
 
-            // 5. Danger
             const justEnteredDanger = nearElimPlayers.some(p => {
                 const oldP = oldGame.players.find(o => o.id === p.id);
                 return oldP && oldP.total < (game.elimScore - 15);
@@ -400,17 +401,6 @@ function initLiveSocket() {
 
                 showGif("funny", `${name} ji wah kya khela! 😂`);
             }
-
-            // else if (santosh.length > 0) {
-            //     playSound("santoshSound");
-
-            //     const text = santosh.length === 1
-            //         ? `${santosh[0]} ji ye hey santosh khela 😂`
-            //         : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
-
-
-            //     showGif("santosh", text);
-            // }
 
             else if (highScorers.length > 0) {
                 playSound("highScoreSound");

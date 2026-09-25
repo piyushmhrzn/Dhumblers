@@ -243,21 +243,60 @@ router.put('/games/ongoing/round', async (req, res) => {
 
             if (winner) winner.elimOrder = -1; // -1 = winner
 
-            // Prepare final ranking (winner first, then reverse elimination order)
+            // ── Winner bonus calculation ─────────────────────
+            let winnerBonus = 0;
+            let winnerBonusName = "";
+
+            if (winner) {
+                const finalScore = winner.total || 0;
+                const elimScore = game.elimScore;
+
+                if (finalScore >= elimScore - 4 && finalScore < elimScore) {
+                    winnerBonus = 2;
+                    winnerBonusName = "Clutch Win";
+                } else if (
+                    finalScore >= elimScore - 9 &&
+                    finalScore <= elimScore - 5
+                ) {
+                    winnerBonus = 1;
+                    winnerBonusName = "Danger Win";
+                } else if (finalScore <= elimScore - 50) {
+                    winnerBonus = 3;
+                    winnerBonusName = "Dominating Gameplay";
+                }
+            }
+
+            // Prepare final ranking:
+            // Winner first, then later elimination rounds first.
+            // Within the same elimination round, lower score ranks higher.
             let rankings = winner ? [winner] : [];
+
             rankings.push(
                 ...game.eliminated
                     .filter(p => p.id !== winner?.id)
-                    .reverse()
+                    .sort((a, b) => {
+                        // Later elimination order ranks higher
+                        if (a.elimOrder !== b.elimOrder) {
+                            return b.elimOrder - a.elimOrder;
+                        }
+
+                        // Same elimination round: lower score ranks higher
+                        return a.total - b.total;
+                    })
             );
 
-            // Calculate point distribution (n+1 → decreasing)
+            // Calculate point distribution
             const n = game.players.length;
             let pointsArr = [];
+
+            //  -------------------------------------------------------------------------------------------------------
+            //  Start with n+1 points for the winner
+            //  -------------------------------------------------------------------------------------------------------
             let pts = n + 1;
 
-            for (let i = 0; i < n; i++) {
-                // Same final score = same points
+            for (let i = 0; i < rankings.length; i++) {
+
+                // Same elimination order AND same total = tied
                 if (
                     i > 0 &&
                     rankings[i].total === rankings[i - 1].total &&
@@ -268,19 +307,20 @@ router.put('/games/ongoing/round', async (req, res) => {
                     pointsArr.push(pts);
                 }
 
-                // Only reduce points when NOT tied
+                // Winner's next rank drops by 3 points.
+                // All other rank changes drop by 1 point.
                 if (
                     i === 0 ||
                     rankings[i].total !== rankings[i - 1].total ||
                     rankings[i].elimOrder !== rankings[i - 1].elimOrder
                 ) {
-                    pts -= (i === 0 ? 2 : 1);
+                    pts -= (i === 0 ? 3 : 1);
                 }
             }
 
             // Award points & update user stats
             for (let i = 0; i < rankings.length; i++) {
-                const awarded = pointsArr[i] || 0;
+                let awarded = pointsArr[i] || 0;
                 const playerId = rankings[i].id;
 
                 // Update in-game player record
@@ -288,15 +328,28 @@ router.put('/games/ongoing/round', async (req, res) => {
                     game.eliminated.find(p => p.id === playerId);
 
                 if (playerInGame) {
+
+                    // Add winner bonus only to the winner
+                    if (winner && playerId === winner.id) {
+                        awarded += winnerBonus;
+
+                        playerInGame.bonusPoints = winnerBonus;
+                        playerInGame.bonusName = winnerBonusName;
+                    }
+
                     playerInGame.points = awarded;
                 }
 
                 // Update global user stats
                 const user = await User.findOne({ id: playerId });
+
                 if (user) {
                     user.totalPoints += awarded;
                     user.gamesPlayed += 1;
-                    user.maxPossible += (n + 1);
+
+                    // New maximum base points: n + 2
+                    user.maxPossible += (n + 2);
+
                     await user.save();
                 }
             }

@@ -24,7 +24,6 @@ function showGif(type, playerName = "", customDuration = null) {
     const highGif = document.getElementById("highGif");
     const nearElimGif = document.getElementById("nearElimGif");
     const winnerGif = document.getElementById("winnerGif");
-    // const santosh = document.getElementById("santoshGif");
 
     if (!overlay) return;
 
@@ -58,10 +57,6 @@ function showGif(type, playerName = "", customDuration = null) {
             activeGif = nearElimGif;
             duration = duration || 10000;
             break;
-        // case "santosh":
-        //     activeGif = santoshGif;
-        //     duration = duration || 10000;
-        //     break;
         case "winner":
             activeGif = winnerGif;
             duration = duration || 10000;
@@ -92,7 +87,7 @@ let audioUnlocked = false;
 document.addEventListener("click", () => {
     if (audioUnlocked) return;
 
-    ["elimSound", "funnySound", "highScoreSound", "nearElimSound", "santoshSound"].forEach(id => {
+    ["elimSound", "funnySound", "highScoreSound", "nearElimSound", "winnerSound"].forEach(id => {
         const audio = document.getElementById(id);
         if (audio) {
             audio.muted = true;

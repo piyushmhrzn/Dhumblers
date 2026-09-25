@@ -134,13 +134,17 @@ async function submitRoundScores() {
         // 1. WINNER
         const isWinner = updatedGame.status === "completed";
 
+        // --------------------------------------------------------------------------------
         // 2. ELIMINATION
+        // --------------------------------------------------------------------------------
         const newlyEliminated = updatedGame.players.filter(p => {
             const oldP = oldGame.players.find(o => o.id === p.id);
             return oldP && oldP.status === 'active' && p.status === 'eliminated';
         });
 
+        // --------------------------------------------------------------------------------
         // 3. FUNNY (40-0)
+        // --------------------------------------------------------------------------------
         let fortyCount = 0;
         let zeroCount = 0;
 
@@ -152,21 +156,20 @@ async function submitRoundScores() {
         const totalPlayers = Object.keys(lastRound).length;
         const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
 
-        // SANTOSH (>40)
-        // const santosh = Object.entries(lastRound)
-        //     .filter(([_, score]) => score > 40)
-        //     .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
-
-        // 4. THUKKA (>40)
+        // --------------------------------------------------------------------------------
+        // 4. HIGH SCORE (40+) Players scoring more than 40 in the round
+        // --------------------------------------------------------------------------------
         const highScorers = Object.entries(lastRound)
             .filter(([_, score]) => score > 40)
             .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
 
-        // 5. NEAR ELIMINATION
         const highScorerIds = Object.entries(lastRound)
             .filter(([_, score]) => score > 40)
             .map(([id]) => parseInt(id));
 
+        // --------------------------------------------------------------------------------
+        // 5. NEAR ELIMINATION (within 15 points of elimScore)
+        // --------------------------------------------------------------------------------
         const nearElimPlayers = updatedGame.players.filter(p => {
             if (p.status !== 'active') return false;
             if (highScorerIds.includes(p.id)) return false;
@@ -211,22 +214,12 @@ async function submitRoundScores() {
             showGif("funny", `${name} ji wah kya khela! 😂`);
         }
 
-        // else if (santosh.length > 0) {
-        //     playSound("santoshSound");
-
-        //     const text = santosh.length === 1
-        //         ? `${santosh[0]} ji ye hey santosh khela 😂`
-        //         : `${santosh.join(" & ")} ji ye hey santosh khela 😂`;
-
-        //     showGif("santosh", text);
-        // }
-
         else if (highScorers.length > 0) {
             playSound("highScoreSound");
 
             const text = highScorers.length === 1
-                ? `${highScorers[0]} ji wah ultra-legend honi 😂`
-                : `${highScorers.join(" & ")} ji wah ultra-legend honi 😂`;
+                ? `${highScorers[0]} jji wah ultra-legend khiladi 😂`
+                : `${highScorers.join(" & ")} jji wah ultra-legend khiladi 😂`;
 
             showGif("high", text);
         }
@@ -264,14 +257,24 @@ function showWinner() {
     const winnerPlayer = currentGame.players.find(p => p.elimOrder === -1);
     const winnerName = getUserById(winnerPlayer?.id)?.name || 'Unknown';
 
-    // 🔊 NEW: Winner celebration
+    // Winner bonus details
+    const bonusPoints = winnerPlayer?.bonusPoints || 0;
+    const bonusName = winnerPlayer?.bonusName || '';
+
+    // 🔊 Winner celebration
     playSound("winnerSound");
-    // showGif("winner", `${winnerName} is the WINNER 👑🔥`, 10000);
 
     document.getElementById('winnerBanner').innerHTML = `
         <div class="alert alert-success text-center mb-4" role="alert">
             <h4 class="alert-heading">Game Over!</h4>
             <p><strong>Winner: ${winnerName}</strong></p>
+
+            ${bonusPoints > 0 ? `
+                <p class="mb-2">
+                    <strong>${bonusName} (+${bonusPoints} points)</strong>
+                </p>
+            ` : ''}
+
             <hr>
             <p class="mb-2">Final scores are shown below.</p>
             <a href="index.html" class="btn btn-success">Back to Home</a>

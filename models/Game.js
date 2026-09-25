@@ -5,7 +5,9 @@ const playerSchema = new mongoose.Schema({
     total: { type: Number, default: 0 },
     status: { type: String, default: 'active' },  // 'active' or 'eliminated'
     elimOrder: { type: Number, default: null },
-    points: { type: Number, default: 0 }  // Awarded at end
+    points: { type: Number, default: 0 },  // Awarded at end
+    bonusPoints: { type: Number, default: 0 },
+    bonusName: { type: String, default: '' }
 });
 
 const gameSchema = new mongoose.Schema({
