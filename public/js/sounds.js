@@ -43,11 +43,11 @@ function showGif(type, playerName = "", customDuration = null) {
     switch (type) {
         case "elim":
             activeGif = elimGif;
-            duration = duration || 15000;
+            duration = duration || 12000;
             break;
         case "funny":
             activeGif = funnyGif;
-            duration = duration || 14000;
+            duration = duration || 9000;
             break;
         case "high":
             activeGif = highGif;
