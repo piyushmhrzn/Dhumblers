@@ -138,7 +138,7 @@ function renderLeaderboard(tbody) {
                 currentWinStreak: 0
             };
             const fullType = determinePlayerType(tempStats, yearStats.avgPoints);
-            const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
+            const prestigeTier = fullType.split(" • ").pop() || "🪱 Compost";
 
             return {
                 id: userId,
@@ -711,39 +711,64 @@ function renderCareerStats(tbody) {
 
     const currentYear = new Date().getFullYear();
 
+    // Truncate instead of rounding
+    const truncate2 = value => Math.trunc(value * 100) / 100;
+
     const userStats = users.map(u => {
 
-        // === NEW: Only count games from current year ===
         const yearStats = getYearStats(u.id, currentYear);
 
         const gamesPlayed = yearStats.games;
         const wins = yearStats.wins;
         const totalPoints = yearStats.totalPoints;
-        const avgPoints = yearStats.avgPoints;
 
-        const winRate = gamesPlayed ? (wins / gamesPlayed) : 0;
-        const winPct = gamesPlayed ? (winRate * 100).toFixed(1) : 0;
+        // Actual average
+        const rawAvgPoints = gamesPlayed
+            ? totalPoints / gamesPlayed
+            : 0;
+
+        // Truncated average to 2 decimal places
+        const avgPoints = truncate2(rawAvgPoints);
+
+        // Win percentage truncated to 2 decimal places
+        const rawWinRate = gamesPlayed
+            ? wins / gamesPlayed
+            : 0;
+
+        const winPct = truncate2(rawWinRate * 100);
+
+        // Use the SAME displayed precision for rank calculation
+        const winRate = winPct / 100;
+
         const avgPointsDisplay = avgPoints.toFixed(2);
+        const winPctDisplay = winPct.toFixed(2);
 
-        // Tier calculation (current year)
         const tempStats = {
             games: gamesPlayed,
             wins: wins,
             currentWinStreak: 0
         };
 
-        const fullType = determinePlayerType(tempStats, avgPoints);
-        const prestigeTier = fullType.split(" • ").pop() || "🪵 Wood";
+        const fullType = determinePlayerType(
+            tempStats,
+            avgPoints
+        );
 
-        // Progress towards next tier (current year)
-        const progressData = getTierProgress(winRate, avgPoints);
+        const prestigeTier =
+            fullType.split(" • ").pop() || "🪱 Compost";
+
+        // Progress uses the same truncated values
+        const progressData = getTierProgress(
+            winRate,
+            avgPoints
+        );
 
         return {
             ...u,
             gamesPlayed,
             wins,
             totalPoints,
-            winPct,
+            winPctDisplay,
             avgPointsDisplay,
             prestigeTier,
             progressData
@@ -758,7 +783,7 @@ function renderCareerStats(tbody) {
 
         const tr = document.createElement('tr');
         tr.style.cursor = "pointer";
-        tr.onclick = () => showPlayerStats(u.id);   // still opens ALL-TIME popup
+        tr.onclick = () => showPlayerStats(u.id);
         tr.classList.add("clickable-row");
 
         tr.innerHTML = `
@@ -771,19 +796,29 @@ function renderCareerStats(tbody) {
                     </div>
 
                     <div class="progress mt-1" style="height:6px;">
-                        <div class="progress-bar" style="width:${u.progressData.progress}%">
+                        <div class="progress-bar"
+                            style="width:${u.progressData.progress}%">
                         </div>
                     </div>
 
                     <div class="career-progress-text">
-                        ${u.progressData.nextTier
-                ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
-                : "Max tier reached"
+
+                        ${u.gamesPlayed < 10
+                ? `Rookie — ${10 - u.gamesPlayed} more games to unlock ranks`
+                : u.progressData.nextTier
+                    ? `${u.progressData.remaining}% to ${u.progressData.nextTier}`
+                    : "You reached Conqueror! 🗿"
             }
+
                         <br>
+
                         <small class="text-white">
-                            ${u.progressData.gapText || ""}
+                            ${u.gamesPlayed < 10
+                ? "Play 10 games to unlock prestige ranks."
+                : u.progressData.gapText || ""
+            }
                         </small>
+
                     </div>
 
                 </div>
@@ -797,10 +832,12 @@ function renderCareerStats(tbody) {
             </td>
 
             <td>
-                <div class="stat-main">${u.winPct}%</div>
+                <div class="stat-main">${u.winPctDisplay}%</div>
                 <div class="stat-sub">⚡${u.avgPointsDisplay}</div>
             </td>
         `;
+
+        tbody.appendChild(tr);
 
         tbody.appendChild(tr);
     });

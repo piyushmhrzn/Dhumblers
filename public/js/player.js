@@ -5,12 +5,13 @@
 function determinePlayerType(stats, avgPoints) {
     const types = [];
 
-    const winRate = stats.games > 0 ? stats.wins / stats.games : 0;
+    const winRate = stats.games > 0
+        ? stats.wins / stats.games
+        : 0;
+
     const hasGames = stats.games >= 10;
 
-    // ─────────────────────────────────────────────
-    // 1. PRIMARY IDENTITY (WIN BASED) - Original Style
-    // ─────────────────────────────────────────────
+    // 1. PRIMARY IDENTITY
     if (winRate >= 0.30 && hasGames) {
         types.push("👑 Sab ka Baap");
     }
@@ -30,9 +31,7 @@ function determinePlayerType(stats, avgPoints) {
         types.push("🤡 Pataki");
     }
 
-    // ─────────────────────────────────────────────
-    // 2. SCORING STYLE (Avg Points Based) - Original Style
-    // ─────────────────────────────────────────────
+    // 2. SCORING STYLE
     if (avgPoints >= 3.40 && hasGames) {
         types.push("💣 Dangdung Khiladi");
     }
@@ -52,34 +51,19 @@ function determinePlayerType(stats, avgPoints) {
         types.push("🐸 Lute");
     }
 
-    // ─────────────────────────────────────────────
-    // 3. PRESTIGE TIER (Expanded Version)
-    // ─────────────────────────────────────────────
-    if (winRate >= 0.30 && avgPoints >= 3.40 && hasGames) {
-        types.push("💎 Diamond");
-    }
-    else if (winRate >= 0.27 && avgPoints >= 3.30 && hasGames) {
-        types.push("🔷 Platinum");
-    }
-    else if (winRate >= 0.24 && avgPoints >= 3.20 && hasGames) {
-        types.push("♦️ Ruby");
-    }
-    else if (winRate >= 0.20 && avgPoints >= 3.10 && hasGames) {
-        types.push("🧈 Gold");
-    }
-    else if (winRate >= 0.15 && avgPoints >= 3.00 && hasGames) {
-        types.push("⬜ Silver");
-    }
-    else if (winRate >= 0.10 && avgPoints >= 2.90 && hasGames) {
-        types.push("🟤 Bronze");
-    }
-    else if (hasGames) {
-        types.push("🪵 Wood");
+    // 3. PRESTIGE TIER
+    if (hasGames) {
+        const tier = [...TIERS]
+            .reverse()
+            .find(t =>
+                winRate >= t.win &&
+                Number(avgPoints) >= t.avg
+            );
+
+        types.push(tier ? tier.name : "🪱 Compost");
     }
 
-    // ─────────────────────────────────────────────
     // 4. STREAK ENERGY
-    // ─────────────────────────────────────────────
     if (stats.currentWinStreak >= 3) {
         types.push("⚡ Unstoppable");
     }
@@ -87,179 +71,107 @@ function determinePlayerType(stats, avgPoints) {
         types.push("🔥 On Fire");
     }
 
-    // ─────────────────────────────────────────────
     // 5. SPECIAL FUN TAGS
-    // ─────────────────────────────────────────────
     if (stats.games <= 10) {
         types.push("🎮 Rookie");
     }
 
-    // ─────────────────────────────────────────────
     // FALLBACK
-    // ─────────────────────────────────────────────
     if (types.length === 0) {
         return hasGames ? "🌀 Casual" : "🎮 Rookie";
     }
 
-    // ─────────────────────────────────────────────
-    // RETURN UP TO 3 BEST TAGS
-    // ─────────────────────────────────────────────
     return types.slice(0, 3).join(" • ");
 }
 
-// Show tier info modal
-function showTierInfo(tierText) {
-    const title = document.getElementById("tierDetailTitle");
-    const body = document.getElementById("tierDetailBody");
-    if (!title || !body) return;
 
-    let tierName = "";
-    let content = "";
-    let rangeText = "";
-
-    if (tierText.includes("Diamond")) {
-        tierName = "💎 Diamond Tier";
-        rangeText = "Win Rate: ≥ 30% &nbsp; | &nbsp; Avg Points: ≥ 3.40";
-        content = "Top of the game. Elite win rate + insane consistency.";
-    }
-    else if (tierText.includes("Platinum")) {
-        tierName = "🔷 Platinum Tier";
-        rangeText = "Win Rate: 27% - 29.99% &nbsp; | &nbsp; Avg Points: 3.30 - 3.39";
-        content = "Highly skilled player with strong performance..";
-    }
-    else if (tierText.includes("Ruby")) {
-        tierName = "♦️ Ruby Tier";
-        rangeText = "Win Rate: 24% - 26.99% &nbsp; | &nbsp; Avg Points: 3.20 - 3.29";
-        content = "Very competitive. Strong scoring and wins.";
-    }
-    else if (tierText.includes("Gold")) {
-        tierName = "🧈 Gold Tier";
-        rangeText = "Win Rate: 20% - 23.99% &nbsp; | &nbsp; Avg Points: 3.10 - 3.19";
-        content = "Reliable player with solid gameplay.";
-    }
-    else if (tierText.includes("Silver")) {
-        tierName = "⬜ Silver Tier";
-        rangeText = "Win Rate: 15% - 19.99% &nbsp; | &nbsp; Avg Points: 3.00 - 3.09";
-        content = "Decent player, still improving.";
-    }
-    else if (tierText.includes("Bronze")) {
-        tierName = "🟤 Bronze Tier";
-        rangeText = "Win Rate: 10% - 14.99% &nbsp; | &nbsp; Avg Points: 2.90 - 2.99";
-        content = "Needs improvement. Focus on consistency.";
-    }
-    else if (tierText.includes("Wood")) {
-        tierName = "🪵 Wood Tier";
-        rangeText = "Win Rate: < 10% &nbsp; | &nbsp; Avg Points: < 2.90";
-        content = "Welcome to Dhumble 😂";
-    }
-    else {
-        tierName = tierText || "New Player";
-        rangeText = "New to the game";
-        content = "Welcome! Play more games to unlock your tier.";
-    }
-
-    body.innerHTML = `
-        <div class="mb-2" style="font-size: 1.8rem;">${tierText}</div>
-        <div class="mb-2">
-            <strong style="color: #ffd700;">Requirements:</strong><br>
-            <span style="font-size: .90rem;">${rangeText}</span>
-        </div>
-        <p class="mb-3">${content}</p>
-    `;
-
-    title.innerText = tierName;
-
-    const modal = new bootstrap.Modal(document.getElementById("tierDetailModal"));
-    modal.show();
-}
-
-const TIERS = [
-    { name: "🪵 Wood", win: 0.00, avg: 0.00 },
-    { name: "🟤 Bronze", win: 0.10, avg: 2.90 },
-    { name: "⬜ Silver", win: 0.15, avg: 3.00 },
-    { name: "🧈 Gold", win: 0.20, avg: 3.10 },
-    { name: "♦️ Ruby", win: 0.24, avg: 3.20 },
-    { name: "🔷 Platinum", win: 0.27, avg: 3.30 },
-    { name: "💎 Diamond", win: 0.30, avg: 3.40 }
-];
-
+// ================================================
+// GET TIER PROGRESS
+// ================================================
 function getTierProgress(winRate, avgPoints) {
     winRate = Number(winRate) || 0;
     avgPoints = Number(avgPoints) || 0;
 
     let currentIndex = 0;
 
+    // Find the highest tier the player qualifies for
     for (let i = TIERS.length - 1; i >= 0; i--) {
-        if (winRate >= TIERS[i].win && avgPoints >= TIERS[i].avg) {
+        if (
+            winRate >= TIERS[i].win &&
+            avgPoints >= TIERS[i].avg
+        ) {
             currentIndex = i;
             break;
         }
     }
 
-    // Max tier
+    const current = TIERS[currentIndex];
+
+    // Maximum rank
     if (currentIndex === TIERS.length - 1) {
         return {
+            currentTier: current.name,
             progress: 100,
             remaining: 0,
             nextTier: null,
-            gapText: ""
+            gapText: "You reached Conqueror! 🗿"
         };
     }
 
-    const current = TIERS[currentIndex];
     const next = TIERS[currentIndex + 1];
 
-    const winRange = (next.win - current.win) || 1;
-    const avgRange = (next.avg - current.avg) || 1;
+    const winRange = next.win - current.win;
+    const avgRange = next.avg - current.avg;
 
-    const winProgress = (winRate - current.win) / winRange;
-    const avgProgress = (avgPoints - current.avg) / avgRange;
+    const winProgress = winRange > 0
+        ? (winRate - current.win) / winRange
+        : 1;
 
+    const avgProgress = avgRange > 0
+        ? (avgPoints - current.avg) / avgRange
+        : 1;
+
+    // Both requirements must be met
     let progressRaw = Math.min(winProgress, avgProgress);
 
-    // Clamp
     progressRaw = Math.max(0, Math.min(1, progressRaw));
 
-    // 🔥 CRITICAL FIX:
-    // If player hasn't reached next tier yet → NEVER allow 100%
     const qualifiesForNext =
-        winRate >= next.win && avgPoints >= next.avg;
+        winRate >= next.win &&
+        avgPoints >= next.avg;
 
     if (!qualifiesForNext && progressRaw >= 1) {
         progressRaw = 0.99;
     }
 
-    let progressPercent = Math.floor(progressRaw * 100);
+    const progressPercent = Math.floor(progressRaw * 100);
+
     let remainingPercent = Math.ceil((1 - progressRaw) * 100);
 
-    // 🔥 FORCE minimum 1% remaining if not promoted
     if (!qualifiesForNext && remainingPercent === 0) {
         remainingPercent = 1;
     }
 
-    // ✅ BONUS UPGRADE (THIS IS THE NEW PART)
+    // Calculate remaining requirements
     const winGap = Math.max(0, next.win - winRate);
     const avgGap = Math.max(0, next.avg - avgPoints);
 
-    let gapParts = [];
+    const gapParts = [];
 
     if (winGap > 0) {
-        gapParts.push(`+${(winGap * 100).toFixed(1)}% win`);
+        gapParts.push(`+${(winGap * 100).toFixed(2)}% win rate`);
     }
 
     if (avgGap > 0) {
-        gapParts.push(`+${avgGap.toFixed(2)} avg`);
+        gapParts.push(`+${avgGap.toFixed(2)} avg points`);
     }
 
-    let gapText = "";
-
-    if (gapParts.length > 0) {
-        gapText = `Needs ${gapParts.join(" + ")}`;
-    } else {
-        gapText = "Ready to rank up! 🔥";
-    }
+    const gapText = qualifiesForNext
+        ? "Ready to rank up! 🔥"
+        : `Needs ${gapParts.join(" + ")}`;
 
     return {
+        currentTier: current.name,
         progress: progressPercent,
         remaining: remainingPercent,
         nextTier: next.name,
@@ -267,36 +179,149 @@ function getTierProgress(winRate, avgPoints) {
     };
 }
 
-function showPlayerStats(userId) {
 
+// ================================================
+// SHOW TIER INFO
+// ================================================
+function showTierInfo(tierText) {
+    const title = document.getElementById("tierDetailTitle");
+    const body = document.getElementById("tierDetailBody");
+
+    if (!title || !body) return;
+
+    // Match the exact tier, including sub-tier I / II / III
+    const tier = [...TIERS]
+        .sort((a, b) => b.name.length - a.name.length)
+        .find(t => tierText.includes(t.name));
+
+    if (!tier) {
+        title.innerText = tierText || "New Player";
+
+        body.innerHTML = `
+            <div class="mb-2" style="font-size: 1.8rem;">
+                ${tierText || "🎮 Rookie"}
+            </div>
+            <p>Play at least 10 games to unlock your prestige rank.</p>
+        `;
+
+        new bootstrap.Modal(
+            document.getElementById("tierDetailModal")
+        ).show();
+
+        return;
+    }
+
+    const index = TIERS.findIndex(t => t.name === tier.name);
+
+    const nextTier = TIERS[index + 1];
+
+    const rangeText = `
+        Win Rate: ≥ ${(tier.win * 100).toFixed(1)}%
+        &nbsp; | &nbsp;
+        Avg Points: ≥ ${tier.avg.toFixed(2)}
+    `;
+
+    let content = "";
+
+    if (tier.name.includes("Compost")) {
+        content = "The bottom of the ladder. Time to get those wins!";
+    }
+    else if (tier.name.includes("Wood")) {
+        content = "Your ranking journey begins here.";
+    }
+    else if (tier.name.includes("Bronze")) {
+        content = "You're building consistency and climbing the ranks.";
+    }
+    else if (tier.name.includes("Silver")) {
+        content = "A solid player with improving performance.";
+    }
+    else if (tier.name.includes("Gold")) {
+        content = "A reliable competitor with strong results.";
+    }
+    else if (tier.name.includes("Ruby")) {
+        content = "A skilled player with competitive performance.";
+    }
+    else if (tier.name.includes("Platinum")) {
+        content = "A high-level player approaching Diamond.";
+    }
+    else if (tier.name.includes("Diamond")) {
+        content = "Elite performance. You've reached the High tier.";
+    }
+    else if (tier.name.includes("Master")) {
+        content = "An exceptional player among the top competitors.";
+    }
+    else if (tier.name.includes("Grandmaster")) {
+        content = "A rare rank for consistently dominant players.";
+    }
+    else if (tier.name.includes("Conqueror")) {
+        content = "The highest prestige rank in Dhumble! 🗿";
+    }
+
+    let nextText = "";
+
+    if (nextTier) {
+        nextText = `
+            <div class="mt-3">
+                <strong>Next Rank:</strong><br>
+                ${nextTier.name}
+            </div>
+        `;
+    }
+
+    title.innerText = `${tier.name} Tier`;
+
+    body.innerHTML = `
+        <div class="mb-2" style="font-size: 1.8rem;">
+            ${tier.name}
+        </div>
+
+        <div class="mb-2">
+            <strong style="color: #ffd700;">Requirements:</strong><br>
+            <span style="font-size: .90rem;">${rangeText}</span>
+        </div>
+
+        <p class="mb-3">${content}</p>
+
+        ${nextText}
+    `;
+
+    const modal = new bootstrap.Modal(
+        document.getElementById("tierDetailModal")
+    );
+
+    modal.show();
+}
+
+
+
+// ================================================
+// SHOW PLAYER STATS
+// ================================================
+function showPlayerStats(userId) {
     const user = getUserById(userId);
 
+    if (!user) return;
+
+    // Only stats used in the Career Stats HTML
     const stats = {
         games: 0,
         wins: 0,
         seconds: 0,
         thirds: 0,
         totalPoints: 0,
-        roundsPlayed: 0,
-        totalScore: 0,
-
         longestWinStreak: 0,
         currentWinStreak: 0,
-        tempWinStreak: 0,
-
-        highestRoundScore: 0,
-        fastestEliminationRounds: Infinity, // updated
-        finishingSum: 0,
-
-        bestWinningGameRounds: Infinity // updated
+        tempWinStreak: 0
     };
 
     // Sort games chronologically
-    const sortedGames = [...games].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedGames = [...games].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+    );
 
     sortedGames.forEach(g => {
-
         const players = getAllGamePlayers(g);
+
         const player = players.find(p => p.id === userId);
 
         if (!player) return;
@@ -305,89 +330,62 @@ function showPlayerStats(userId) {
         stats.totalPoints += player.points || 0;
 
         const numPlayers = players.length;
-        let finish = player.elimOrder === -1 ? 1 : numPlayers - player.elimOrder + 1;
 
-        stats.finishingSum += finish;
+        const finish = player.elimOrder === -1
+            ? 1
+            : numPlayers - player.elimOrder + 1;
 
+        // Wins and win streaks
         if (finish === 1) {
             stats.wins++;
             stats.tempWinStreak++;
         } else {
-            if (stats.tempWinStreak > stats.longestWinStreak)
-                stats.longestWinStreak = stats.tempWinStreak;
+            stats.longestWinStreak = Math.max(
+                stats.longestWinStreak,
+                stats.tempWinStreak
+            );
 
             stats.tempWinStreak = 0;
         }
 
-        if (finish === 2) stats.seconds++;
-        if (finish === 3) stats.thirds++;
-
-        // --- Calculate fastest elimination ---
-        if (player.status === 'eliminated') {
-            let cumulative = 0;
-            let roundsToElim = 0;
-            for (let i = 0; i < g.rounds.length; i++) {
-                cumulative += g.rounds[i][player.id] || 0;
-                roundsToElim++;
-                if (cumulative >= g.elimScore) break;
-            }
-            if (roundsToElim < stats.fastestEliminationRounds)
-                stats.fastestEliminationRounds = roundsToElim;
+        // Second and third places
+        if (finish === 2) {
+            stats.seconds++;
         }
 
-        // --- Calculate best winning game ---
-        if (finish === 1) {
-            // Track cumulative points of all other players
-            const otherPlayers = players.filter(p => p.id !== userId);
-            const cumTotals = {};
-            otherPlayers.forEach(p => cumTotals[p.id] = 0);
-
-            let roundsToEliminateAll = 0;
-
-            for (let i = 0; i < g.rounds.length; i++) {
-                g.rounds[i] && otherPlayers.forEach(p => {
-                    cumTotals[p.id] += g.rounds[i][p.id] || 0;
-                });
-
-                roundsToEliminateAll = i + 1;
-
-                // Check if all other players eliminated
-                const allElim = Object.values(cumTotals).every(t => t >= g.elimScore);
-                if (allElim) break; // Stop at round when last player eliminated
-            }
-
-            if (roundsToEliminateAll < stats.bestWinningGameRounds)
-                stats.bestWinningGameRounds = roundsToEliminateAll;
+        if (finish === 3) {
+            stats.thirds++;
         }
-
-        // round statistics
-        g.rounds.forEach(r => {
-            const score = r[userId] || 0;
-
-            stats.roundsPlayed++;
-            stats.totalScore += score;
-
-            if (score > stats.highestRoundScore)
-                stats.highestRoundScore = score;
-        });
-
     });
 
-    // finalize streaks
-    stats.longestWinStreak = Math.max(stats.longestWinStreak, stats.tempWinStreak);
+    // Finalize streaks
+    stats.longestWinStreak = Math.max(
+        stats.longestWinStreak,
+        stats.tempWinStreak
+    );
+
     stats.currentWinStreak = stats.tempWinStreak;
 
-    const winPct = stats.games ? ((stats.wins / stats.games) * 100).toFixed(1) : 0;
-    const avgPoints = stats.games ? (stats.totalPoints / stats.games).toFixed(2) : 0;
+    // Career calculations
+    const winPct = stats.games
+        ? ((stats.wins / stats.games) * 100).toFixed(1)
+        : "0.0";
+
+    const avgPoints = stats.games
+        ? (stats.totalPoints / stats.games).toFixed(2)
+        : "0.00";
+
     const playerType = determinePlayerType(stats, avgPoints);
+
     const rivalry = getRivalry(userId);
     const nemesis = getNemesis(userId);
 
+    // Career Stats HTML
     const html = `
         <div class="alert alert-secondary text-center mb-4">
             <strong>Style:</strong> ${playerType}
         </div>
-        
+
         <div class="row text-center mb-3">
 
             <div class="col-6 col-md-3 mb-2">
@@ -425,14 +423,17 @@ function showPlayerStats(userId) {
                 <h6>🥉 3rd Places</h6>
                 <p class="fw-bold">${stats.thirds}</p>
             </div>
+
         </div>
 
         <hr>
 
         <div class="row text-center mb-3">
+
             <div class="col-6 col-md-6 mb-2">
                 <h6>🤜 Rival</h6>
                 <p class="fw-bold">${rivalry.rival || "—"}</p>
+
                 <small class="text-white-50">
                     ${rivalry.rivalStats || "Your closest competitor"}
                 </small>
@@ -441,26 +442,33 @@ function showPlayerStats(userId) {
             <div class="col-6 col-md-6 mb-2">
                 <h6>💀 Nemesis</h6>
                 <p class="fw-bold">${nemesis.nemesis || "—"}</p>
+
                 <small class="text-white-50">
                     ${nemesis.nemesisStats || "Beats you most in finals"}
                 </small>
             </div>
+
         </div>
 
         <hr>
 
         <div class="row text-center mb-3">
+
             <div class="col-6 col-md-6 mb-2">
                 <h6>🔥 Longest Win Streak</h6>
-                <p class="font-weight-bold">${stats.longestWinStreak}</p>
+                <p class="font-weight-bold">
+                    ${stats.longestWinStreak}
+                </p>
             </div>
 
             <div class="col-6 col-md-6 mb-2">
                 <h6>⚡ Current Win Streak</h6>
-                <p class="font-weight-bold">${stats.currentWinStreak}</p>
+                <p class="font-weight-bold">
+                    ${stats.currentWinStreak}
+                </p>
             </div>
-        </div>
 
+        </div>
     `;
 
     document.getElementById("playerStatsTitle").innerText =
@@ -468,7 +476,10 @@ function showPlayerStats(userId) {
 
     document.getElementById("playerStatsContent").innerHTML = html;
 
-    const modal = new bootstrap.Modal(document.getElementById("playerStatsModal"));
+    const modal = new bootstrap.Modal(
+        document.getElementById("playerStatsModal")
+    );
+
     modal.show();
 }
 

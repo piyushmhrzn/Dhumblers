@@ -3,9 +3,9 @@
     "$oid": "69a8c0d5e314e164061713af"
   },
   "name": "Piyush",
-  "totalPoints": 849,
-  "gamesPlayed": 237,
-  "maxPossible": 1446,
+  "totalPoints": 871,
+  "gamesPlayed": 247,
+  "maxPossible": 1506,
   "id": 1,
   "__v": 0
 },
@@ -14,9 +14,9 @@
     "$oid": "69a8c13aa896629e5d9d0da0"
   },
   "name": "Santosh",
-  "totalPoints": 1022,
-  "gamesPlayed": 353,
-  "maxPossible": 2058,
+  "totalPoints": 1045,
+  "gamesPlayed": 361,
+  "maxPossible": 2108,
   "id": 2,
   "__v": 0
 },
@@ -25,9 +25,9 @@
     "$oid": "69a8c6e2739552ede9c2a1f1"
   },
   "name": "Biplab",
-  "totalPoints": 690,
-  "gamesPlayed": 202,
-  "maxPossible": 1220,
+  "totalPoints": 725,
+  "gamesPlayed": 211,
+  "maxPossible": 1274,
   "id": 3,
   "__v": 0
 },
@@ -36,9 +36,9 @@
     "$oid": "69a8e0195407836054225633"
   },
   "name": "Bhima",
-  "totalPoints": 906,
-  "gamesPlayed": 275,
-  "maxPossible": 1658,
+  "totalPoints": 933,
+  "gamesPlayed": 283,
+  "maxPossible": 1707,
   "id": 4,
   "__v": 0
 },
@@ -47,9 +47,9 @@
     "$oid": "69a8e01e5407836054225638"
   },
   "name": "Januka",
-  "totalPoints": 936,
-  "gamesPlayed": 291,
-  "maxPossible": 1765,
+  "totalPoints": 976,
+  "gamesPlayed": 300,
+  "maxPossible": 1820,
   "id": 5,
   "__v": 0
 },
@@ -58,9 +58,9 @@
     "$oid": "69a8e02f540783605422563d"
   },
   "name": "Bibek",
-  "totalPoints": 616,
-  "gamesPlayed": 186,
-  "maxPossible": 1121,
+  "totalPoints": 619,
+  "gamesPlayed": 187,
+  "maxPossible": 1126,
   "id": 6,
   "__v": 0
 },
@@ -69,9 +69,9 @@
     "$oid": "69a8e0ff5407836054225642"
   },
   "name": "Buwa",
-  "totalPoints": 767,
-  "gamesPlayed": 260,
-  "maxPossible": 1545,
+  "totalPoints": 780,
+  "gamesPlayed": 265,
+  "maxPossible": 1578,
   "id": 7,
   "__v": 0
 },
