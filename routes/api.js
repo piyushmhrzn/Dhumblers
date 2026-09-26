@@ -254,15 +254,15 @@ router.put('/games/ongoing/round', async (req, res) => {
                 if (finalScore >= elimScore - 4 && finalScore < elimScore) {
                     winnerBonus = 2;
                     winnerBonusName = "Clutch Win";
-                } else if (
-                    finalScore >= elimScore - 9 &&
-                    finalScore <= elimScore - 5
-                ) {
-                    winnerBonus = 1;
-                    winnerBonusName = "Danger Win";
+                    // } else if (
+                    //     finalScore >= elimScore - 9 &&
+                    //     finalScore <= elimScore - 5
+                    // ) {
+                    //     winnerBonus = 1;
+                    //     winnerBonusName = "Danger Win";
                 } else if (finalScore <= elimScore - 50) {
                     winnerBonus = 3;
-                    winnerBonusName = "Dominating Gameplay";
+                    winnerBonusName = "Dominating Win";
                 }
             }
 
@@ -289,9 +289,7 @@ router.put('/games/ongoing/round', async (req, res) => {
             const n = game.players.length;
             let pointsArr = [];
 
-            //  -------------------------------------------------------------------------------------------------------
-            //  Start with n+1 points for the winner
-            //  -------------------------------------------------------------------------------------------------------
+            // Winner gets n + 1 points
             let pts = n + 1;
 
             for (let i = 0; i < rankings.length; i++) {
@@ -307,14 +305,13 @@ router.put('/games/ongoing/round', async (req, res) => {
                     pointsArr.push(pts);
                 }
 
-                // Winner's next rank drops by 3 points.
-                // All other rank changes drop by 1 point.
+                // Winner's next rank drops by 2; others by 1
                 if (
                     i === 0 ||
                     rankings[i].total !== rankings[i - 1].total ||
                     rankings[i].elimOrder !== rankings[i - 1].elimOrder
                 ) {
-                    pts -= (i === 0 ? 3 : 1);
+                    pts -= (i === 0 ? 2 : 1);
                 }
             }
 
