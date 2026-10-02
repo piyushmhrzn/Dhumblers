@@ -98,3 +98,23 @@ function getYearStats(userId, year) {
         totalPoints
     };
 }
+
+/* Get the current win streak for a user based on completed games (most recent first) */
+function getWinnerWinStreak(userId, completedGames) {
+    let streak = 0;
+
+    for (const game of completedGames) {
+
+        const won = game.players?.some(
+            p => p.id === userId && p.elimOrder === -1
+        );
+
+        if (!won) {
+            break;
+        }
+
+        streak++;
+    }
+
+    return streak;
+}

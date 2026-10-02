@@ -245,24 +245,50 @@ router.put('/games/ongoing/round', async (req, res) => {
 
             // ── Winner bonus calculation ─────────────────────
             let winnerBonus = 0;
-            let winnerBonusName = "";
+            let winnerBonusNames = [];
 
             if (winner) {
                 const finalScore = winner.total || 0;
                 const elimScore = game.elimScore;
 
-                if (finalScore >= elimScore - 4 && finalScore < elimScore) {
-                    winnerBonus = 2;
-                    winnerBonusName = "Clutch Win";
-                    // } else if (
-                    //     finalScore >= elimScore - 9 &&
-                    //     finalScore <= elimScore - 5
-                    // ) {
-                    //     winnerBonus = 1;
-                    //     winnerBonusName = "Danger Win";
-                } else if (finalScore <= elimScore - 50) {
-                    winnerBonus = 3;
-                    winnerBonusName = "Dominating Win";
+                // -----------------------------
+                // CLUTCH WIN
+                // -----------------------------
+                if (
+                    finalScore >= elimScore - 4 &&
+                    finalScore < elimScore
+                ) {
+                    winnerBonus += 2;
+                    winnerBonusNames.push("Clutch Win");
+                }
+
+                // -----------------------------
+                // DOMINATING GAMEPLAY
+                // -----------------------------
+                if (finalScore <= elimScore - 50) {
+                    winnerBonus += 3;
+                    winnerBonusNames.push("Dominating Win");
+                }
+
+                // -----------------------------
+                // MULTI-ELIMINATION
+                // -----------------------------
+                const eliminationOrders =
+                    game.eliminated.map(p => p.elimOrder);
+
+                const finalElimOrder =
+                    eliminationOrders.length
+                        ? Math.max(...eliminationOrders)
+                        : null;
+
+                const finalRoundEliminations =
+                    game.eliminated.filter(
+                        p => p.elimOrder === finalElimOrder
+                    );
+
+                if (finalRoundEliminations.length >= 2) {
+                    winnerBonus += 1;
+                    winnerBonusNames.push("Multi-Elimination");
                 }
             }
 
@@ -331,7 +357,10 @@ router.put('/games/ongoing/round', async (req, res) => {
                         awarded += winnerBonus;
 
                         playerInGame.bonusPoints = winnerBonus;
-                        playerInGame.bonusName = winnerBonusName;
+                        playerInGame.bonusName =
+                            winnerBonusNames.length
+                                ? winnerBonusNames.join(" + ")
+                                : "";
                     }
 
                     playerInGame.points = awarded;
