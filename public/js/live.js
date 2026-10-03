@@ -604,6 +604,33 @@ function renderLastGameStats(game, completedGames = []) {
     const totalRounds = (game.rounds || []).length;
 
     // ------------------------------------------------
+    // DHUMBLE HISTORY
+    // ------------------------------------------------
+
+    const dhumbleHistory = (game.dhumbles || []).map(dhumble => {
+
+        const victimName =
+            getUserById(Number(dhumble.victim))?.name ||
+            "Unknown";
+
+        const causedByNames =
+            Array.isArray(dhumble.causedBy)
+                ? dhumble.causedBy
+                    .map(id =>
+                        getUserById(Number(id))?.name ||
+                        "Unknown"
+                    )
+                    .join(", ")
+                : "Unknown";
+
+        return {
+            round: dhumble.round,
+            victimName,
+            causedByNames
+        };
+    });
+
+    // ------------------------------------------------
     // BUILD MONTHLY BEFORE / AFTER SNAPSHOTS
     // ------------------------------------------------
 
@@ -947,14 +974,77 @@ function renderLastGameStats(game, completedGames = []) {
                 </div>
             </div>
 
-        </div>
+                </div>
+
+    `;
 
 
+    // ------------------------------------------------
+    // DHUMBLE HISTORY TABLE
+    // ------------------------------------------------
+
+    if (dhumbleHistory.length > 0) {
+
+        html += `
+            <h6 class="mb-2">
+                🤬 Dhumble History
+            </h6>
+
+            <div class="table-responsive mb-4">
+
+                <table class="table table-sm table-striped mb-0">
+
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Dhumbled</th>
+                            <th>Caused By</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+        `;
+
+        dhumbleHistory.forEach(dhumble => {
+
+            html += `
+                <tr>
+                    <td>
+                        ${dhumble.round}
+                    </td>
+
+                    <td>
+                        <strong>
+                            ${dhumble.victimName}
+                        </strong>
+                    </td>
+
+                    <td>
+                        ${dhumble.causedByNames}
+                    </td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+    }
+
+
+    // ------------------------------------------------
+    // RANKING & TIER CHANGES
+    // ------------------------------------------------
+
+    html += `
         <h6 class="mb-2">
             <i class="fas fa-arrow-trend-up me-2"></i>
             Ranking & Tier Changes
         </h6>
-
     `;
 
 

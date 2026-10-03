@@ -380,6 +380,8 @@ function showPlayerStats(userId) {
     const rivalry = getRivalry(userId);
     const nemesis = getNemesis(userId);
 
+    const dhumbleStats = getDhumbleCareerStats(userId);
+
     // Career Stats HTML
     const html = `
         <div class="alert alert-secondary text-center mb-4">
@@ -446,11 +448,74 @@ function showPlayerStats(userId) {
                 <small class="text-white-50">
                     ${nemesis.nemesisStats || "Beats you most in finals"}
                 </small>
+                        </div>
+
+        </div>
+
+    <hr>
+
+        <div class="row text-center mb-3">
+
+            <div class="col-6 col-md-6 mb-3">
+
+                <h6>💀 Dhumbles Caused</h6>
+
+                <p class="fw-bold">
+                    ${dhumbleStats.dhumblesCaused}
+                </p>
+
+            </div>
+
+
+            <div class="col-6 col-md-6 mb-3">
+
+                <h6>🎯 Dhumble Victim</h6>
+
+                <p class="fw-bold">
+                    ${dhumbleStats.dhumbleVictim}
+                </p>
+
+            </div>
+
+
+            <div class="col-6 col-md-6 mb-2">
+
+                <h6>😈 You Dhumble Most</h6>
+
+                <p class="fw-bold">
+                    ${dhumbleStats.mostDhumbledPlayer}
+                </p>
+
+                <small class="text-white-50">
+                    ${dhumbleStats.mostDhumbledCount > 0
+            ? `${dhumbleStats.mostDhumbledCount} Dhumbles`
+            : "No Dhumbles yet"
+        }
+                </small>
+
+            </div>
+
+
+            <div class="col-6 col-md-6 mb-2">
+
+                <h6>☠️ Dhumbles You Most</h6>
+
+                <p class="fw-bold">
+                    ${dhumbleStats.dhumbleNemesis}
+                </p>
+
+                <small class="text-white-50">
+                    ${dhumbleStats.dhumbleNemesisCount > 0
+            ? `${dhumbleStats.dhumbleNemesisCount} Dhumbles`
+            : "No Dhumbles yet"
+        }
+                </small>
+
             </div>
 
         </div>
 
-        <hr>
+    <hr>
 
         <div class="row text-center mb-3">
 
@@ -481,6 +546,117 @@ function showPlayerStats(userId) {
     );
 
     modal.show();
+}
+
+// Dhumble Career Stats
+function getDhumbleCareerStats(userId) {
+
+    let dhumblesCaused = 0;
+    let dhumbleVictim = 0;
+
+    // Players this user has Dhumbled
+    const victims = {};
+
+    // Players who have Dhumbled this user
+    const causers = {};
+
+
+    games.forEach(game => {
+
+        (game.dhumbles || []).forEach(dhumble => {
+
+            const victimId =
+                Number(dhumble.victim);
+
+            const causedByIds =
+                Array.isArray(dhumble.causedBy)
+                    ? dhumble.causedBy.map(Number)
+                    : [];
+
+
+            // -----------------------------------------
+            // DHUMBLES CAUSED BY THIS PLAYER
+            // -----------------------------------------
+
+            if (causedByIds.includes(userId)) {
+
+                dhumblesCaused++;
+
+                victims[victimId] =
+                    (victims[victimId] || 0) + 1;
+            }
+
+
+            // -----------------------------------------
+            // TIMES THIS PLAYER WAS DHUMBLED
+            // -----------------------------------------
+
+            if (victimId === userId) {
+
+                dhumbleVictim++;
+
+                causedByIds.forEach(causerId => {
+
+                    causers[causerId] =
+                        (causers[causerId] || 0) + 1;
+                });
+            }
+        });
+    });
+
+
+    // -----------------------------------------
+    // MOST DHUMBLED PLAYER
+    // -----------------------------------------
+
+    let mostDhumbledId = null;
+    let mostDhumbledCount = 0;
+
+    Object.entries(victims).forEach(([id, count]) => {
+
+        if (count > mostDhumbledCount) {
+            mostDhumbledCount = count;
+            mostDhumbledId = Number(id);
+        }
+    });
+
+
+    // -----------------------------------------
+    // DHUMBLE NEMESIS
+    // -----------------------------------------
+
+    let dhumbleNemesisId = null;
+    let dhumbleNemesisCount = 0;
+
+    Object.entries(causers).forEach(([id, count]) => {
+
+        if (count > dhumbleNemesisCount) {
+            dhumbleNemesisCount = count;
+            dhumbleNemesisId = Number(id);
+        }
+    });
+
+
+    return {
+
+        dhumblesCaused,
+
+        dhumbleVictim,
+
+        mostDhumbledPlayer:
+            mostDhumbledId !== null
+                ? getUserById(mostDhumbledId)?.name || "Unknown"
+                : "—",
+
+        mostDhumbledCount,
+
+        dhumbleNemesis:
+            dhumbleNemesisId !== null
+                ? getUserById(dhumbleNemesisId)?.name || "Unknown"
+                : "—",
+
+        dhumbleNemesisCount
+    };
 }
 
 /* Get rivalry stats */

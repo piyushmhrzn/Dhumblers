@@ -10,6 +10,26 @@ const playerSchema = new mongoose.Schema({
     bonusName: { type: String, default: '' }
 });
 
+const dhumbleSchema = new mongoose.Schema({
+    round: {
+        type: Number,
+        required: true
+    },
+
+    // Player who received the 40 points
+    victim: {
+        type: Number,
+        required: true
+    },
+
+    // Player who caused the Dhumble
+    causedBy: {
+        type: [Number],
+        required: true,
+        default: []
+    }
+}, { _id: false });
+
 const gameSchema = new mongoose.Schema({
     id: { type: Number, unique: true },  // Auto-incremented
     date: { type: Date, default: Date.now },
@@ -17,7 +37,11 @@ const gameSchema = new mongoose.Schema({
     players: [playerSchema],
     eliminated: [playerSchema],  // Array of eliminated players
     rounds: [{ type: Object }],  // Array of round score objects {playerId: score}
-    status: { type: String, default: 'ongoing' }  // 'ongoing' or 'completed'
+    status: { type: String, default: 'ongoing' },  // 'ongoing' or 'completed'
+    dhumbles: {
+        type: [dhumbleSchema],
+        default: []
+    },
 });
 
 // Auto-increment ID

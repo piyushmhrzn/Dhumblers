@@ -66,9 +66,24 @@ function renderGameTable() {
         const isActive = p.status === 'active';
 
         let history = '';
+
         currentGame.rounds.forEach((round, idx) => {
             const score = round[p.id] || 0;
-            history += `R${idx + 1}(${score}) `;
+            const roundNumber = idx + 1;
+
+            // Check whether this player caused a Dhumble
+            // during this specific round.
+            const causedDhumble = (currentGame.dhumbles || []).some(d =>
+                d.round === roundNumber &&
+                Array.isArray(d.causedBy) &&
+                d.causedBy.map(Number).includes(p.id)
+            );
+
+            if (causedDhumble) {
+                history += `R${roundNumber}(${score} - 2) `;
+            } else {
+                history += `R${roundNumber}(${score}) `;
+            }
         });
 
         const tr = document.createElement('tr');
@@ -90,6 +105,127 @@ function renderGameTable() {
     });
 }
 
+
+/**
+ * --------------------------------------------------------------------------------------------------------------------------------
+ * HELPER FUNCTION
+ * Displays a modal to ask for Dhumble causers and returns the selected IDs
+ * --------------------------------------------------------------------------------------------------------------------------------
+ */
+function askDhumbleCausers(victimId, possibleCausers) {
+
+    return new Promise(resolve => {
+
+        const modalElement =
+            document.getElementById("dhumbleModal");
+
+        const victimElement =
+            document.getElementById("dhumbleVictimName");
+
+        const causerList =
+            document.getElementById("dhumbleCauserList");
+
+        const errorElement =
+            document.getElementById("dhumbleError");
+
+        const confirmButton =
+            document.getElementById("confirmDhumbleBtn");
+
+        const victimName =
+            getUserById(victimId)?.name ||
+            `Player ${victimId}`;
+
+        victimElement.textContent = victimName;
+
+        errorElement.style.display = "none";
+
+        // Build checkbox list
+        causerList.innerHTML = possibleCausers
+            .map(player => `
+                <div class="form-check mb-2">
+
+                    <input
+                        class="form-check-input dhumble-causer-checkbox"
+                        type="checkbox"
+                        value="${player.id}"
+                        id="dhumbleCauser${player.id}"
+                    >
+
+                    <label
+                        class="form-check-label"
+                        for="dhumbleCauser${player.id}"
+                    >
+                        ${player.name}
+                    </label>
+
+                </div>
+            `)
+            .join("");
+
+        const modal =
+            bootstrap.Modal.getOrCreateInstance(modalElement);
+
+        let finished = false;
+
+        const finish = result => {
+
+            if (finished) return;
+
+            finished = true;
+
+            confirmButton.removeEventListener(
+                "click",
+                handleConfirm
+            );
+
+            modalElement.removeEventListener(
+                "hidden.bs.modal",
+                handleHidden
+            );
+
+            resolve(result);
+        };
+
+        const handleConfirm = () => {
+
+            const selectedIds = [
+                ...modalElement.querySelectorAll(
+                    ".dhumble-causer-checkbox:checked"
+                )
+            ].map(input => Number(input.value));
+
+            if (selectedIds.length === 0) {
+                errorElement.style.display = "block";
+                return;
+            }
+
+            errorElement.style.display = "none";
+
+            finish(selectedIds);
+
+            modal.hide();
+        };
+
+        const handleHidden = () => {
+
+            // Closing/cancelling without confirming
+            finish(null);
+        };
+
+        confirmButton.addEventListener(
+            "click",
+            handleConfirm
+        );
+
+        modalElement.addEventListener(
+            "hidden.bs.modal",
+            handleHidden
+        );
+
+        modal.show();
+    });
+}
+
 /**
  * --------------------------------------------------------------------------------------------------------------------------------
  * COLLECTS CURRENT ROUND SCORES FROM INPUTS, SENDS TO BACKEND, AND UPDATES GAME STATE
@@ -97,21 +233,114 @@ function renderGameTable() {
  * --------------------------------------------------------------------------------------------------------------------------------
  */
 async function submitRoundScores() {
-    const inputs = document.querySelectorAll('#gameHistory .score-input');
+
+    const inputs =
+        document.querySelectorAll(
+            '#gameHistory .score-input'
+        );
+
     let roundScores = {};
 
     inputs.forEach(inp => {
-        const val = parseInt(inp.value) || 0;
-        const id = parseInt(inp.dataset.id);
+
+        const val =
+            parseInt(inp.value) || 0;
+
+        const id =
+            parseInt(inp.dataset.id);
+
         roundScores[id] = val;
+    });
+
+
+    // ─────────────────────────────────────────────
+    // DHUMBLE DETECTION
+    // ─────────────────────────────────────────────
+
+    let dhumble = null;
+
+    const scoreEntries =
+        Object.entries(roundScores);
+
+    const fortyPlayers =
+        scoreEntries.filter(
+            ([_, score]) =>
+                Number(score) === 40
+        );
+
+    const zeroPlayers =
+        scoreEntries.filter(
+            ([_, score]) =>
+                Number(score) === 0
+        );
+
+    const isDhumbleRound =
+        fortyPlayers.length === 1 &&
+        zeroPlayers.length ===
+        scoreEntries.length - 1;
+
+
+    // ─────────────────────────────────────────────
+    // DHUMBLE ATTRIBUTION
+    // ─────────────────────────────────────────────
+
+    if (isDhumbleRound) {
+
+        const victimId =
+            Number(fortyPlayers[0][0]);
+
+        const possibleCausers =
+            zeroPlayers.map(([id]) => {
+
+                const playerId =
+                    Number(id);
+
+                return {
+                    id: playerId,
+
+                    name:
+                        getUserById(playerId)?.name ||
+                        `Player ${playerId}`
+                };
+            });
+
+
+        const selectedCauserIds =
+            await askDhumbleCausers(
+                victimId,
+                possibleCausers
+            );
+
+
+        // User cancelled modal.
+        // Do NOT submit the round.
+        if (selectedCauserIds === null) {
+            return;
+        }
+
+
+        dhumble = {
+            victim: victimId,
+            causedBy: selectedCauserIds
+        };
+    }
+
+
+    // Clear inputs only AFTER Dhumble
+    // attribution has successfully finished.
+    inputs.forEach(inp => {
         inp.value = '';
     });
+
 
     try {
         const res = await fetch('/api/games/ongoing/round', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ roundScores })
+            body: JSON.stringify({
+                roundScores,
+                dhumble
+            })
         });
 
         if (!res.ok) {

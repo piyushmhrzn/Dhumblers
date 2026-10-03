@@ -184,7 +184,7 @@ router.post('/games', checkGamePasscode, async (req, res) => {
  * Updates totals, eliminates players, awards points when game ends
  */
 router.put('/games/ongoing/round', async (req, res) => {
-    const { roundScores } = req.body; // { playerId: score, ... }
+    const { roundScores, dhumble } = req.body; // { playerId: score, ... }
 
     try {
         const game = await Game.findOne({ status: 'ongoing' });
@@ -202,14 +202,125 @@ router.put('/games/ongoing/round', async (req, res) => {
         if (allZero) {
             return res.status(400).json({ error: 'At least one score >0' });
         }
+        // ── Dhumble validation ──────────────────────────────
+        if (dhumble) {
+            const victimId = Number(dhumble.victim);
 
+            const causedByIds = Array.isArray(dhumble.causedBy)
+                ? dhumble.causedBy.map(Number)
+                : [];
+
+            const scoreEntries = Object.entries(roundScores);
+
+            const fortyPlayers = scoreEntries.filter(
+                ([_, score]) => Number(score) === 40
+            );
+
+            const zeroPlayers = scoreEntries.filter(
+                ([_, score]) => Number(score) === 0
+            );
+
+            // A valid Dhumble round must have:
+            // exactly one player with 40
+            // everybody else with 0
+            const isDhumbleRound =
+                fortyPlayers.length === 1 &&
+                zeroPlayers.length === scoreEntries.length - 1;
+
+            if (!isDhumbleRound) {
+                return res.status(400).json({
+                    error: 'Dhumble attribution is only allowed on a 40/0 round'
+                });
+            }
+
+            // ── Validate victim ─────────────────────────────
+            const actualVictimId =
+                Number(fortyPlayers[0][0]);
+
+            if (victimId !== actualVictimId) {
+                return res.status(400).json({
+                    error: 'Dhumble victim must be the player who scored 40'
+                });
+            }
+
+            const victimPlayer = game.players.find(
+                p => p.id === victimId
+            );
+
+            if (!victimPlayer) {
+                return res.status(400).json({
+                    error: 'Invalid Dhumble victim'
+                });
+            }
+
+            // ── At least one causer is required ─────────────
+            if (causedByIds.length === 0) {
+                return res.status(400).json({
+                    error: 'At least one Dhumble causer is required'
+                });
+            }
+
+            // ── Prevent duplicate causers ───────────────────
+            const uniqueCausedByIds =
+                [...new Set(causedByIds)];
+
+            if (uniqueCausedByIds.length !== causedByIds.length) {
+                return res.status(400).json({
+                    error: 'Duplicate Dhumble causers are not allowed'
+                });
+            }
+
+            // ── Validate every selected causer ──────────────
+            for (const causedById of causedByIds) {
+
+                // Victim cannot cause their own Dhumble
+                if (causedById === victimId) {
+                    return res.status(400).json({
+                        error: 'Dhumble victim cannot cause their own Dhumble'
+                    });
+                }
+
+                // Every causer must be one of the players
+                // who scored 0 in this round
+                if (Number(roundScores[causedById]) !== 0) {
+                    return res.status(400).json({
+                        error: 'Every Dhumble causer must have scored 0'
+                    });
+                }
+
+                // Causer must actually belong to this game
+                const causedByPlayer = game.players.find(
+                    p => p.id === causedById
+                );
+
+                if (!causedByPlayer) {
+                    return res.status(400).json({
+                        error: 'Invalid Dhumble causer'
+                    });
+                }
+            }
+        }
         const elimOrder = game.eliminated.length + 1;
 
         // ── Update player totals & check eliminations ───────
         game.players.forEach(p => {
             if (p.status === 'active') {
+
+                // Add this round's normal score
                 p.total = (p.total || 0) + (roundScores[p.id] || 0);
 
+                // ── Dhumble bonus ───────────────────────────
+                // Every player who caused the Dhumble gets
+                // 5 points deducted from their running total.
+                if (
+                    dhumble &&
+                    Array.isArray(dhumble.causedBy) &&
+                    dhumble.causedBy.map(Number).includes(p.id)
+                ) {
+                    p.total -= 2;
+                }
+
+                // Check elimination after applying Dhumble bonus
                 if (p.total >= game.elimScore) {
                     p.status = 'eliminated';
                     p.elimOrder = elimOrder;
@@ -227,6 +338,15 @@ router.put('/games/ongoing/round', async (req, res) => {
 
         // Save this round's scores
         game.rounds.push(roundScores);
+
+        // Save Dhumble attribution if this was a Dhumble round
+        if (dhumble) {
+            game.dhumbles.push({
+                round: game.rounds.length,
+                victim: Number(dhumble.victim),
+                causedBy: dhumble.causedBy.map(Number)
+            });
+        }
 
         // ── Check if game is finished ───────────────────────
         const active = game.players.filter(p => p.status === 'active');
