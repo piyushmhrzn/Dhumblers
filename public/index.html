@@ -107,6 +107,15 @@
                   <button id="soundToggleBtn" class="btn btn-sm btn-outline-secondary ms-2">
                       🔈
                   </button>
+                  
+                  <button
+                    id="announceScoreBtn"
+                    class="btn btn-sm btn-outline-secondary ms-2"
+                    onclick="announceLiveScores()"
+                >
+                    <i class="fas fa-volume-high me-1"></i>
+                    Announce
+                </button>
                 <span id="elimScoreBadge" class="badge bg-danger ms-2"></span>
                 <span id="liveRound" class="badge bg-info ms-2"></span>
             </h5>
@@ -523,6 +532,7 @@
 <script src="js/home.js"></script>
 <script src="js/game.js"></script>
 <script src="js/live.js"></script>
+<script src="js/announcer.js"></script>
 <script src="js/bets.js"></script>
 <script src="js/records.js"></script>
 
