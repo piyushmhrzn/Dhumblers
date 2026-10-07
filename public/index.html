@@ -150,9 +150,44 @@
             </div>
 
         </div>
+        </div>
+
+
+    <!-- ========================================= -->
+    <!-- 🏛️ DHUMBLE HALL OF FAME -->
+    <!-- ========================================= -->
+
+    <div class="card mt-3" id="recordsCard">
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+                <h5 class="mb-0">
+                    🏛️ Dhumble Hall of Fame
+                </h5>
+
+                <span class="badge bg-warning text-dark">
+                    All-Time Records
+                </span>
+
+            </div>
+
+            <div id="recordsContent">
+
+                <div class="text-secondary text-center py-3">
+                    Loading records...
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 
+
     <!-- Recent Games -->
+
     <div class="card mt-3">
         <div class="card-body">
             <h5><i class="fas fa-history me-2 text-info"></i>Recent Games</h5>
@@ -489,6 +524,7 @@
 <script src="js/game.js"></script>
 <script src="js/live.js"></script>
 <script src="js/bets.js"></script>
+<script src="js/records.js"></script>
 
 <script>
   // Home page init + modal handling
@@ -496,6 +532,7 @@
     await fetchUsers();
     await fetchGames().then(() => {
         renderLastGameStatsFromHistory();
+        renderRecords();
     });
     fetchBetHistory();
     

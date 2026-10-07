@@ -311,7 +311,7 @@ router.put('/games/ongoing/round', async (req, res) => {
 
                 // ── Dhumble bonus ───────────────────────────
                 // Every player who caused the Dhumble gets
-                // 5 points deducted from their running total.
+                // 2 points deducted from their running total.
                 if (
                     dhumble &&
                     Array.isArray(dhumble.causedBy) &&
