@@ -648,6 +648,23 @@ LIVE GAME HIGHLIGHT
     }
 }
 
+/* Compact prediction achievement chip */
+.prediction-achievement-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    padding: 2px 5px;
+    border-radius: 6px;
+    background: rgba(148, 163, 184, 0.14);
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    font-size: 0.8rem;
+    line-height: 1.2;
+    vertical-align: middle;
+    cursor: help;
+    white-space: nowrap;
+}
+
 /* =========================
 LOADING OVERLAY
 ========================= */

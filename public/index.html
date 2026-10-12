@@ -127,6 +127,17 @@
         </div>
     </div>
 
+    <!-- Dhumble Prediction -->
+    <div class="card mb-3" id="predictionCard">
+        <div class="card-body">
+            <div id="predictionContainer">
+                <div class="text-center text-secondary py-3">
+                    Loading Prediction ...
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Player Career Stats -->
     <div class="card mt-3">
         <div class="card-body">
@@ -535,11 +546,14 @@
 <script src="js/announcer.js"></script>
 <script src="js/bets.js"></script>
 <script src="js/records.js"></script>
+<script src="js/predictions.js"></script>
 
 <script>
   // Home page init + modal handling
   document.addEventListener('DOMContentLoaded', async () => {
     await fetchUsers();
+    await loadPredictionPoll();
+    await loadMonthlyPredictionBadges();
     await fetchGames().then(() => {
         renderLastGameStatsFromHistory();
         renderRecords();

@@ -491,6 +491,121 @@ function getLastGameTierIndex(tierName) {
 }
 
 
+async function renderLastGamePredictionResults(gameId) {
+    const container = document.getElementById(
+        'lastGamePredictionResults'
+    );
+
+    if (!container) return;
+
+    try {
+        const response = await fetch(
+            `/api/predictions/results/${encodeURIComponent(gameId)}`
+        );
+
+        if (!response.ok) {
+            throw new Error('Could not load prediction results');
+        }
+
+        const data = await response.json();
+        const results = data.results || [];
+
+        if (results.length === 0) {
+            container.innerHTML = `
+                <p class="text-secondary small mb-0">
+                    No predictions were submitted for this game.
+                </p>
+            `;
+            return;
+        }
+
+        const escapeHTML = value =>
+            String(value ?? '').replace(/[&<>"']/g, c => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[c]);
+
+        const fields = [
+            ['winner', 'Winner'],
+            ['dhumbleVictim', 'Dhumble'],
+            ['highestScorer', 'Highest Score'],
+            ['firstEliminated', 'First Out']
+        ];
+
+        let html = `
+            <div class="table-responsive">
+                <table class="table table-sm table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Voter</th>
+                            <th>Correct</th>
+                            <th>Badge</th>
+                            <th>Predictions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        results.forEach(result => {
+            const voterName =
+                getUserById(result.voterId)?.name ||
+                `Player #${result.voterId}`;
+
+            const badge = result.badge
+                ? `${result.badge.icon} ${result.badge.name}`
+                : '—';
+
+            const details = fields.map(([field, label]) => {
+                const correct = result.correct?.[field];
+                const icon = correct ? '✅' : '❌';
+
+                const pickedName = getUserById(
+                    result.picks?.[field]
+                )?.name || 'Unknown';
+
+                return `
+                    <div class="small">
+                        ${icon} ${label}:
+                        ${escapeHTML(pickedName)}
+                    </div>
+                `;
+            }).join('');
+
+            html += `
+                <tr>
+                    <td class="fw-semibold">
+                        ${escapeHTML(voterName)}
+                    </td>
+                    <td>${result.score}/4</td>
+                    <td>${escapeHTML(badge)}</td>
+                    <td>${details}</td>
+                </tr>
+            `;
+        });
+
+        html += `
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+    } catch (error) {
+        console.error('Prediction results error:', error);
+
+        container.innerHTML = `
+            <p class="text-danger small mb-0">
+                Prediction results could not be loaded.
+            </p>
+        `;
+    }
+}
+
+
 /**
  * Render statistics for the most recently completed game
  */
@@ -1271,8 +1386,26 @@ function renderLastGameStats(game, completedGames = []) {
     }
 
 
+    // 🗳️ Prediction Results
+    html += `
+        <div class="mt-4">
+            <h6 class="mb-2">
+                🗳️ Prediction Results
+            </h6>
+
+            <div id="lastGamePredictionResults">
+                <p class="text-secondary small mb-0">
+                    Loading prediction results...
+                </p>
+            </div>
+        </div>
+    `;
+
     container.innerHTML = html;
     card.style.display = "block";
+
+    // Load prediction results for this completed game
+    renderLastGamePredictionResults(game.id);
 }
 
 
@@ -1313,12 +1446,22 @@ function initLiveSocket() {
 
     socket.on("gameUpdate", (game) => {
 
+        // 🗳️ Refresh Prediction Championship
+        if (typeof loadPredictionPoll === 'function') {
+            loadPredictionPoll();
+        }
+
         // ─────────────────────────────
         // 🧹 HANDLE GAME END / NO GAME
         // ─────────────────────────────
         if (!game || game.status !== "ongoing") {
 
             if (game && game.status === "completed") {
+
+                // Refresh monthly prediction badges if the function is defined
+                if (typeof loadMonthlyPredictionBadges === 'function') {
+                    loadMonthlyPredictionBadges();
+                }
 
                 // Refresh historical games first so Last Game Stats
                 // uses the newly completed game in monthly/yearly calculations.
@@ -1464,7 +1607,17 @@ function initLiveSocket() {
         // ─────────────────────────────
         currentGame = game;
         renderLiveGame(game);
+
         renderBets();
         fetchBetHistory().then(renderBetHistory);
+    });
+
+    // Refresh voting when somebody votes
+    socket.on('predictionUpdate', () => {
+
+        if (typeof loadPredictionPoll === 'function') {
+            loadPredictionPoll();
+        }
+
     });
 }

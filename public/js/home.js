@@ -175,7 +175,7 @@ function renderLeaderboard(tbody) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                ${p.name}
+                ${p.name}${getMonthlyPredictionBadgeHTML(p.id)}
                 <span class="tier-badge"
                     data-tier="${p.tier}" 
                     onclick="showTierInfo('${p.tier}')">

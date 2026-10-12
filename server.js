@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
 const apiRoutes = require('./routes/api');
+const predictionRoutes = require('./routes/predictions');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -29,6 +30,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes (already mounted at /api)
 app.use('/api', apiRoutes);
+
+// Prediction routes (mounted at /api/predictions)
+app.use('/api/predictions', predictionRoutes);
 
 // Catch-all route: serve index.html for any non-API path
 // This makes client-side routing / direct links to game.html, admin.html work
