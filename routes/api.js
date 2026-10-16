@@ -9,6 +9,7 @@ const router = express.Router();
 const User = require('../models/User');
 const Game = require('../models/Game');
 const Bet = require('../models/Bet');
+const Prediction = require('../models/Prediction');
 
 // ────────────────────────────────────────────────
 // 1. MIDDLEWARE - Authentication / Authorization
@@ -177,6 +178,105 @@ router.post('/games', checkGamePasscode, async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+/*
+    * Helper function: Get IDs of players who made perfect predictions for a game
+    * A perfect prediction means the player correctly predicted:
+    * - The winner
+    * - The first Dhumble victim
+    * - The highest scorer
+    * - The first eliminated player
+    * Returns a Set of player IDs
+*/
+async function getPerfectPredictionPlayerIds(game) {
+    const ballots = await Prediction.find({
+        gameId: game.id
+    }).lean();
+
+    const participatingIds = new Set(
+        game.players.map(p => Number(p.id))
+    );
+
+    const winner = [
+        ...game.players,
+        ...game.eliminated
+    ].find(p => Number(p.elimOrder) === -1);
+
+    const firstDhumble = [...(game.dhumbles || [])]
+        .sort((a, b) => a.round - b.round)[0];
+
+    let highestScore = -Infinity;
+    const highestScorers = new Set();
+
+    for (const round of game.rounds || []) {
+        for (const [id, rawScore] of Object.entries(round)) {
+            const score = Number(rawScore);
+
+            if (!Number.isFinite(score)) continue;
+
+            if (score > highestScore) {
+                highestScore = score;
+                highestScorers.clear();
+                highestScorers.add(Number(id));
+            } else if (score === highestScore) {
+                highestScorers.add(Number(id));
+            }
+        }
+    }
+
+    const eliminationOrders = (game.eliminated || [])
+        .map(p => Number(p.elimOrder))
+        .filter(order => Number.isFinite(order) && order > 0);
+
+    const firstOrder = eliminationOrders.length
+        ? Math.min(...eliminationOrders)
+        : null;
+
+    const firstEliminated = new Set(
+        (game.eliminated || [])
+            .filter(p =>
+                firstOrder !== null &&
+                Number(p.elimOrder) === firstOrder
+            )
+            .map(p => Number(p.id))
+    );
+
+    const perfectPlayers = new Set();
+
+    for (const ballot of ballots) {
+        const voterId = Number(ballot.voterId);
+
+        // Spectators can earn badges, not points.
+        if (!participatingIds.has(voterId)) continue;
+
+        const correctWinner =
+            winner &&
+            Number(ballot.winner) === Number(winner.id);
+
+        const correctDhumble =
+            firstDhumble &&
+            Number(ballot.dhumbleVictim) ===
+            Number(firstDhumble.victim);
+
+        const correctHighest =
+            highestScorers.has(Number(ballot.highestScorer));
+
+        const correctEliminated =
+            firstEliminated.has(Number(ballot.firstEliminated));
+
+        if (
+            correctWinner &&
+            correctDhumble &&
+            correctHighest &&
+            correctEliminated
+        ) {
+            perfectPlayers.add(voterId);
+        }
+    }
+
+    return perfectPlayers;
+}
+
 
 /**
  * PUT /api/games/ongoing/round
@@ -438,6 +538,9 @@ router.put('/games/ongoing/round', async (req, res) => {
             // Winner gets n + 1 points
             let pts = n + 1;
 
+            // Award prediction bonus to players who made perfect predictions
+            const perfectPredictionPlayerIds = await getPerfectPredictionPlayerIds(game);
+
             for (let i = 0; i < rankings.length; i++) {
 
                 // Same elimination order AND same total = tied
@@ -465,6 +568,10 @@ router.put('/games/ongoing/round', async (req, res) => {
             for (let i = 0; i < rankings.length; i++) {
                 let awarded = pointsArr[i] || 0;
                 const playerId = rankings[i].id;
+                const predictionBonus =
+                    perfectPredictionPlayerIds.has(Number(playerId))
+                        ? 1
+                        : 0;
 
                 // Update in-game player record
                 let playerInGame = game.players.find(p => p.id === playerId) ||
@@ -484,13 +591,14 @@ router.put('/games/ongoing/round', async (req, res) => {
                     }
 
                     playerInGame.points = awarded;
+                    playerInGame.predictionBonus = predictionBonus;
                 }
 
                 // Update global user stats
                 const user = await User.findOne({ id: playerId });
 
                 if (user) {
-                    user.totalPoints += awarded;
+                    user.totalPoints += awarded + predictionBonus;
                     user.gamesPlayed += 1;
 
                     // New maximum base points: n + 2

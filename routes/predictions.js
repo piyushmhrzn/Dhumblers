@@ -375,16 +375,25 @@ router.get('/results/:gameId', async (req, res) => {
 
         const actual = getActualResults(game);
 
-        const results = predictions.map(prediction => ({
-            voterId: prediction.voterId,
-            picks: {
-                winner: prediction.winner,
-                dhumbleVictim: prediction.dhumbleVictim,
-                highestScorer: prediction.highestScorer,
-                firstEliminated: prediction.firstEliminated
-            },
-            ...gradePrediction(prediction, actual)
-        }));
+        const results = predictions.map(prediction => {
+            const graded = gradePrediction(prediction, actual);
+
+            const player = game.players.find(
+                p => Number(p.id) === Number(prediction.voterId)
+            );
+
+            return {
+                voterId: prediction.voterId,
+                picks: {
+                    winner: prediction.winner,
+                    dhumbleVictim: prediction.dhumbleVictim,
+                    highestScorer: prediction.highestScorer,
+                    firstEliminated: prediction.firstEliminated
+                },
+                ...graded,
+                earnedPoint: Number(player?.predictionBonus || 0)
+            };
+        });
 
         results.sort((a, b) => b.score - a.score);
 

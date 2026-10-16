@@ -117,7 +117,7 @@ function renderLeaderboard(tbody) {
 
         if (d.getMonth() === month && d.getFullYear() === year) {
             getAllGamePlayers(g).forEach(p => {
-                stats[p.id].points += p.points || 0;
+                stats[p.id].points += (p.points || 0) + (p.predictionBonus || 0);
                 stats[p.id].games += 1;
                 if (p.elimOrder === -1) stats[p.id].wins += 1;
             });
