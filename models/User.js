@@ -5,11 +5,7 @@ const userSchema = new mongoose.Schema({
     name: { type: String, required: true, unique: true },
     totalPoints: { type: Number, default: 0 },
     gamesPlayed: { type: Number, default: 0 },
-    maxPossible: { type: Number, default: 0 },
-    predictionBonus: {
-        type: Number,
-        default: 0
-    },
+    maxPossible: { type: Number, default: 0 }
 });
 
 // Auto-increment ID before saving

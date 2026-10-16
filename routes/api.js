@@ -278,6 +278,14 @@ async function getPerfectPredictionPlayerIds(game) {
 }
 
 
+
+
+// Prevent simultaneous round submissions in this server process.
+let roundSubmissionInProgress = false;
+
+
+
+
 /**
  * PUT /api/games/ongoing/round
  * Submit scores for current round
@@ -285,6 +293,14 @@ async function getPerfectPredictionPlayerIds(game) {
  */
 router.put('/games/ongoing/round', async (req, res) => {
     const { roundScores, dhumble } = req.body; // { playerId: score, ... }
+
+    if (roundSubmissionInProgress) {
+        return res.status(409).json({
+            error: 'A round is already being submitted. Please wait.'
+        });
+    }
+
+    roundSubmissionInProgress = true;
 
     try {
         const game = await Game.findOne({ status: 'ongoing' });
@@ -541,6 +557,7 @@ router.put('/games/ongoing/round', async (req, res) => {
             // Award prediction bonus to players who made perfect predictions
             const perfectPredictionPlayerIds = await getPerfectPredictionPlayerIds(game);
 
+
             for (let i = 0; i < rankings.length; i++) {
 
                 // Same elimination order AND same total = tied
@@ -606,6 +623,8 @@ router.put('/games/ongoing/round', async (req, res) => {
 
                     await user.save();
                 }
+
+
             }
 
             // Mark modified sub-documents
@@ -673,7 +692,14 @@ router.put('/games/ongoing/round', async (req, res) => {
 
         res.json(game);
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Round submission error:', err);
+
+        res.status(500).json({
+            error: err.message
+        });
+
+    } finally {
+        roundSubmissionInProgress = false;
     }
 });
 

@@ -232,6 +232,10 @@ function askDhumbleCausers(victimId, possibleCausers) {
  * Also contains simple sound logic based on round outcomes (elimination or 40/0 scenario)
  * --------------------------------------------------------------------------------------------------------------------------------
  */
+
+let isRoundSubmitting = false;
+
+
 async function submitRoundScores() {
 
     const inputs =
@@ -325,6 +329,16 @@ async function submitRoundScores() {
         };
     }
 
+
+    if (isRoundSubmitting) return;
+
+    isRoundSubmitting = true;
+
+    const submitButton = document.getElementById('submitRoundBtn');
+
+    if (submitButton) {
+        submitButton.disabled = true;
+    }
 
     // Clear inputs only AFTER Dhumble
     // attribution has successfully finished.
@@ -476,8 +490,16 @@ async function submitRoundScores() {
 
     } catch (err) {
         alert('Error submitting round: ' + err.message);
+
+    } finally {
+        isRoundSubmitting = false;
+
+        if (submitButton && currentGame?.status !== 'completed') {
+            submitButton.disabled = false;
+        }
     }
 }
+
 
 /**
  * Shows winner announcement when game completes

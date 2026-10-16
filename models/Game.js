@@ -7,7 +7,11 @@ const playerSchema = new mongoose.Schema({
     elimOrder: { type: Number, default: null },
     points: { type: Number, default: 0 },  // Awarded at end
     bonusPoints: { type: Number, default: 0 },
-    bonusName: { type: String, default: '' }
+    bonusName: { type: String, default: '' },
+    predictionBonus: {
+        type: Number,
+        default: 0
+    }
 });
 
 const dhumbleSchema = new mongoose.Schema({
