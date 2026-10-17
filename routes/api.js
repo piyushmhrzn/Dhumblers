@@ -479,6 +479,16 @@ router.put('/games/ongoing/round', async (req, res) => {
 
             if (winner) winner.elimOrder = -1; // -1 = winner
 
+            if (winner) {
+                const winnerInPlayers = game.players.find(
+                    p => Number(p.id) === Number(winner.id)
+                );
+
+                if (winnerInPlayers) {
+                    winnerInPlayers.elimOrder = -1;
+                }
+            }
+
             // ── Winner bonus calculation ─────────────────────
             let winnerBonus = 0;
             let winnerBonusNames = [];
@@ -609,6 +619,18 @@ router.put('/games/ongoing/round', async (req, res) => {
 
                     playerInGame.points = awarded;
                     playerInGame.predictionBonus = predictionBonus;
+
+                    // Keep eliminated-player copy synchronized.
+                    const eliminatedPlayer = game.eliminated.find(
+                        p => Number(p.id) === Number(playerId)
+                    );
+
+                    if (eliminatedPlayer) {
+                        eliminatedPlayer.points = awarded;
+                        eliminatedPlayer.predictionBonus = predictionBonus;
+                        eliminatedPlayer.bonusPoints = playerInGame.bonusPoints;
+                        eliminatedPlayer.bonusName = playerInGame.bonusName;
+                    }
                 }
 
                 // Update global user stats

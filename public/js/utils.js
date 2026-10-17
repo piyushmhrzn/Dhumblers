@@ -25,7 +25,11 @@ function getLifetimeStats(userId) {
         const player = getAllGamePlayers(g).find(p => p.id === userId);
         if (player) {
             gamesPlayed++;
-            totalPoints += player.points || 0;
+
+            totalPoints +=
+                Number(player.points || 0) +
+                Number(player.predictionBonus || 0);
+
             if (player.elimOrder === -1) wins++;
         }
     });
@@ -86,7 +90,11 @@ function getYearStats(userId, year) {
         const player = getAllGamePlayers(g).find(p => p.id === userId);
         if (player) {
             gamesPlayed++;
-            totalPoints += player.points || 0;
+
+            totalPoints +=
+                Number(player.points || 0) +
+                Number(player.predictionBonus || 0);
+
             if (player.elimOrder === -1) wins++;
         }
     });

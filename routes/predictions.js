@@ -44,9 +44,9 @@ function getActualResults(game) {
     const eliminated = game.eliminated || [];
 
     // The official winner is identified by elimOrder = -1.
-    const winner = players.find(
-        p => p.elimOrder === -1
-    );
+    const winner =
+        players.find(p => Number(p.elimOrder) === -1) ||
+        eliminated.find(p => Number(p.elimOrder) === -1);
 
     // Earliest recorded Dhumble.
     const firstDhumble = [...dhumbles]

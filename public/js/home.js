@@ -41,7 +41,10 @@ function renderRecentGames(tbody) {
         const winnerName = winnerPlayer ? getUserById(winnerPlayer.id)?.name || 'Unknown' : 'N/A';
 
         const playerPoints = g.players
-            .map(p => ({ name: getUserById(p.id)?.name || '?', pts: p.points || 0 }))
+            .map(p => ({
+                name: getUserById(p.id)?.name || '?',
+                pts: Number(p.points || 0) + Number(p.predictionBonus || 0)
+            }))
             .sort((a, b) => b.pts - a.pts)
             .map(pp => `${pp.name} (${pp.pts})`)
             .join(', ');
@@ -228,7 +231,9 @@ function showWeeklyHistory() {
                     };
                 }
 
-                stats[p.id].points += p.points || 0;
+                stats[p.id].points +=
+                    Number(p.points || 0) +
+                    Number(p.predictionBonus || 0);
                 stats[p.id].games += 1;
 
                 // Count wins
@@ -335,7 +340,9 @@ function renderWeeklyWinner(el) {
     weeklyGames.forEach(g => {
         getAllGamePlayers(g).forEach(p => {
 
-            const pts = p.points || 0;
+            const pts =
+                Number(p.points || 0) +
+                Number(p.predictionBonus || 0);
 
             // KEEP EXISTING FUNCTIONALITY
             if (pts > 0) {
@@ -463,7 +470,9 @@ function renderMonthlyWinners(container) {
             }
 
             // Count every game played
-            monthlyStats[monthKey][p.id].points += p.points || 0;
+            monthlyStats[monthKey][p.id].points +=
+                Number(p.points || 0) +
+                Number(p.predictionBonus || 0);
             monthlyStats[monthKey][p.id].games += 1;
 
             // Count wins
@@ -639,7 +648,9 @@ function showMonthHistory(monthKey) {
                     };
                 }
 
-                stats[p.id].points += p.points || 0;
+                stats[p.id].points +=
+                    Number(p.points || 0) +
+                    Number(p.predictionBonus || 0);
                 stats[p.id].games += 1;
 
                 if (p.elimOrder === -1) {
@@ -906,8 +917,13 @@ function renderYearlyHistory() {
             if (!statsMap[p.id]) return;
 
             statsMap[p.id].games++;
-            statsMap[p.id].points += p.points || 0;
-            statsMap[p.id].totalPoints += p.points || 0;
+
+            const totalEarned =
+                Number(p.points || 0) +
+                Number(p.predictionBonus || 0);
+
+            statsMap[p.id].points += totalEarned;
+            statsMap[p.id].totalPoints += totalEarned;
 
             // Calculate finish position
             const finish = p.elimOrder === -1

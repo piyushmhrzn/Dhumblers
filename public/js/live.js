@@ -313,7 +313,10 @@ function getLastGameMonthlyStats(completedGames) {
                 };
             }
 
-            stats[p.id].points += p.points || 0;
+            stats[p.id].points +=
+                Number(p.points || 0) +
+                Number(p.predictionBonus || 0);
+
             stats[p.id].games += 1;
 
             if (p.elimOrder === -1) {
@@ -421,7 +424,9 @@ function getLastGameYearStats(userId, completedGames, lastGameIndex, includeGame
         }
 
         gamesPlayed += 1;
-        totalPoints += player.points || 0;
+        totalPoints +=
+            Number(player.points || 0) +
+            Number(player.predictionBonus || 0);
 
         if (player.elimOrder === -1) {
             wins += 1;
@@ -543,6 +548,7 @@ async function renderLastGamePredictionResults(gameId) {
                             <th>Voter</th>
                             <th>Correct</th>
                             <th>Badge</th>
+                            <th>Bonus</th>
                             <th>Predictions</th>
                         </tr>
                     </thead>
@@ -581,6 +587,11 @@ async function renderLastGamePredictionResults(gameId) {
                     </td>
                     <td>${result.score}/4</td>
                     <td>${escapeHTML(badge)}</td>
+                    <td class="fw-semibold">
+                        ${Number(result.earnedPoint || 0) > 0
+                    ? '🧿 +1'
+                    : '—'}
+                    </td>
                     <td>${details}</td>
                 </tr>
             `;
@@ -986,7 +997,8 @@ function renderLastGameStats(game, completedGames = []) {
                     player.total || 0,
 
                 pointsEarned:
-                    player.points || 0
+                    Number(player.points || 0) +
+                    Number(player.predictionBonus || 0)
             };
         })
         .sort((a, b) => b.pointsEarned - a.pointsEarned);
