@@ -25,6 +25,9 @@ const RECORDS_MIN_ROUNDS = 6;
 const RECORDS_MAX_REAL_ROUND_SCORE = 75;
 const RECORDS_MIN_GAMES_FOR_RATE = 10;
 
+let recordsCacheGames = null;
+let recordsCacheUsers = null;
+let recordsCacheHTML = null;
 
 // ================================================
 // MAIN RENDER
@@ -36,6 +39,14 @@ function renderRecords() {
         document.getElementById("recordsContent");
 
     if (!container) {
+        return;
+    }
+
+    if (
+        recordsCacheGames === games &&
+        recordsCacheUsers === users &&
+        recordsCacheHTML !== null
+    ) {
         return;
     }
 
@@ -152,6 +163,10 @@ function renderRecords() {
     )}
 
     `;
+
+    recordsCacheGames = games;
+    recordsCacheUsers = users;
+    recordsCacheHTML = container.innerHTML;
 }
 
 
@@ -939,27 +954,23 @@ function buildHighestTierRecord(
     }
 
 
+    const reversedTiers = [...TIERS].reverse();
+
     const results =
         eligible.map(player => {
 
-            // ----------------------------------------
-            // Find prestige tier directly using the
-            // SAME TIERS requirements.
-            // ----------------------------------------
-
+            // Find prestige tier using the existing requirements.
             const tier =
-                [...TIERS]
-                    .reverse()
-                    .find(tier =>
+                reversedTiers.find(tier =>
 
-                        player.winRate >=
-                        tier.win &&
+                    player.winRate >=
+                    tier.win &&
 
-                        Number(
-                            player.avgPoints
-                        ) >=
-                        tier.avg
-                    );
+                    Number(
+                        player.avgPoints
+                    ) >=
+                    tier.avg
+                );
 
 
             const tierName =
@@ -1038,120 +1049,76 @@ function buildHighestTierRecord(
 // LONGEST WIN STREAK
 // ================================================
 
-function buildLongestWinStreakRecord(
-    players,
-    validGames
-) {
+function buildLongestWinStreakRecord(players, validGames) {
 
     let bestStreak = 0;
-
     let bestPlayerIds = [];
 
+    // Sort valid games once, oldest to newest.
+    const chronologicalGames = [...validGames].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+    );
+
+    // Track each player's streak independently.
+    const streaks = new Map();
 
     players.forEach(player => {
+        streaks.set(Number(player.id), {
+            current: 0,
+            longest: 0
+        });
+    });
 
-        const playerGames =
-            validGames
-                .filter(game =>
+    // Process each game only once.
+    chronologicalGames.forEach(game => {
 
-                    getAllGamePlayers(game)
-                        .some(p =>
-                            Number(p.id) ===
-                            Number(player.id)
-                        )
-                )
-                .slice()
-                .sort(
-                    (a, b) =>
-                        new Date(a.date) -
-                        new Date(b.date)
+        getAllGamePlayers(game).forEach(player => {
+
+            const playerId = Number(player.id);
+            const stats = streaks.get(playerId);
+
+            if (!stats) return;
+
+            if (player.elimOrder === -1) {
+                stats.current++;
+
+                stats.longest = Math.max(
+                    stats.longest,
+                    stats.current
                 );
-
-
-        let currentStreak = 0;
-        let longestStreak = 0;
-
-
-        playerGames.forEach(game => {
-
-            const won =
-                getAllGamePlayers(game)
-                    .some(p =>
-
-                        Number(p.id) ===
-                        Number(player.id) &&
-
-                        p.elimOrder === -1
-                    );
-
-
-            if (won) {
-
-                currentStreak++;
-
-
-                longestStreak =
-                    Math.max(
-                        longestStreak,
-                        currentStreak
-                    );
-
-            }
-            else {
-
-                currentStreak = 0;
+            } else {
+                stats.current = 0;
             }
         });
+    });
 
+    // Find the best streak, preserving ties.
+    players.forEach(player => {
 
-        if (
-            longestStreak >
-            bestStreak
-        ) {
+        const stats = streaks.get(Number(player.id));
+        const longestStreak = stats?.longest || 0;
 
-            bestStreak =
-                longestStreak;
+        if (longestStreak > bestStreak) {
+            bestStreak = longestStreak;
+            bestPlayerIds = [player.id];
 
-
-            bestPlayerIds =
-                [player.id];
-
-        }
-        else if (
-            longestStreak ===
-            bestStreak &&
+        } else if (
+            longestStreak === bestStreak &&
             longestStreak > 0
         ) {
-
-            bestPlayerIds.push(
-                player.id
-            );
+            bestPlayerIds.push(player.id);
         }
     });
 
-
     return {
-
-        icon:
-            "🔥",
-
-        title:
-            "Longest Win Streak",
-
-        names:
-            bestPlayerIds.length
-
-                ? bestPlayerIds.map(
-                    getRecordsPlayerName
-                )
-
-                : ["—"],
-
-        value:
-            `${bestStreak} Wins`
+        icon: "🔥",
+        title: "Longest Win Streak",
+        names: bestPlayerIds.length
+            ? bestPlayerIds.map(getRecordsPlayerName)
+            : ["—"],
+        value: `${bestStreak} Wins`
     };
 }
-
 
 
 // ================================================
@@ -1823,7 +1790,7 @@ function renderRecordSection(
 
         html += `
 
-            <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="col-6 col-lg-4 col-xl-3">
 
                 <div
                     class="

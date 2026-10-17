@@ -41,6 +41,13 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
     <div class="container">
         <span class="navbar-brand">Dhumblers</span>
+
+        <a href="records.html"
+        class="btn btn-sm btn-outline-warning ms-auto me-2">
+            <i class="fas fa-landmark me-1"></i>
+            Hall of Fame
+        </a>
+
         <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#newGameModal">
            <i class="fas fa-plus me-1"></i> Start New Game
         </button>
@@ -69,7 +76,15 @@
                             <th>Wins</th> 
                         </tr>
                     </thead>
-                    <tbody id="leaderboardBody"></tbody>
+                    <tbody id="leaderboardBody">
+                        <tr>
+                            <td colspan="4" class="text-center text-info py-3">
+                                <span class="spinner-border spinner-border-sm me-2"
+                                    role="status" aria-hidden="true"></span>
+                                Loading monthly leaderboard...
+                            </td>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
             <p class="mt-3">
@@ -138,6 +153,33 @@
         </div>
     </div>
 
+    <!-- 1 vs 1 Bets -->
+    <div class="card mb-3">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5>
+                    💰 1 vs 1 Bets
+                </h5>
+
+                <button class="btn btn-sm btn-success" data-bs-toggle="modal"  data-bs-target="#betModal">
+                    New Bet
+                </button>
+
+            </div>
+
+            <div id="betContainer">
+
+                <p class="text-secondary">
+                    No active bets
+                </p>
+
+            </div>
+
+        </div>
+    </div>
+
     <!-- Player Career Stats -->
     <div class="card mt-3">
         <div class="card-body">
@@ -173,39 +215,6 @@
         </div>
 
 
-    <!-- ========================================= -->
-    <!-- 🏛️ DHUMBLE HALL OF FAME -->
-    <!-- ========================================= -->
-
-    <div class="card mt-3" id="recordsCard">
-
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center mb-3">
-
-                <h5 class="mb-0">
-                    🏛️ Dhumble Hall of Fame
-                </h5>
-
-                <span class="badge bg-warning text-dark">
-                    All-Time Records
-                </span>
-
-            </div>
-
-            <div id="recordsContent">
-
-                <div class="text-secondary text-center py-3">
-                    Loading records...
-                </div>
-
-            </div>
-
-        </div>
-
-    </div>
-
-
     <!-- Recent Games -->
 
     <div class="card mt-3">
@@ -231,6 +240,103 @@
                 <span id="pageInfo">Page 1 of 1</span>
                 <button id="nextPage" class="btn btn-outline-secondary" onclick="changePage(1)">Next</button>
             </div>
+        </div>
+    </div>
+
+    <!-- ==================== YEARLY HISTORY ==================== -->
+     <!-- Temporarily disabled — keep all code for future use -->
+    <div class="card mt-3" style="display: none;">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 text-white">📅 Yearly History</h5>
+            <select id="yearSelect" class="form-select form-select-sm" style="width: auto;" onchange="renderYearlyHistory()">
+                <!-- years will be filled by JS -->
+            </select>
+        </div>
+        <div class="card-body p-3">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Points</th>
+                            <th>Games</th>
+                            <th>Avg</th>
+                            <th>1st</th>
+                            <th>2nd</th>
+                            <th>3rd</th>
+                            <th>Win%</th>
+                        </tr>
+                    </thead>
+                    <tbody id="yearlyHistoryBody">
+                        <!-- filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Betting History -->
+    <div class="card mt-3">
+        <div class="card-body">
+
+            <h5>
+                💰 Betting History
+            </h5>
+
+            <div class="table-responsive">
+
+                <table class="table table-striped">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>S.N.</th>
+                            <th>Date</th>
+                            <th>Match</th>
+                            <th>Winner</th>
+                            <th>Stake</th>
+                            <th>Payout</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="betHistoryBody"></tbody>
+
+                </table>
+
+            </div>
+
+            <div class="d-flex justify-content-between mt-3">
+
+                <button
+                    id="betPrevPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(-1)"
+                    disabled>
+
+                    Previous
+
+                </button>
+
+                <span id="betPageInfo">
+
+                    Page 1 of 1
+
+                </span>
+
+                <button
+                    id="betNextPage"
+                    class="btn btn-outline-secondary"
+                    onclick="changeBetPage(1)">
+
+                    Next
+
+                </button>
+
+            </div>
+
         </div>
     </div>
 
@@ -278,6 +384,61 @@
     </div>
 </div>
 
+
+<!-- New Bet Modal -->
+ <div class="modal fade" id="betModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+
+          <h5 class="modal-title">
+            Create Bet
+          </h5>
+
+          <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">
+              Player A
+            </label>
+
+            <select id="betPlayerA" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Player B
+            </label>
+
+            <select id="betPlayerB" class="form-select"></select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">
+              Stake Per Point ($)
+            </label>
+
+            <input type="number" class="form-control" id="betStake" value="1">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            Close
+          </button>
+
+          <button class="btn btn-primary" onclick="createBet()">
+            Save Bet
+          </button>
+
+        </div>
+      </div>
+    </div>
+</div>
 
 <!-- Weekly History Modal -->
 <div class="modal fade" id="weeklyHistoryModal" tabindex="-1">
@@ -545,20 +706,44 @@
 <script src="js/live.js"></script>
 <script src="js/announcer.js"></script>
 <script src="js/bets.js"></script>
-<script src="js/records.js"></script>
 <script src="js/predictions.js"></script>
 
 <script>
   // Home page init + modal handling
   document.addEventListener('DOMContentLoaded', async () => {
     await fetchUsers();
-    await loadPredictionPoll();
-    await loadMonthlyPredictionBadges();
-    await fetchGames().then(() => {
-        renderLastGameStatsFromHistory();
-        renderRecords();
+
+    // Start fetching the ongoing game immediately.
+    // Do not wait for completed-game history.
+    const ongoingGamePromise = fetchOngoingGame();
+
+    // Render the live scoreboard as soon as its data arrives.
+    ongoingGamePromise
+        .then(ongoing => {
+            renderLiveGame(ongoing);
+        })
+        .catch(error => {
+            console.error('Failed to load live scoreboard:', error);
+        });
+
+    const predictionPromise = loadPredictionPoll();
+    const badgesPromise = loadMonthlyPredictionBadges();
+
+    await fetchGames();
+
+    renderLastGameStatsFromHistory();
+
+    Promise.allSettled([
+        predictionPromise,
+        badgesPromise
+    ]).catch(error => {
+        console.error('Prediction loading error:', error);
     });
+
     fetchBetHistory();
+
+    populateBetPlayers();
+    renderBets();
     
     renderPlayerCheckboxes(document.getElementById('playerSelectModal'));
     renderRecentGames(document.getElementById('recentGamesBody'));
@@ -566,12 +751,10 @@
     renderWeeklyWinner(document.getElementById('weeklyWinner'));
     renderMonthlyWinners(document.getElementById('monthlyWinners'));
     renderCareerStats(document.getElementById('careerStatsBody'));
+    renderBetHistory();
     
     initYearlyHistory();
     initLiveSocket();
-
-    const ongoing = await fetchOngoingGame();
-    renderLiveGame(ongoing);
 
     // 🔊 Sound button UI feedback ONLY
     const soundBtn = document.getElementById("soundToggleBtn");

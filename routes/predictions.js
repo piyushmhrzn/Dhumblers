@@ -6,6 +6,15 @@ const Game = require('../models/Game');
 const User = require('../models/User');
 const Prediction = require('../models/Prediction');
 
+// Cache monthly prediction badge results
+const monthlyBadgesCache = new Map();
+
+const MONTHLY_BADGES_CACHE_TTL = 30 * 1000; // 30 seconds
+
+function clearMonthlyBadgesCache() {
+    monthlyBadgesCache.clear();
+}
+
 const FIELDS = [
     'winner',
     'dhumbleVictim',
@@ -410,6 +419,7 @@ router.get('/results/:gameId', async (req, res) => {
     }
 });
 
+
 // GET /api/predictions/badges/monthly
 // Best badge earned by each voter this month.
 router.get('/badges/monthly', async (req, res) => {
@@ -434,16 +444,31 @@ router.get('/badges/monthly', async (req, res) => {
         const start = new Date(Date.UTC(year, month - 1, 1));
         const end = new Date(Date.UTC(year, month, 1));
 
+        // Return cached monthly badges when available
+        const cacheKey = `${year}-${month}`;
+        const cached = monthlyBadgesCache.get(cacheKey);
+
+        if (
+            cached &&
+            Date.now() - cached.timestamp < MONTHLY_BADGES_CACHE_TTL
+        ) {
+            return res.json(cached.data);
+        }
+
+        // Fetch completed games for the selected month
         const games = await Game.find({
             status: 'completed',
             date: {
                 $gte: start,
                 $lt: end
             }
-        }).lean();
+        })
+            .select('id players eliminated rounds dhumbles')
+            .lean();
 
         const gameIds = games.map(g => g.id);
 
+        // Fetch predictions for those games
         const predictions = await Prediction.find({
             gameId: { $in: gameIds }
         }).lean();
@@ -483,11 +508,19 @@ router.get('/badges/monthly', async (req, res) => {
             }
         });
 
-        res.json({
+        // Cache calculated badges for future requests
+        const responseData = {
             year,
             month,
             badges
+        };
+
+        monthlyBadgesCache.set(cacheKey, {
+            data: responseData,
+            timestamp: Date.now()
         });
+
+        res.json(responseData);
 
     } catch (err) {
         res.status(500).json({
@@ -496,4 +529,6 @@ router.get('/badges/monthly', async (req, res) => {
     }
 });
 
+
 module.exports = router;
+module.exports.clearMonthlyBadgesCache = clearMonthlyBadgesCache;

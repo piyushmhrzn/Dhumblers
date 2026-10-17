@@ -48,6 +48,9 @@ const gameSchema = new mongoose.Schema({
     },
 });
 
+// Index for faster retrieval of games sorted by date
+gameSchema.index({ date: -1 });
+
 // Auto-increment ID
 gameSchema.pre('save', async function () {
     if (!this.id) {

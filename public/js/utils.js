@@ -79,7 +79,15 @@ function getAvailableYears() {
 /**
  * Calculates year-based stats for a player (used for tier calculation)
  */
+const yearStatsCache = new Map();
+
 function getYearStats(userId, year) {
+    const cacheKey = `${year}-${userId}`;
+
+    if (yearStatsCache.has(cacheKey)) {
+        return yearStatsCache.get(cacheKey);
+    }
+
     const yearGames = getGamesByYear(year);
 
     let gamesPlayed = 0;
@@ -87,7 +95,10 @@ function getYearStats(userId, year) {
     let totalPoints = 0;
 
     yearGames.forEach(g => {
-        const player = getAllGamePlayers(g).find(p => p.id === userId);
+        const player = getAllGamePlayers(g).find(
+            p => p.id === userId
+        );
+
         if (player) {
             gamesPlayed++;
 
@@ -95,16 +106,24 @@ function getYearStats(userId, year) {
                 Number(player.points || 0) +
                 Number(player.predictionBonus || 0);
 
-            if (player.elimOrder === -1) wins++;
+            if (player.elimOrder === -1) {
+                wins++;
+            }
         }
     });
 
-    return {
+    const result = {
         games: gamesPlayed,
         wins,
-        avgPoints: gamesPlayed ? totalPoints / gamesPlayed : 0,
+        avgPoints: gamesPlayed
+            ? totalPoints / gamesPlayed
+            : 0,
         totalPoints
     };
+
+    yearStatsCache.set(cacheKey, result);
+
+    return result;
 }
 
 /* Get the current win streak for a user based on completed games (most recent first) */

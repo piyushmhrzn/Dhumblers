@@ -10,6 +10,13 @@ const User = require('../models/User');
 const Game = require('../models/Game');
 const Bet = require('../models/Bet');
 const Prediction = require('../models/Prediction');
+const { clearMonthlyBadgesCache } = require('./predictions');
+
+// Cache for completed game history
+let gamesCache = null;
+let gamesCacheTime = 0;
+
+const GAMES_CACHE_TTL = 30 * 1000; // 30 seconds
 
 // ────────────────────────────────────────────────
 // 1. MIDDLEWARE - Authentication / Authorization
@@ -55,10 +62,18 @@ const checkGamePasscode = (req, res, next) => {
  */
 router.get('/users', async (req, res) => {
     try {
-        const users = await User.find().sort('id');
+        const users = await User.find()
+            .sort({ id: 1 })
+            .lean();
+
         res.json(users);
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error fetching users:', err);
+
+        res.status(500).json({
+            error: 'Failed to fetch users'
+        });
     }
 });
 
@@ -107,10 +122,31 @@ router.post('/users', checkAdminPassword, async (req, res) => {
  */
 router.get('/games', async (req, res) => {
     try {
-        const games = await Game.find({ status: 'completed' }).sort('-date');
+        const now = Date.now();
+
+        let games;
+
+        if (
+            gamesCache !== null &&
+            now - gamesCacheTime < GAMES_CACHE_TTL
+        ) {
+            games = gamesCache;
+        } else {
+            games = await Game.find()
+                .sort({ date: -1 })
+                .lean();
+
+            gamesCache = games;
+            gamesCacheTime = Date.now();
+        }
+
         res.json(games);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
+
+    } catch (error) {
+        console.error('Error fetching games:', error);
+        res.status(500).json({
+            error: 'Failed to fetch games'
+        });
     }
 });
 
@@ -122,10 +158,18 @@ router.get('/games', async (req, res) => {
  */
 router.get('/games/ongoing', async (req, res) => {
     try {
-        const game = await Game.findOne({ status: 'ongoing' });
+        const game = await Game.findOne({
+            status: 'ongoing'
+        }).lean();
+
         res.json(game || null);
+
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        console.error('Error fetching ongoing game:', err);
+
+        res.status(500).json({
+            error: 'Failed to fetch ongoing game'
+        });
     }
 });
 
@@ -169,6 +213,10 @@ router.post('/games', checkGamePasscode, async (req, res) => {
         });
 
         await game.save();
+
+        // Invalidate cached game history after creating a new game
+        gamesCache = null;
+        gamesCacheTime = 0;
 
         // Notify all connected clients (live scoreboard update)
         req.app.get('io').emit('gameUpdate', game);
@@ -709,6 +757,15 @@ router.put('/games/ongoing/round', async (req, res) => {
 
         await game.save();
 
+        // Invalidate cached game history after a successful save
+        gamesCache = null;
+        gamesCacheTime = 0;
+
+        // Refresh monthly prediction badges after game updates
+        if (game.status === 'completed') {
+            clearMonthlyBadgesCache();
+        }
+
         // Broadcast updated game state to all clients
         req.app.get('io').emit('gameUpdate', game);
 
@@ -750,6 +807,15 @@ router.delete('/games/ongoing', async (req, res) => {
             gameId: game.id,
             status: 'pending'
         });
+
+        // Invalidate cached game history after cancellation
+        gamesCache = null;
+        gamesCacheTime = 0;
+
+        // Clear monthly prediction badges if a completed game was deleted
+        if (game.status === 'completed') {
+            clearMonthlyBadgesCache();
+        }
 
         // Notify clients that there is no active game.
         req.app.get('io').emit('gameUpdate', null);

@@ -1013,7 +1013,7 @@ function renderLastGameStats(game, completedGames = []) {
         <div class="row g-3 mb-4">
 
             <!-- Winner -->
-            <div class="col-md-3 col-sm-6">
+            <div class="col-6 col-md-3 col-sm-6">
                 <div class="border rounded p-3 h-100 text-center">
 
                     <div class="text-warning fs-4">
@@ -1040,7 +1040,7 @@ function renderLastGameStats(game, completedGames = []) {
 
 
             <!-- Winner Bonus -->
-            <div class="col-md-3 col-sm-6">
+            <div class="col-6 col-md-3 col-sm-6">
                 <div class="border rounded p-3 h-100 text-center">
 
                     <div class="text-success fs-4">
@@ -1063,7 +1063,7 @@ function renderLastGameStats(game, completedGames = []) {
 
 
             <!-- Highest Round Score -->
-            <div class="col-md-3 col-sm-6">
+            <div class="col-6 col-md-3 col-sm-6">
                 <div class="border rounded p-3 h-100 text-center">
 
                     <div class="text-danger fs-4">
@@ -1089,7 +1089,7 @@ function renderLastGameStats(game, completedGames = []) {
             </div>
 
             <!-- Number of Rounds -->
-            <div class="col-md-3 col-sm-6">
+            <div class="col-6 col-md-3 col-sm-6">
                 <div class="border rounded p-3 h-100 text-center">
                     <div class="text-primary fs-4">🎯</div>
                     <div class="text-secondary small">
@@ -1480,6 +1480,29 @@ function initLiveSocket() {
                 fetchGames()
                     .then(() => {
                         renderLastGameStatsFromHistory();
+
+                        renderLeaderboard(
+                            document.getElementById('leaderboardBody')
+                        );
+
+                        renderWeeklyWinner(
+                            document.getElementById('weeklyWinner')
+                        );
+
+                        renderMonthlyWinners(
+                            document.getElementById('monthlyWinners')
+                        );
+
+                        renderCareerStats(
+                            document.getElementById('careerStatsBody')
+                        );
+
+                        renderRecentGames(
+                            document.getElementById('recentGamesBody')
+                        );
+
+                        renderYearlyHistory();
+                        renderRecords();
                     })
                     .catch(err => {
                         console.error("Error refreshing game history:", err);

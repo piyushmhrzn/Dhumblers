@@ -7,10 +7,13 @@ const predictionRoutes = require('./routes/predictions');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
+const compression = require('compression');
 
 dotenv.config();
 
 const app = express();
+
+app.use(compression()); // Enable gzip compression for all responses
 app.use(express.json());  // Parse JSON bodies
 app.use(cors());  // Allow cross-origin (for local testing)
 

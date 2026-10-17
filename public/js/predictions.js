@@ -874,19 +874,18 @@ async function loadMonthlyPredictionBadges() {
         monthlyPredictionBadges =
             data.badges || {};
 
+        // Refresh leaderboard only after game history has loaded.
+        // Prevents "No games played this month" from flashing.
         if (
-            typeof renderLeaderboard ===
-            'function'
+            typeof renderLeaderboard === 'function' &&
+            Array.isArray(games) &&
+            games.length > 0
         ) {
             const leaderboardBody =
-                document.getElementById(
-                    'leaderboardBody'
-                );
+                document.getElementById('leaderboardBody');
 
             if (leaderboardBody) {
-                renderLeaderboard(
-                    leaderboardBody
-                );
+                renderLeaderboard(leaderboardBody);
             }
         }
 

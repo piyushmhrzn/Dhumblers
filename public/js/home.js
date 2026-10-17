@@ -8,15 +8,13 @@
  */
 function renderPlayerCheckboxes(container) {
     if (!container) return;
-    container.innerHTML = '';
 
-    users.forEach(u => {
-        container.innerHTML += `
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="checkbox" value="${u.id}" id="p${u.id}">
-                <label class="form-check-label" for="p${u.id}">${u.name}</label>
-            </div>`;
-    });
+    container.innerHTML = users.map(u => `
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" value="${u.id}" id="p${u.id}">
+            <label class="form-check-label" for="p${u.id}">${u.name}</label>
+        </div>
+    `).join('');
 }
 
 /**
@@ -32,7 +30,7 @@ function renderRecentGames(tbody) {
 
     const pageGames = games.slice(startIndex, endIndex);
 
-    tbody.innerHTML = '';
+    const fragment = document.createDocumentFragment();
 
     pageGames.forEach((g, idx) => {
         const globalSN = startIndex + idx + 1;
@@ -56,8 +54,10 @@ function renderRecentGames(tbody) {
             <td>${winnerName}</td>
             <td>${playerPoints}</td>
         `;
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
     });
+
+    tbody.replaceChildren(fragment);
 
     updatePagination(totalGames);
 }
@@ -174,6 +174,8 @@ function renderLeaderboard(tbody) {
     }
 
     // Render leaderboard
+    const fragment = document.createDocumentFragment();
+
     leaderboard.forEach(p => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -189,8 +191,10 @@ function renderLeaderboard(tbody) {
             <td>${p.games}</td>
             <td>${p.wins}</td>
         `;
-        tbody.appendChild(tr);
+        fragment.appendChild(tr);
     });
+
+    tbody.appendChild(fragment);
 }
 
 
@@ -449,12 +453,14 @@ function renderMonthlyWinners(container) {
 
     const monthlyStats = {};
 
+    const monthFormatter = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        year: 'numeric'
+    });
+
     games.forEach(game => {
         const d = new Date(game.date);
-        const monthKey = d.toLocaleString('en-US', {
-            month: 'long',
-            year: 'numeric'
-        });
+        const monthKey = monthFormatter.format(d);
 
         if (!monthlyStats[monthKey]) {
             monthlyStats[monthKey] = {};
@@ -628,13 +634,15 @@ function showMonthHistory(monthKey) {
 
     const stats = {};
 
+    const monthFormatter = new Intl.DateTimeFormat('en-US', {
+        month: 'long',
+        year: 'numeric'
+    });
+
     games.forEach(g => {
 
         const d = new Date(g.date);
-        const key = d.toLocaleString('en-US', {
-            month: 'long',
-            year: 'numeric'
-        });
+        const key = monthFormatter.format(d);
 
         if (key === monthKey) {
 
@@ -849,8 +857,6 @@ function renderCareerStats(tbody) {
         `;
 
         tbody.appendChild(tr);
-
-        tbody.appendChild(tr);
     });
 }
 
@@ -877,7 +883,7 @@ function initYearlyHistory() {
     });
 
     // Render the newest year by default
-    renderYearlyHistory();
+    // renderYearlyHistory(); // Temporarily disabled
 }
 
 /**
@@ -952,17 +958,11 @@ function renderYearlyHistory() {
             const fullType = determinePlayerType(tempStats, avg);
             const tier = fullType.split(" • ").pop() || "🪵 Wood";
 
-            // Rival & Nemesis for this specific year
-            const rivalry = getRivalryForYear(s.id, year);
-            const nemesis = getNemesisForYear(s.id, year);
-
             return {
                 ...s,
                 avg: avg.toFixed(2),
                 winPct: (winRate * 100).toFixed(1),
-                tier,
-                rival: rivalry.rival || "—",
-                nemesis: nemesis.nemesis || "—"
+                tier
             };
         })
         .sort((a, b) => {
@@ -976,7 +976,7 @@ function renderYearlyHistory() {
     if (leaderboard.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="10" class="text-center text-muted py-4">
+                <td colspan="8" class="text-center text-muted py-4">
                     No games played in ${year}
                 </td>
             </tr>
@@ -998,8 +998,6 @@ function renderYearlyHistory() {
             <td>${p.seconds}</td>
             <td>${p.thirds}</td>
             <td>${p.winPct}%</td>
-            <td>${p.rival}</td>
-            <td>${p.nemesis}</td>
         `;
         tbody.appendChild(tr);
     });
