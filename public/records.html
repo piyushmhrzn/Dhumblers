@@ -27,6 +27,42 @@
     >
 
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Compact Hall of Fame cards on mobile */
+        @media (max-width: 576px) {
+
+            #recordsContent .row.g-3 {
+                --bs-gutter-x: 10px;
+                --bs-gutter-y: 10px;
+            }
+
+            #recordsContent .row.g-3 > div > .border {
+                padding: 10px 6px !important;
+                min-height: 0;
+            }
+
+            #recordsContent .row.g-3 .fs-3 {
+                font-size: 22px !important;
+                line-height: 1.2;
+                margin-bottom: 4px !important;
+            }
+
+            #recordsContent .row.g-3 .fs-5 {
+                font-size: 15px !important;
+                line-height: 1.3;
+                margin-top: 6px !important;
+            }
+
+            #recordsContent .row.g-3 .small {
+                font-size: 11px;
+                line-height: 1.3;
+            }
+
+            #recordsContent .row.g-3 .mt-2 {
+                margin-top: 6px !important;
+            }
+        }
+    </style>
 </head>
 
 <body>
@@ -84,6 +120,19 @@
             try {
                 await fetchUsers();
                 await fetchGames();
+
+                const predictionResponse = await fetch(
+                    '/api/predictions/records/all-time'
+                );
+
+                if (!predictionResponse.ok) {
+                    throw new Error('Failed to load prediction records');
+                }
+
+                const predictionData = await predictionResponse.json();
+
+                window.allTimePredictionRecords =
+                    predictionData.records || [];
 
                 renderRecords();
             } catch (error) {

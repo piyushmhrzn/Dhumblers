@@ -1502,7 +1502,6 @@ function initLiveSocket() {
                         );
 
                         renderYearlyHistory();
-                        renderRecords();
                     })
                     .catch(err => {
                         console.error("Error refreshing game history:", err);

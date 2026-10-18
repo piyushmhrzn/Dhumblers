@@ -529,6 +529,76 @@ router.get('/badges/monthly', async (req, res) => {
     }
 });
 
+// GET /api/predictions/records/all-time
+// Count every prediction badge earned in completed games.
+router.get('/records/all-time', async (req, res) => {
+    try {
+        const completedGames = await Game.find({
+            status: 'completed'
+        })
+            .select('id players eliminated rounds dhumbles')
+            .lean();
+
+        const gameIds = completedGames.map(game => game.id);
+
+        const predictions = await Prediction.find({
+            gameId: { $in: gameIds }
+        }).lean();
+
+        const gamesById = new Map(
+            completedGames.map(game => [game.id, game])
+        );
+
+        const actualByGame = new Map();
+        const records = {};
+
+        predictions.forEach(prediction => {
+            const game = gamesById.get(prediction.gameId);
+            if (!game) return;
+
+            if (!actualByGame.has(game.id)) {
+                actualByGame.set(
+                    game.id,
+                    getActualResults(game)
+                );
+            }
+
+            const { score } = gradePrediction(
+                prediction,
+                actualByGame.get(game.id)
+            );
+
+            const voterId = prediction.voterId;
+
+            if (!records[voterId]) {
+                records[voterId] = {
+                    voterId,
+                    dhumbleBaba: 0,
+                    naagJyotishi: 0,
+                    tukkeBaaz: 0
+                };
+            }
+
+            if (score === 4) {
+                records[voterId].dhumbleBaba++;
+            } else if (score === 3) {
+                records[voterId].naagJyotishi++;
+            } else if (score === 2) {
+                records[voterId].tukkeBaaz++;
+            }
+        });
+
+        res.json({
+            records: Object.values(records)
+        });
+
+    } catch (error) {
+        console.error('Prediction records error:', error);
+        res.status(500).json({
+            error: 'Unable to load prediction records'
+        });
+    }
+});
 
 module.exports = router;
 module.exports.clearMonthlyBadgesCache = clearMonthlyBadgesCache;

@@ -33,26 +33,78 @@
         letter-spacing: 0.08em;
     }
 
+    /* Compact Last Game Stats cards on mobile */
+    @media (max-width: 576px) {
 
+        #lastGameStatsContent .row.g-3.mb-4 {
+            --bs-gutter-x: 10px;
+            --bs-gutter-y: 10px;
+            margin-bottom: 16px !important;
+        }
+
+        #lastGameStatsContent .row.g-3.mb-4 > div > .border {
+            padding: 10px 6px !important;
+            min-height: 0;
+        }
+
+        #lastGameStatsContent .row.g-3.mb-4 .fs-4 {
+            font-size: 19px !important;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        #lastGameStatsContent .row.g-3.mb-4 .fs-5 {
+            font-size: 16px !important;
+            line-height: 1.3;
+        }
+
+        #lastGameStatsContent .row.g-3.mb-4 .small {
+            font-size: 11px;
+            line-height: 1.3;
+        }
+
+        #lastGameStatsContent .row.g-3.mb-4 .mt-1 {
+            margin-top: 4px !important;
+        }
+    }
   </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-light bg-light mb-2">
-    <div class="container">
-        <span class="navbar-brand">Dhumblers</span>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-2">
+        <div class="container">
 
-        <a href="records.html"
-        class="btn btn-sm btn-outline-warning ms-auto me-2">
-            <i class="fas fa-landmark me-1"></i>
-            Hall of Fame
-        </a>
+            <div class="d-flex flex-column flex-sm-row
+                        align-items-center justify-content-between
+                        w-100 gap-2">
 
-        <button class="btn btn-sm btn-primary ms-auto" data-bs-toggle="modal" data-bs-target="#newGameModal">
-           <i class="fas fa-plus me-1"></i> Start New Game
-        </button>
-    </div>
-</nav>
+                <!-- Brand -->
+                <span class="navbar-brand fw-bold m-0">
+                    Dhumblers
+                </span>
+
+                <!-- Navigation Buttons -->
+                <div class="d-flex flex-wrap justify-content-center
+                            align-items-center gap-2">
+
+                    <a href="records.html"
+                    class="btn btn-sm btn-outline-warning">
+                        🏛️ Hall of Fame
+                    </a>
+
+                    <button class="btn btn-sm btn-primary"
+                            data-bs-toggle="modal"
+                            data-bs-target="#playerSelectModal">
+                        <i class="fas fa-plus me-1"></i>
+                        Start New Game
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+    </nav>
 
 <div class="container" id="homeContent">
 

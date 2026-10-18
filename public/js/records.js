@@ -135,6 +135,48 @@ function renderRecords() {
             recordStats
         );
 
+    // --------------------------------------------
+    // ALL-TIME PREDICTION RECORDS
+    // --------------------------------------------
+
+    const predictionPlayers =
+        (window.allTimePredictionRecords || []).map(player => ({
+            ...player,
+            id: Number(player.voterId)
+        }));
+
+    const predictionRecords = [
+
+        makeMaxRecord(
+            "🧿",
+            "Most Dhumble Baba",
+            predictionPlayers,
+            player => player.dhumbleBaba,
+            value => `${value} Times`
+        ),
+
+        makeMaxRecord(
+            "🐍",
+            "Most Naag Jyotishi",
+            predictionPlayers,
+            player => player.naagJyotishi,
+            value => `${value} Times`
+        ),
+
+        makeMaxRecord(
+            "🦜",
+            "Most Tukke Baaz",
+            predictionPlayers,
+            player => player.tukkeBaaz,
+            value => `${value} Times`
+        )
+    ];
+
+    // Use voterId as the player identifier for
+    // the existing Hall of Fame card renderer.
+    predictionPlayers.forEach(player => {
+        player.id = player.voterId;
+    });
 
     // ------------------------------------------------
     // RENDER
@@ -162,6 +204,10 @@ function renderRecords() {
         bonusRecords
     )}
 
+        ${renderRecordSection(
+        "🔮 Prediction Records",
+        predictionRecords
+    )}
     `;
 
     recordsCacheGames = games;
