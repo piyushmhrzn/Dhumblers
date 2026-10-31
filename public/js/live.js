@@ -1879,8 +1879,8 @@ function initLiveSocket() {
                 );
 
                 const text = names.length === 1
-                    ? `${names[0]} ji abata tata bye bye nai ho! 🚨`
-                    : `${names.join(" & ")} ji abata tata bye bye nai ho! 🚨`;
+                    ? `${names[0]} ji tata bye bye tayari ma! 🚨`
+                    : `${names.join(" & ")} ji tata bye bye tayari ma! 🚨`;
 
                 showGif("criticalElim", text);
 
