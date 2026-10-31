@@ -17,7 +17,7 @@ let betTotalPages = 1;
 
 // Monthly winners pagination
 let monthlyWinnersPage = 1;
-const MONTHS_PER_PAGE = 5;
+const MONTHS_PER_PAGE = 4;
 
 const TIERS = [
     { name: "🪱 Compost", win: 0.00, avg: 0.00 },

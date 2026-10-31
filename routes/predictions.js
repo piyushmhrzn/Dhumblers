@@ -65,12 +65,25 @@ function getActualResults(game) {
     let highestScore = -Infinity;
     let highestScorers = [];
 
-    rounds.forEach(round => {
-        Object.entries(round).forEach(([id, rawScore]) => {
+    rounds.forEach((round, roundIndex) => {
+
+        const roundNumber = roundIndex + 1;
+
+        // Identify Dhumble victims in this round
+        const dhumbledIds = new Set(
+            dhumbles
+                .filter(d => Number(d.round) === roundNumber)
+                .map(d => Number(d.victim))
+        );
+
+        Object.entries(round || {}).forEach(([id, rawScore]) => {
             const score = Number(rawScore);
             const playerId = Number(id);
 
             if (!Number.isFinite(score)) return;
+
+            // Exclude Dhumble penalties from Highest Scorer
+            if (dhumbledIds.has(playerId)) return;
 
             if (score > highestScore) {
                 highestScore = score;

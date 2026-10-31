@@ -365,120 +365,6 @@ async function submitRoundScores() {
 
         const updatedGame = await res.json();
 
-        // ─────────────────────────────
-        // 🔊 PRIORITY-BASED SOUND SYSTEM
-        // ─────────────────────────────
-
-        const oldGame = { ...currentGame };
-
-        // Detect events
-        const lastRound = updatedGame.rounds[updatedGame.rounds.length - 1] || {};
-
-        // 1. WINNER
-        const isWinner = updatedGame.status === "completed";
-
-        // --------------------------------------------------------------------------------
-        // 2. ELIMINATION
-        // --------------------------------------------------------------------------------
-        const newlyEliminated = updatedGame.players.filter(p => {
-            const oldP = oldGame.players.find(o => o.id === p.id);
-            return oldP && oldP.status === 'active' && p.status === 'eliminated';
-        });
-
-        // --------------------------------------------------------------------------------
-        // 3. FUNNY (40-0)
-        // --------------------------------------------------------------------------------
-        let fortyCount = 0;
-        let zeroCount = 0;
-
-        Object.values(lastRound).forEach(score => {
-            if (score === 40) fortyCount++;
-            if (score === 0) zeroCount++;
-        });
-
-        const totalPlayers = Object.keys(lastRound).length;
-        const isFunny = (fortyCount === 1 && zeroCount === totalPlayers - 1);
-
-        // --------------------------------------------------------------------------------
-        // 4. HIGH SCORE (40+) Players scoring more than 40 in the round
-        // --------------------------------------------------------------------------------
-        const highScorers = Object.entries(lastRound)
-            .filter(([_, score]) => score > 40)
-            .map(([id]) => getUserById(parseInt(id))?.name || "Legend");
-
-        const highScorerIds = Object.entries(lastRound)
-            .filter(([_, score]) => score > 40)
-            .map(([id]) => parseInt(id));
-
-        // --------------------------------------------------------------------------------
-        // 5. NEAR ELIMINATION (within 15 points of elimScore)
-        // --------------------------------------------------------------------------------
-        const nearElimPlayers = updatedGame.players.filter(p => {
-            if (p.status !== 'active') return false;
-            if (highScorerIds.includes(p.id)) return false;
-            return p.total >= (updatedGame.elimScore - 15);
-        });
-
-        const justEnteredDanger = nearElimPlayers.some(p => {
-            const oldP = oldGame.players.find(o => o.id === p.id);
-            return oldP && oldP.total < (updatedGame.elimScore - 15);
-        });
-
-
-        // ─────────────────────────────
-        // 🎯 APPLY PRIORITY
-        // ─────────────────────────────
-
-        if (isWinner) {
-            const winner = updatedGame.players.find(p => p.elimOrder === -1);
-            const name = getUserById(winner?.id)?.name || "Champion";
-
-            playSound("winnerSound");
-            showGif("winner", `${name} is the WINNER 👑🔥`, 14000);
-        }
-
-        else if (newlyEliminated.length > 0) {
-            playSound("elimSound");
-
-            const names = newlyEliminated.map(p => getUserById(p.id)?.name || "Unknown");
-            const text = names.length === 1
-                ? `${names[0]} ji TATA BYE BYE! 👋`
-                : `${names.join(" & ")} ji TATA BYE BYE! 👋`;
-
-            showGif("elim", text);
-        }
-
-        else if (isFunny) {
-            playSound("funnySound");
-
-            const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
-            const name = getUserById(parseInt(scorerId))?.name || "Legend";
-
-            showGif("funny", `${name} ji wah kya khela! 😂`);
-        }
-
-        else if (highScorers.length > 0) {
-            playSound("highScoreSound");
-
-            const text = highScorers.length === 1
-                ? `${highScorers[0]} jji wah ultra-legend khiladi 😂`
-                : `${highScorers.join(" & ")} jji wah ultra-legend khiladi 😂`;
-
-            showGif("high", text);
-        }
-
-        else if (justEnteredDanger) {
-            playSound("nearElimSound");
-
-            const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
-            const text = names.length === 1
-                ? `${names[0]} ji udaan tayari hudai 🚀`
-                : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
-
-            showGif("nearElim", text, 10000);
-        }
-
-
         // Update current game state
         currentGame = updatedGame;
 
@@ -511,9 +397,6 @@ function showWinner() {
     // Winner bonus details
     const bonusPoints = winnerPlayer?.bonusPoints || 0;
     const bonusName = winnerPlayer?.bonusName || '';
-
-    // 🔊 Winner celebration
-    playSound("winnerSound");
 
     document.getElementById('winnerBanner').innerHTML = `
         <div class="alert alert-success text-center mb-4" role="alert">

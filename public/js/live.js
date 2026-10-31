@@ -106,15 +106,65 @@ function renderLiveGame(game) {
     }
 
     // ─────────────────────────────────────
+    // HIGHEST VALID ROUND SCORE
+    // Exclude scores from Dhumble events
+    // ─────────────────────────────────────
+
+    let highestValidScore = -Infinity;
+    let highestValidPlayers = [];
+
+    (game.rounds || []).forEach((round, roundIndex) => {
+
+        const roundNumber = roundIndex + 1;
+
+        const dhumbledIds = new Set(
+            (game.dhumbles || [])
+                .filter(d => Number(d.round) === roundNumber)
+                .map(d => Number(d.victim))
+        );
+
+        Object.entries(round || {}).forEach(([id, rawScore]) => {
+
+            const playerId = Number(id);
+            const score = Number(rawScore);
+
+            if (!Number.isFinite(score)) return;
+
+            // Dhumble penalties do not qualify
+            if (dhumbledIds.has(playerId)) return;
+
+            if (score > highestValidScore) {
+                highestValidScore = score;
+                highestValidPlayers = [playerId];
+            } else if (
+                score === highestValidScore &&
+                !highestValidPlayers.includes(playerId)
+            ) {
+                highestValidPlayers.push(playerId);
+            }
+        });
+    });
+
+    const highestScorerText = highestValidPlayers.length
+        ? `${highestValidPlayers
+            .map(id => getUserById(id)?.name || "Unknown")
+            .join(" & ")} (${highestValidScore})`
+        : "Not yet";
+
+    // ─────────────────────────────────────
     // HTML
     // ─────────────────────────────────────
 
     let html = `
 
-    <div class="d-flex justify-content-between mb-3">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
 
-        <span class="badge bg-danger fs-6">
-            🤡 Panauti Streak: ${hotText}
+        <span class="badge bg-danger fw-bold">
+            🤡 Panauti: ${hotText}
+        </span>
+
+        <span class="badge bg-warning text-dark fw-bold">
+            🥵 TopScorer: ${highestScorerText}
         </span>
 
     </div>
@@ -669,10 +719,23 @@ function renderLastGameStats(game, completedGames = []) {
 
     (game.rounds || []).forEach((round, roundIndex) => {
 
+        const roundNumber = roundIndex + 1;
+
+        // Identify players Dhumbled in this round
+        const dhumbledIds = new Set(
+            (game.dhumbles || [])
+                .filter(d => Number(d.round) === roundNumber)
+                .map(d => Number(d.victim))
+        );
+
         Object.entries(round || {}).forEach(([id, score]) => {
 
-            const numericScore =
-                Number(score) || 0;
+            // Exclude Dhumble penalty scores
+            if (dhumbledIds.has(Number(id))) return;
+
+            const numericScore = Number(score);
+
+            if (!Number.isFinite(numericScore)) return;
 
             if (numericScore > highestRoundScore) {
 
@@ -1024,12 +1087,8 @@ function renderLastGameStats(game, completedGames = []) {
                         WINNER
                     </div>
 
-                    <div class="fw-bold fs-5">
-                        ${winnerName}
-                    </div>
-
-                    <div>
-                        ${winnerScore} points
+                    <div class="fw-bold">
+                        ${winnerName} (${winnerScore} pts)
                     </div>
 
                     <div class="small text-warning mt-1">
@@ -1074,7 +1133,7 @@ function renderLastGameStats(game, completedGames = []) {
                         HIGHEST ROUND SCORE
                     </div>
 
-                    <div class="fw-bold fs-5">
+                    <div class="fw-bold">
                         ${highestRoundScore >= 0
             ? highestRoundScore
             : "N/A"
@@ -1095,7 +1154,7 @@ function renderLastGameStats(game, completedGames = []) {
                     <div class="text-secondary small">
                         ROUNDS PLAYED
                     </div>
-                    <div class="fw-bold fs-5">
+                    <div class="fw-bold">
                         ${totalRounds}
                     </div>
                 </div>
@@ -1195,9 +1254,9 @@ function renderLastGameStats(game, completedGames = []) {
 
         html += `
 
-            <div class="table-responsive">
+        <div class="table-responsive d-none d-md-block">
 
-                <table class="table table-sm table-striped mb-0">
+            <table class="table table-sm table-striped mb-0">
 
                     <thead>
                         <tr>
@@ -1355,7 +1414,7 @@ function renderLastGameStats(game, completedGames = []) {
                     </td>
 
                     <td>
-                        <span class="tier-badge">
+                        <span class="tier-badge small" style="font-size: 0.7rem; padding: 2px 5px;">
                             ${tierBefore}
                         </span>
 
@@ -1363,7 +1422,7 @@ function renderLastGameStats(game, completedGames = []) {
                             →
                         </span>
 
-                        <span class="tier-badge">
+                        <span class="tier-badge small" style="font-size: 0.7rem; padding: 2px 5px;">
                             ${tierAfter}
                         </span>
                     </td>
@@ -1387,7 +1446,6 @@ function renderLastGameStats(game, completedGames = []) {
 
 
         html += `
-
                     </tbody>
 
                 </table>
@@ -1395,10 +1453,153 @@ function renderLastGameStats(game, completedGames = []) {
             </div>
 
         `;
+
+        // --------------------------------------------
+        // MOBILE: COMPACT PLAYER DROPDOWNS
+        // --------------------------------------------
+
+        html += `
+            <div class="d-md-none accordion" id="lastGameRankingAccordion">
+        `;
+
+        changes.forEach((player, index) => {
+
+            const rankBefore = player.rankBefore ?? "—";
+            const rankAfter = player.rankAfter ?? "—";
+
+            let rankChangeText = "—";
+
+            if (player.rankBefore == null) {
+                rankChangeText = "NEW";
+            } else if (player.rankAfter != null) {
+                const difference =
+                    player.rankBefore - player.rankAfter;
+
+                if (difference > 0) {
+                    rankChangeText = `↑ ${difference}`;
+                } else if (difference < 0) {
+                    rankChangeText = `↓ ${Math.abs(difference)}`;
+                }
+            }
+
+            let tierChangeText = "—";
+            let tierChangeClass = "text-secondary";
+
+            if (
+                player.tierBeforeIndex != null &&
+                player.tierAfterIndex != null
+            ) {
+                const difference =
+                    player.tierAfterIndex -
+                    player.tierBeforeIndex;
+
+                if (difference > 0) {
+                    tierChangeText =
+                        `↑ ${difference} tier${difference > 1 ? "s" : ""}`;
+                    tierChangeClass = "text-success";
+                } else if (difference < 0) {
+                    tierChangeText =
+                        `↓ ${Math.abs(difference)} tier${Math.abs(difference) > 1 ? "s" : ""}`;
+                    tierChangeClass = "text-danger";
+                }
+            }
+
+            html += `
+                <div class="accordion-item bg-dark text-light border-secondary">
+
+                    <h2 class="accordion-header" id="rankingHeading${index}">
+
+                        <button
+                            class="accordion-button collapsed bg-dark text-light shadow-none px-3 py-2"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#rankingCollapse${index}"
+                            aria-expanded="false"
+                            aria-controls="rankingCollapse${index}"
+                        >
+                            <span class="d-flex align-items-center justify-content-between w-100 gap-2 pe-2">
+
+                                <span class="fw-semibold">
+                                    ${player.name}
+                                    <small class="d-block text-secondary fw-normal">
+                                        Rank ${rankBefore} → ${rankAfter}
+                                    </small>
+                                </span>
+
+                                <span class="text-end">
+                                    <span class="fw-bold text-success">
+                                        +${player.pointsEarned} pts
+                                    </span>
+                                    <small class="d-block ${tierChangeClass}">
+                                        ${tierChangeText === "—" ? "No tier change" : tierChangeText}
+                                    </small>
+                                </span>
+
+                            </span>
+                        </button>
+
+                    </h2>
+
+                    <div
+                        id="rankingCollapse${index}"
+                        class="accordion-collapse collapse"
+                        aria-labelledby="rankingHeading${index}"
+                        data-bs-parent="#lastGameRankingAccordion"
+                    >
+                        <div class="accordion-body bg-dark text-light px-3 py-2 small">
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Rank Change</span>
+                                <strong>${rankChangeText}</strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2 gap-2">
+                                <span class="text-secondary">Previous Tier</span>
+                                <span class="tier-badge small" style="font-size: 0.7rem; padding: 2px 5px;">
+                                    ${player.tierBefore}
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2 gap-2">
+                                <span class="text-secondary">New Tier</span>
+                                <span class="tier-badge small" style="font-size: 0.7rem; padding: 2px 5px;">
+                                    ${player.tierAfter}
+                                </span>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Tier Change</span>
+                                <strong class="${tierChangeClass}">
+                                    ${tierChangeText}
+                                </strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-secondary">Final Score</span>
+                                <strong>${player.finalScore}</strong>
+                            </div>
+
+                            <div class="d-flex justify-content-between">
+                                <span class="text-secondary">Points Earned</span>
+                                <strong class="text-success">
+                                    +${player.pointsEarned}
+                                </strong>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            `;
+        });
+
+        html += `</div>`;
     }
 
 
+    // ------------------------------------------------
     // 🗳️ Prediction Results
+    // ------------------------------------------------
     html += `
         <div class="mt-4">
             <h6 class="mb-2">
@@ -1447,8 +1648,7 @@ function renderLastGameStatsFromHistory() {
     );
 }
 
-
-
+let lastAnnouncedWinnerGameId = null;
 
 /**
  * Initializes Socket.IO connection and sets up real-time game updates
@@ -1510,20 +1710,21 @@ function initLiveSocket() {
                         renderLastGameStats(game);
                     });
 
-                const winner = game.players.find(
-                    p => p.elimOrder === -1
+                const completedGameId = String(
+                    game._id ||
+                    game.id ||
+                    `${game.createdAt || ""}-${game.rounds?.length || 0}-${game.players?.map(p => p.id).join(",") || ""}`
                 );
 
-                const name =
-                    getUserById(winner?.id)?.name || "Champion";
+                if (lastAnnouncedWinnerGameId !== completedGameId) {
+                    lastAnnouncedWinnerGameId = completedGameId;
 
-                playSound("winnerSound");
+                    const winner = game.players.find(p => p.elimOrder === -1);
+                    const name = getUserById(winner?.id)?.name || "Champion";
 
-                showGif(
-                    "winner",
-                    `${name} is the WINNER 👑🔥`,
-                    11000
-                );
+                    playSound("winnerSound");
+                    showGif("winner", `${name} is the WINNER 👑🔥`);
+                }
             }
 
             currentGame = null;
@@ -1579,22 +1780,56 @@ function initLiveSocket() {
                 .map(([id]) => parseInt(id));
 
             // --------------------------------------------------------------------------------
-            // 4. NEAR ELIMINATION (within 15 points of elimScore)
+            // 4. SCORE 31–40 (EXCLUDING DHUMBLE)
             // --------------------------------------------------------------------------------
-            const nearElimPlayers = game.players.filter(p => {
-                if (p.status !== 'active') return false;
-                if (highScorerIds.includes(p.id)) return false;
-                return p.total >= (game.elimScore - 15);
+            const midHighScorers = Object.entries(lastRound)
+                .filter(([_, rawScore]) => {
+                    const score = Number(rawScore);
+
+                    // Only scores from 31 through 40 qualify.
+                    if (score < 31 || score > 40) return false;
+
+                    // A Dhumble round must never trigger this event.
+                    if (isFunny) return false;
+
+                    return true;
+                })
+                .map(([id]) => getUserById(Number(id))?.name || "Player");
+
+            // --------------------------------------------------------------------------------
+            // 5. CRITICAL DANGER (NEWLY REACHES ELIMINATION SCORE - 5)
+            // --------------------------------------------------------------------------------
+            const criticalElimPlayers = game.players.filter(p => {
+                if (p.status !== "active") return false;
+
+                const oldP = oldGame.players.find(o => o.id === p.id);
+
+                return oldP &&
+                    Number(oldP.total) < (game.elimScore - 5) &&
+                    Number(p.total) >= (game.elimScore - 5);
             });
 
-            const justEnteredDanger = nearElimPlayers.some(p => {
+            const justEnteredCritical = criticalElimPlayers.length > 0;
+
+            // --------------------------------------------------------------------------------
+            // 6. NEAR ELIMINATION (NEWLY REACHES ELIMINATION SCORE - 15)
+            // --------------------------------------------------------------------------------
+            const nearElimPlayers = game.players.filter(p => {
+                if (p.status !== "active") return false;
+
                 const oldP = oldGame.players.find(o => o.id === p.id);
-                return oldP && oldP.total < (game.elimScore - 15);
+
+                return oldP &&
+                    Number(oldP.total) < (game.elimScore - 15) &&
+                    Number(p.total) >= (game.elimScore - 15);
             });
+
+            const justEnteredDanger = nearElimPlayers.length > 0;
 
             // ───────── PRIORITY SYSTEM ─────────
 
             if (newlyEliminated.length > 0) {
+                // Priority 2: Elimination
                 playSound("elimSound");
 
                 const names = newlyEliminated.map(p => getUserById(p.id)?.name || "Unknown");
@@ -1606,6 +1841,7 @@ function initLiveSocket() {
             }
 
             else if (isFunny) {
+                // Priority 3: Dhumbled
                 playSound("funnySound");
 
                 const scorerId = Object.keys(lastRound).find(id => lastRound[id] === 40);
@@ -1615,6 +1851,7 @@ function initLiveSocket() {
             }
 
             else if (highScorers.length > 0) {
+                // Priority 4: High Score (above 40)
                 playSound("highScoreSound");
 
                 const text = highScorers.length === 1
@@ -1622,17 +1859,44 @@ function initLiveSocket() {
                     : `${highScorers.join(" & ")} ji wah ultra-legend khiladi 😂`;
 
                 showGif("high", text);
-            }
 
-            else if (justEnteredDanger) {
+            } else if (midHighScorers.length > 0) {
+                // Priority 5: Score 31–40 (non-Dhumble)
+                playSound("midHighSound");
+
+                const text = midHighScorers.length === 1
+                    ? `${midHighScorers[0]} ji wah dhamakedar performance! 😵`
+                    : `${midHighScorers.join(" & ")} ji wah dhamakedar performance! 😵`;
+
+                showGif("midHigh", text);
+
+            } else if (justEnteredCritical) {
+                // Priority 6: Critical Danger (elimination score - 5)
+                playSound("criticalElimSound");
+
+                const names = criticalElimPlayers.map(
+                    p => getUserById(p.id)?.name || "Player"
+                );
+
+                const text = names.length === 1
+                    ? `${names[0]} ji abata tata bye bye nai ho! 🚨`
+                    : `${names.join(" & ")} ji abata tata bye bye nai ho! 🚨`;
+
+                showGif("criticalElim", text);
+
+            } else if (justEnteredDanger) {
+                // Priority 7: Near Elimination (elimination score - 15)
                 playSound("nearElimSound");
 
-                const names = nearElimPlayers.map(p => getUserById(p.id)?.name || "Player");
+                const names = nearElimPlayers.map(
+                    p => getUserById(p.id)?.name || "Player"
+                );
+
                 const text = names.length === 1
                     ? `${names[0]} ji udaan tayari hudai 🚀`
                     : `${names.join(" & ")} ji udaan tayari hudai 🚀`;
 
-                showGif("nearElim", text, 10000);
+                showGif("nearElim", text);
             }
         }
 

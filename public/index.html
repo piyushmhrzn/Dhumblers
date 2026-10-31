@@ -33,6 +33,11 @@
         letter-spacing: 0.08em;
     }
 
+    /* White accordion arrow on dark background */
+    #lastGameRankingAccordion .accordion-button::after {
+        filter: brightness(0) invert(1);
+    }
+
     /* Compact Last Game Stats cards on mobile */
     @media (max-width: 576px) {
 
@@ -143,23 +148,40 @@
                 <strong>Weekly Winner:</strong> 
                 <span id="weeklyWinner"><i class="fas fa-crown text-warning"></i>Loading...</span>
             </p>
-            <p class="mt-4"><strong>Monthly Winners (Last 5):</strong></p>
+            <p class="mt-4"><strong>Monthly Winners (Last 4):</strong></p>
             <div id="monthlyWinners"></div>
         </div>
     </div>
 
     <!-- Last Game Stats -->
     <div class="card mb-3" id="lastGameStatsCard" style="display: none;">
+
         <div class="card-body">
 
-            <h5>
-                <i class="fas fa-chart-bar me-2 text-success"></i>
-                Last Game Stats
+            <h5 class="mb-0">
+                <button
+                    class="btn w-100 d-flex align-items-center justify-content-between text-light p-0 border-0 shadow-none"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#lastGameStatsCollapse"
+                    aria-expanded="false"
+                    aria-controls="lastGameStatsCollapse"
+                >
+                    <span>
+                        <i class="fas fa-chart-bar me-2 text-success"></i>
+                        Last Game Stats
+                    </span>
+
+                    <i class="fas fa-chevron-down text-light"></i>
+                </button>
             </h5>
 
-            <div id="lastGameStatsContent"></div>
+            <div class="collapse mt-3" id="lastGameStatsCollapse">
+                <div id="lastGameStatsContent"></div>
+            </div>
 
         </div>
+
     </div>
 
     <!-- Live Game -->
@@ -176,14 +198,15 @@
                   </button>
                   
                   <button
-                    id="announceScoreBtn"
-                    class="btn btn-sm btn-outline-secondary ms-2"
-                    onclick="announceLiveScores()"
-                >
-                    <i class="fas fa-volume-high me-1"></i>
-                    Announce
-                </button>
-                <span id="elimScoreBadge" class="badge bg-danger ms-2"></span>
+                        id="announceScoreBtn"
+                        class="btn btn-sm btn-outline-secondary ms-1 px-2"
+                        onclick="announceLiveScores()"
+                        title="Announce Live Scores"
+                        aria-label="Announce Live Scores"
+                    >
+                        <i class="fas fa-bullhorn"></i>
+                    </button>
+                <!-- <span id="elimScoreBadge" class="badge bg-danger ms-2"></span> -->
                 <span id="liveRound" class="badge bg-info ms-2"></span>
             </h5>
 
@@ -202,33 +225,6 @@
                     Loading Prediction ...
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- 1 vs 1 Bets -->
-    <div class="card mb-3">
-        <div class="card-body">
-
-            <div class="d-flex justify-content-between align-items-center">
-
-                <h5>
-                    💰 1 vs 1 Bets
-                </h5>
-
-                <button class="btn btn-sm btn-success" data-bs-toggle="modal"  data-bs-target="#betModal">
-                    New Bet
-                </button>
-
-            </div>
-
-            <div id="betContainer">
-
-                <p class="text-secondary">
-                    No active bets
-                </p>
-
-            </div>
-
         </div>
     </div>
 
@@ -324,6 +320,33 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- 1 vs 1 Bets -->
+    <div class="card mt-3 mb-3">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <h5>
+                    💰 1 vs 1 Bets
+                </h5>
+
+                <button class="btn btn-sm btn-success" data-bs-toggle="modal"  data-bs-target="#betModal">
+                    New Bet
+                </button>
+
+            </div>
+
+            <div id="betContainer">
+
+                <p class="text-secondary">
+                    No active bets
+                </p>
+
+            </div>
+
         </div>
     </div>
 
@@ -729,19 +752,25 @@
         <div id="gifText" class="gif-text"></div>
 
         <!-- 💀 Elimination -->
-        <img id="elimGif" src="img/anmol.gif" class="gif-img">
+        <img id="elimGif" src="img/coffin.gif" class="gif-img">
 
         <!-- 😂 Funny (Dhumble) -->
         <img id="funnyGif" src="img/salman.gif" class="gif-img">
 
+        <!-- 😵 Score 31–40 -->
+        <img id="midHighGif" src="img/sudan-gurung.gif" class="gif-img">
+
         <!-- 😭 HighScore (40+) -->
         <img id="highGif" src="img/santosh.gif" class="gif-img">
 
-        <!-- 🪦 Near Elimination -->
-        <img id="nearElimGif" src="img/crying.gif" class="gif-img">     
+        <!-- 🪦 Near Elimination (Elimination Score - 15) -->
+        <img id="nearElimGif" src="img/dhamala-crying.gif" class="gif-img">
+
+        <!-- 🚨 Critical Danger (Elimination Score - 5) -->
+        <img id="criticalElimGif" src="img/strong-hunuparxa.gif" class="gif-img">
 
         <!-- 🏆 Winner -->
-        <img id="winnerGif" src="img/winner.gif" class="gif-img">
+        <img id="winnerGif" src="img/dhamala-congratulation.gif" class="gif-img">
     </div>
 </div>
 
@@ -840,10 +869,25 @@
 </script>
 
 <!-- Sound Effects -->
-<audio id="elimSound" src="sounds/harey.mp3" preload="auto"></audio>
+ <!-- Elimination -->
+<audio id="elimSound" src="sounds/coffin.mp3" preload="auto"></audio>
+
+<!-- Funny (Dhumble) -->
 <audio id="funnySound" src="sounds/lutGaye.mp3" preload="auto"></audio>
+
+<!-- Score 31–40 -->
+<audio id="midHighSound" src="sounds/sudan-gurung.mp3" preload="auto"></audio>
+
+<!-- High Score (40+) -->
 <audio id="highScoreSound" src="sounds/santosh.mp3" preload="auto"></audio>
-<audio id="nearElimSound" src="sounds/zindagi.mp3" preload="auto"></audio>
-<audio id="winnerSound" src="sounds/winner.mp3" preload="auto"></audio>
+
+<!-- Near Elimination (Elimination Score - 15) -->
+<audio id="nearElimSound" src="sounds/dhamala-crying.mp3" preload="auto"></audio>
+
+<!-- Critical Danger (Elimination Score - 5) -->
+<audio id="criticalElimSound" src="sounds/strong-hunuparxa.mp3" preload="auto"></audio>
+
+<!-- Winner -->
+<audio id="winnerSound" src="sounds/dhamala-congratulation.mp3" preload="auto"></audio>
 </body>
 </html>

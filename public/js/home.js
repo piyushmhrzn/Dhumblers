@@ -373,8 +373,7 @@ function renderWeeklyWinner(el) {
     if (Object.keys(weeklyStats).length === 0) {
         el.innerHTML = `
             <br>
-            <strong>Current Week:</strong>
-            No games played yet (Ends ${endFormatted})
+            No games played yet (Ends: ${endFormatted})
             <br>
         `;
         return;
@@ -432,9 +431,10 @@ function renderWeeklyWinner(el) {
         : `${winners.join(' & ')} (${maxPoints} points)`;
 
     el.innerHTML = `
-        <br>&nbsp;&nbsp;&nbsp;&nbsp;<strong>Current Week:</strong> 
-        <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
-        <small><em>(Ends ${endFormatted})</em></small>
+        <small>
+            <i class="fas fa-crown text-warning me-1"></i> ${winnerText} 
+            <em>(Ends: ${endFormatted})</em>
+        </small>
 
         <button class="btn btn-sm btn-outline-secondary ms-2"
             onclick="showWeeklyHistory()">
@@ -553,7 +553,7 @@ function renderMonthlyWinners(container) {
 
             html += `
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
+                    <span class="small">
                         <strong>${monthKey}:</strong>
                         ${winners.length > 1 ? 's' : ''} ${winnerText}
                     </span>
