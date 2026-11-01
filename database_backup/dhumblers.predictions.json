@@ -1329,4 +1329,382 @@
     "$date": "2026-10-31T00:09:43.082Z"
   },
   "winner": 4
+},
+{
+  "_id": {
+    "$oid": "6ae674fdfdb12ea0d3eb12b3"
+  },
+  "voterId": 5,
+  "gameId": 488,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:08:45.557Z"
+  },
+  "dhumbleVictim": 2,
+  "firstEliminated": 2,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-10-31T23:08:45.555Z"
+  },
+  "winner": 5
+},
+{
+  "_id": {
+    "$oid": "6ae67516fdb12ea0d3eb12b6"
+  },
+  "gameId": 488,
+  "voterId": 2,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:09:10.212Z"
+  },
+  "dhumbleVictim": 3,
+  "firstEliminated": 5,
+  "highestScorer": 5,
+  "updatedAt": {
+    "$date": "2026-10-31T23:09:45.257Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae6752bfdb12ea0d3eb12b8"
+  },
+  "gameId": 488,
+  "voterId": 1,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:09:31.956Z"
+  },
+  "dhumbleVictim": 3,
+  "firstEliminated": 6,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-10-31T23:09:31.955Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae67554fdb12ea0d3eb12be"
+  },
+  "gameId": 488,
+  "voterId": 6,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:10:12.376Z"
+  },
+  "dhumbleVictim": 2,
+  "firstEliminated": 5,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-10-31T23:10:12.375Z"
+  },
+  "winner": 6
+},
+{
+  "_id": {
+    "$oid": "6ae67569fdb12ea0d3eb12bf"
+  },
+  "voterId": 3,
+  "gameId": 488,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:10:33.660Z"
+  },
+  "dhumbleVictim": 6,
+  "firstEliminated": 1,
+  "highestScorer": 5,
+  "updatedAt": {
+    "$date": "2026-10-31T23:12:06.703Z"
+  },
+  "winner": 3
+},
+{
+  "_id": {
+    "$oid": "6ae67e65fdb12ea0d3eb16cb"
+  },
+  "gameId": 489,
+  "voterId": 1,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:48:53.835Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 4,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-10-31T23:48:53.833Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae67e6cfdb12ea0d3eb16cc"
+  },
+  "gameId": 489,
+  "voterId": 5,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:49:00.382Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 4,
+  "highestScorer": 4,
+  "updatedAt": {
+    "$date": "2026-10-31T23:49:00.382Z"
+  },
+  "winner": 5
+},
+{
+  "_id": {
+    "$oid": "6ae67e77fdb12ea0d3eb16ce"
+  },
+  "voterId": 6,
+  "gameId": 489,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:49:11.291Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 2,
+  "highestScorer": 5,
+  "updatedAt": {
+    "$date": "2026-10-31T23:49:11.291Z"
+  },
+  "winner": 6
+},
+{
+  "_id": {
+    "$oid": "6ae67e7bfdb12ea0d3eb16cf"
+  },
+  "voterId": 2,
+  "gameId": 489,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:49:15.033Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 3,
+  "highestScorer": 3,
+  "updatedAt": {
+    "$date": "2026-10-31T23:49:54.751Z"
+  },
+  "winner": 2
+},
+{
+  "_id": {
+    "$oid": "6ae67e8ffdb12ea0d3eb16d2"
+  },
+  "gameId": 489,
+  "voterId": 3,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-10-31T23:49:35.668Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 2,
+  "highestScorer": 6,
+  "updatedAt": {
+    "$date": "2026-10-31T23:49:38.974Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae696f7fdb12ea0d3eb1f76"
+  },
+  "gameId": 490,
+  "voterId": 1,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T01:33:43.524Z"
+  },
+  "dhumbleVictim": 5,
+  "firstEliminated": 5,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-11-01T01:33:43.523Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae69701fdb12ea0d3eb1f79"
+  },
+  "gameId": 490,
+  "voterId": 2,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T01:33:54.002Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 5,
+  "highestScorer": 6,
+  "updatedAt": {
+    "$date": "2026-11-01T01:33:54.002Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae69710fdb12ea0d3eb1f7c"
+  },
+  "voterId": 6,
+  "gameId": 490,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T01:34:08.092Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 5,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-11-01T01:34:08.091Z"
+  },
+  "winner": 6
+},
+{
+  "_id": {
+    "$oid": "6ae6a32dfdb12ea0d3eb23e8"
+  },
+  "voterId": 5,
+  "gameId": 491,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T02:25:49.969Z"
+  },
+  "dhumbleVictim": 1,
+  "firstEliminated": 6,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-11-01T02:25:49.968Z"
+  },
+  "winner": 5
+},
+{
+  "_id": {
+    "$oid": "6ae6a331fdb12ea0d3eb23e9"
+  },
+  "gameId": 491,
+  "voterId": 6,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T02:25:53.126Z"
+  },
+  "dhumbleVictim": 2,
+  "firstEliminated": 2,
+  "highestScorer": 5,
+  "updatedAt": {
+    "$date": "2026-11-01T02:25:53.126Z"
+  },
+  "winner": 6
+},
+{
+  "_id": {
+    "$oid": "6ae6a34cfdb12ea0d3eb23ec"
+  },
+  "gameId": 491,
+  "voterId": 1,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T02:26:20.149Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 4,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-11-01T02:26:20.149Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae6a360fdb12ea0d3eb23f0"
+  },
+  "voterId": 2,
+  "gameId": 491,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T02:26:40.663Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 4,
+  "highestScorer": 6,
+  "updatedAt": {
+    "$date": "2026-11-01T02:26:40.663Z"
+  },
+  "winner": 2
+},
+{
+  "_id": {
+    "$oid": "6ae6a39ffdb12ea0d3eb2413"
+  },
+  "gameId": 491,
+  "voterId": 4,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T02:27:43.331Z"
+  },
+  "dhumbleVictim": 5,
+  "firstEliminated": 5,
+  "highestScorer": 6,
+  "updatedAt": {
+    "$date": "2026-11-01T02:27:43.331Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae6ac75fdb12ea0d3eb2515"
+  },
+  "gameId": 492,
+  "voterId": 2,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T03:05:25.674Z"
+  },
+  "dhumbleVictim": 4,
+  "firstEliminated": 5,
+  "highestScorer": 5,
+  "updatedAt": {
+    "$date": "2026-11-01T03:05:25.673Z"
+  },
+  "winner": 2
+},
+{
+  "_id": {
+    "$oid": "6ae6ac85fdb12ea0d3eb251a"
+  },
+  "gameId": 492,
+  "voterId": 1,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T03:05:41.789Z"
+  },
+  "dhumbleVictim": 2,
+  "firstEliminated": 2,
+  "highestScorer": 4,
+  "updatedAt": {
+    "$date": "2026-11-01T03:05:41.789Z"
+  },
+  "winner": 1
+},
+{
+  "_id": {
+    "$oid": "6ae6ac9bfdb12ea0d3eb251c"
+  },
+  "voterId": 6,
+  "gameId": 492,
+  "__v": 0,
+  "createdAt": {
+    "$date": "2026-11-01T03:06:03.332Z"
+  },
+  "dhumbleVictim": 5,
+  "firstEliminated": 2,
+  "highestScorer": 2,
+  "updatedAt": {
+    "$date": "2026-11-01T03:06:03.331Z"
+  },
+  "winner": 6
 }]

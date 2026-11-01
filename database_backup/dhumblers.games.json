@@ -109050,4 +109050,1363 @@
   ],
   "id": 487,
   "__v": 15
+},
+{
+  "_id": {
+    "$oid": "6ae6747f1690fa747c0901f5"
+  },
+  "elimScore": 150,
+  "players": [
+    {
+      "id": 1,
+      "total": 72,
+      "status": "active",
+      "elimOrder": -1,
+      "points": 10,
+      "bonusPoints": 4,
+      "bonusName": "Dominating Win + Multi-Elimination",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6747f1690fa747c0901f6"
+      }
+    },
+    {
+      "id": 2,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6747f1690fa747c0901f7"
+      }
+    },
+    {
+      "id": 3,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6747f1690fa747c0901f8"
+      }
+    },
+    {
+      "id": 5,
+      "total": 151,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6747f1690fa747c0901f9"
+      }
+    },
+    {
+      "id": 6,
+      "total": 174,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6747f1690fa747c0901fa"
+      }
+    }
+  ],
+  "eliminated": [
+    {
+      "id": 2,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67d241690fa747c0903ea"
+      }
+    },
+    {
+      "id": 3,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67d241690fa747c0903eb"
+      }
+    },
+    {
+      "id": 5,
+      "total": 151,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67d7c1690fa747c09040f"
+      }
+    },
+    {
+      "id": 6,
+      "total": 174,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67d7c1690fa747c090410"
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "1": 6,
+      "2": 13,
+      "3": 0,
+      "5": 4,
+      "6": 6
+    },
+    {
+      "1": 5,
+      "2": 12,
+      "3": 10,
+      "5": 0,
+      "6": 6
+    },
+    {
+      "1": 3,
+      "2": 3,
+      "3": 2,
+      "5": 0,
+      "6": 3
+    },
+    {
+      "1": 0,
+      "2": 21,
+      "3": 24,
+      "5": 18,
+      "6": 15
+    },
+    {
+      "1": 23,
+      "2": 0,
+      "3": 14,
+      "5": 30,
+      "6": 42
+    },
+    {
+      "1": 0,
+      "2": 5,
+      "3": 22,
+      "5": 13,
+      "6": 11
+    },
+    {
+      "1": 6,
+      "2": 33,
+      "3": 4,
+      "5": 21,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 16,
+      "3": 25,
+      "5": 15,
+      "6": 16
+    },
+    {
+      "1": 16,
+      "2": 4,
+      "3": 0,
+      "5": 3,
+      "6": 21
+    },
+    {
+      "1": 13,
+      "2": 22,
+      "3": 35,
+      "5": 12,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 23,
+      "3": 16,
+      "5": 17,
+      "6": 17
+    },
+    {
+      "1": 0,
+      "5": 18,
+      "6": 37
+    }
+  ],
+  "status": "completed",
+  "date": {
+    "$date": "2026-10-31T23:06:40.012Z"
+  },
+  "dhumbles": [],
+  "id": 488,
+  "__v": 12
+},
+{
+  "_id": {
+    "$oid": "6ae67ddd1690fa747c090457"
+  },
+  "elimScore": 150,
+  "players": [
+    {
+      "id": 1,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c090458"
+      }
+    },
+    {
+      "id": 2,
+      "total": 146,
+      "status": "active",
+      "elimOrder": -1,
+      "points": 10,
+      "bonusPoints": 3,
+      "bonusName": "Clutch Win + Multi-Elimination",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c090459"
+      }
+    },
+    {
+      "id": 3,
+      "total": 166,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c09045a"
+      }
+    },
+    {
+      "id": 4,
+      "total": 154,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c09045b"
+      }
+    },
+    {
+      "id": 5,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 5,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c09045c"
+      }
+    },
+    {
+      "id": 6,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae67ddd1690fa747c09045d"
+      }
+    }
+  ],
+  "eliminated": [
+    {
+      "id": 6,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae688ee1690fa747c0906de"
+      }
+    },
+    {
+      "id": 4,
+      "total": 154,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae68cee1690fa747c09078e"
+      }
+    },
+    {
+      "id": 1,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae68da21690fa747c0907b5"
+      }
+    },
+    {
+      "id": 3,
+      "total": 166,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae68e991690fa747c090808"
+      }
+    },
+    {
+      "id": 5,
+      "total": 152,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 5,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae68e991690fa747c090809"
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "1": 3,
+      "2": 3,
+      "3": 2,
+      "4": 0,
+      "5": 3,
+      "6": 6
+    },
+    {
+      "1": 22,
+      "2": 0,
+      "3": 25,
+      "4": 7,
+      "5": 15,
+      "6": 24
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "3": 1,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    {
+      "1": 9,
+      "2": 9,
+      "3": 0,
+      "4": 18,
+      "5": 19,
+      "6": 12
+    },
+    {
+      "1": 0,
+      "2": 6,
+      "3": 7,
+      "4": 5,
+      "5": 11,
+      "6": 12
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 40
+    },
+    {
+      "1": 22,
+      "2": 22,
+      "3": 9,
+      "4": 0,
+      "5": 6,
+      "6": 15
+    },
+    {
+      "1": 4,
+      "2": 2,
+      "3": 3,
+      "4": 0,
+      "5": 3,
+      "6": 7
+    },
+    {
+      "1": 2,
+      "2": 2,
+      "3": 5,
+      "4": 2,
+      "5": 0,
+      "6": 5
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 40,
+      "5": 0,
+      "6": 0
+    },
+    {
+      "1": 26,
+      "2": 26,
+      "3": 30,
+      "4": 27,
+      "5": 0,
+      "6": 24
+    },
+    {
+      "1": 3,
+      "2": 8,
+      "3": 6,
+      "4": 6,
+      "5": 9,
+      "6": 0
+    },
+    {
+      "1": 15,
+      "2": 7,
+      "3": 14,
+      "4": 0,
+      "5": 20,
+      "6": 16
+    },
+    {
+      "1": 6,
+      "2": 3,
+      "3": 2,
+      "4": 0,
+      "5": 13
+    },
+    {
+      "1": 4,
+      "2": 5,
+      "3": 0,
+      "4": 10,
+      "5": 10
+    },
+    {
+      "1": 5,
+      "2": 0,
+      "3": 7,
+      "4": 5,
+      "5": 12
+    },
+    {
+      "1": 13,
+      "2": 0,
+      "3": 15,
+      "4": 7,
+      "5": 8
+    },
+    {
+      "1": 10,
+      "2": 23,
+      "3": 0,
+      "4": 27,
+      "5": 18
+    },
+    {
+      "1": 12,
+      "2": 15,
+      "3": 11,
+      "5": 0
+    },
+    {
+      "2": 15,
+      "3": 12,
+      "5": 0
+    },
+    {
+      "2": 0,
+      "3": 17,
+      "5": 9
+    }
+  ],
+  "status": "completed",
+  "date": {
+    "$date": "2026-10-31T23:46:37.061Z"
+  },
+  "dhumbles": [
+    {
+      "round": 6,
+      "victim": 6,
+      "causedBy": [
+        5
+      ]
+    },
+    {
+      "round": 10,
+      "victim": 4,
+      "causedBy": [
+        5
+      ]
+    }
+  ],
+  "id": 489,
+  "__v": 21
+},
+{
+  "_id": {
+    "$oid": "6ae6969a1690fa747c09088f"
+  },
+  "elimScore": 150,
+  "players": [
+    {
+      "id": 1,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6969a1690fa747c090890"
+      }
+    },
+    {
+      "id": 2,
+      "total": 157,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6969a1690fa747c090891"
+      }
+    },
+    {
+      "id": 4,
+      "total": 176,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6969a1690fa747c090892"
+      }
+    },
+    {
+      "id": 5,
+      "total": 158,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6969a1690fa747c090893"
+      }
+    },
+    {
+      "id": 6,
+      "total": 131,
+      "status": "active",
+      "elimOrder": -1,
+      "points": 6,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6969a1690fa747c090894"
+      }
+    }
+  ],
+  "eliminated": [
+    {
+      "id": 2,
+      "total": 157,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a0c21690fa747c090a84"
+      }
+    },
+    {
+      "id": 5,
+      "total": 158,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a0c21690fa747c090a85"
+      }
+    },
+    {
+      "id": 4,
+      "total": 176,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a1b41690fa747c090acc"
+      }
+    },
+    {
+      "id": 1,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a28c1690fa747c090b19"
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "1": 0,
+      "2": 3,
+      "4": 3,
+      "5": 6,
+      "6": 4
+    },
+    {
+      "1": 5,
+      "2": 6,
+      "4": 3,
+      "5": 5,
+      "6": 0
+    },
+    {
+      "1": 21,
+      "2": 0,
+      "4": 9,
+      "5": 14,
+      "6": 18
+    },
+    {
+      "1": 22,
+      "2": 0,
+      "4": 14,
+      "5": 22,
+      "6": 14
+    },
+    {
+      "1": 5,
+      "2": 9,
+      "4": 4,
+      "5": 10,
+      "6": 0
+    },
+    {
+      "1": 6,
+      "2": 11,
+      "4": 4,
+      "5": 0,
+      "6": 11
+    },
+    {
+      "1": 13,
+      "2": 36,
+      "4": 24,
+      "5": 0,
+      "6": 31
+    },
+    {
+      "1": 18,
+      "2": 27,
+      "4": 0,
+      "5": 24,
+      "6": 14
+    },
+    {
+      "1": 8,
+      "2": 0,
+      "4": 5,
+      "5": 10,
+      "6": 5
+    },
+    {
+      "1": 8,
+      "2": 30,
+      "4": 34,
+      "5": 9,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "4": 0,
+      "5": 40,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 6,
+      "4": 2,
+      "5": 2,
+      "6": 5
+    },
+    {
+      "1": 15,
+      "2": 16,
+      "4": 11,
+      "5": 0,
+      "6": 10
+    },
+    {
+      "1": 8,
+      "2": 15,
+      "4": 19,
+      "5": 16,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "4": 4,
+      "6": 16
+    },
+    {
+      "1": 0,
+      "4": 40,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "6": 5
+    },
+    {
+      "1": 27,
+      "6": 0
+    }
+  ],
+  "status": "completed",
+  "date": {
+    "$date": "2026-11-01T01:32:10.484Z"
+  },
+  "dhumbles": [
+    {
+      "round": 11,
+      "victim": 5,
+      "causedBy": [
+        2
+      ]
+    },
+    {
+      "round": 16,
+      "victim": 4,
+      "causedBy": [
+        6
+      ]
+    }
+  ],
+  "id": 490,
+  "__v": 18
+},
+{
+  "_id": {
+    "$oid": "6ae6a30c1690fa747c090ba2"
+  },
+  "elimScore": 150,
+  "players": [
+    {
+      "id": 1,
+      "total": 150,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a30c1690fa747c090ba3"
+      }
+    },
+    {
+      "id": 2,
+      "total": 150,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a30c1690fa747c090ba4"
+      }
+    },
+    {
+      "id": 4,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a30c1690fa747c090ba5"
+      }
+    },
+    {
+      "id": 5,
+      "total": 80,
+      "status": "active",
+      "elimOrder": -1,
+      "points": 9,
+      "bonusPoints": 3,
+      "bonusName": "Dominating Win",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a30c1690fa747c090ba6"
+      }
+    },
+    {
+      "id": 6,
+      "total": 165,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a30c1690fa747c090ba7"
+      }
+    }
+  ],
+  "eliminated": [
+    {
+      "id": 4,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6a7e81690fa747c090d0c"
+      }
+    },
+    {
+      "id": 6,
+      "total": 165,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ab291690fa747c090dc1"
+      }
+    },
+    {
+      "id": 2,
+      "total": 150,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6aba11690fa747c090de5"
+      }
+    },
+    {
+      "id": 1,
+      "total": 150,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6abee1690fa747c090e0c"
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "1": 11,
+      "2": 19,
+      "4": 10,
+      "5": 6,
+      "6": 0
+    },
+    {
+      "1": 18,
+      "2": 29,
+      "4": 22,
+      "5": 0,
+      "6": 35
+    },
+    {
+      "1": 24,
+      "2": 9,
+      "4": 35,
+      "5": 15,
+      "6": 0
+    },
+    {
+      "1": 17,
+      "2": 0,
+      "4": 16,
+      "5": 15,
+      "6": 23
+    },
+    {
+      "1": 10,
+      "2": 38,
+      "4": 20,
+      "5": 0,
+      "6": 25
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "4": 40,
+      "5": 0,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 8,
+      "4": 18,
+      "5": 10,
+      "6": 7
+    },
+    {
+      "1": 6,
+      "2": 17,
+      "5": 0,
+      "6": 16
+    },
+    {
+      "1": 7,
+      "2": 10,
+      "5": 0,
+      "6": 14
+    },
+    {
+      "1": 4,
+      "2": 0,
+      "5": 12,
+      "6": 12
+    },
+    {
+      "1": 12,
+      "2": 0,
+      "5": 6,
+      "6": 10
+    },
+    {
+      "1": 15,
+      "2": 0,
+      "5": 4,
+      "6": 8
+    },
+    {
+      "1": 18,
+      "2": 8,
+      "5": 0,
+      "6": 17
+    },
+    {
+      "1": 0,
+      "2": 12,
+      "5": 12
+    },
+    {
+      "1": 8,
+      "5": 0
+    }
+  ],
+  "status": "completed",
+  "date": {
+    "$date": "2026-11-01T02:25:16.051Z"
+  },
+  "dhumbles": [
+    {
+      "round": 6,
+      "victim": 4,
+      "causedBy": [
+        6
+      ]
+    }
+  ],
+  "id": 491,
+  "__v": 15
+},
+{
+  "_id": {
+    "$oid": "6ae6ac571690fa747c090e80"
+  },
+  "elimScore": 150,
+  "players": [
+    {
+      "id": 1,
+      "total": 159,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ac571690fa747c090e81"
+      }
+    },
+    {
+      "id": 2,
+      "total": 147,
+      "status": "active",
+      "elimOrder": -1,
+      "points": 8,
+      "bonusPoints": 2,
+      "bonusName": "Clutch Win",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ac571690fa747c090e82"
+      }
+    },
+    {
+      "id": 4,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ac571690fa747c090e83"
+      }
+    },
+    {
+      "id": 5,
+      "total": 167,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ac571690fa747c090e84"
+      }
+    },
+    {
+      "id": 6,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ac571690fa747c090e85"
+      }
+    }
+  ],
+  "eliminated": [
+    {
+      "id": 4,
+      "total": 161,
+      "status": "eliminated",
+      "elimOrder": 1,
+      "points": 1,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6b05d1690fa747c090f81"
+      }
+    },
+    {
+      "id": 1,
+      "total": 159,
+      "status": "eliminated",
+      "elimOrder": 2,
+      "points": 2,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6b80e1690fa747c091176"
+      }
+    },
+    {
+      "id": 5,
+      "total": 167,
+      "status": "eliminated",
+      "elimOrder": 3,
+      "points": 3,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6b89f1690fa747c09119a"
+      }
+    },
+    {
+      "id": 6,
+      "total": 156,
+      "status": "eliminated",
+      "elimOrder": 4,
+      "points": 4,
+      "bonusPoints": 0,
+      "bonusName": "",
+      "predictionBonus": 0,
+      "_id": {
+        "$oid": "6ae6ba291690fa747c091233"
+      }
+    }
+  ],
+  "rounds": [
+    {
+      "1": 3,
+      "2": 3,
+      "4": 13,
+      "5": 3,
+      "6": 0
+    },
+    {
+      "1": 18,
+      "2": 17,
+      "4": 8,
+      "5": 0,
+      "6": 27
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "4": 40,
+      "5": 0,
+      "6": 0
+    },
+    {
+      "1": 2,
+      "2": 0,
+      "4": 50,
+      "5": 3,
+      "6": 2
+    },
+    {
+      "1": 13,
+      "2": 9,
+      "4": 50,
+      "5": 11,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 8,
+      "5": 4,
+      "6": 5
+    },
+    {
+      "1": 3,
+      "2": 2,
+      "5": 3,
+      "6": 0
+    },
+    {
+      "1": 9,
+      "2": 0,
+      "5": 21,
+      "6": 16
+    },
+    {
+      "1": 2,
+      "2": 0,
+      "5": 7,
+      "6": 14
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "5": -3,
+      "6": 0
+    },
+    {
+      "1": 2,
+      "2": 0,
+      "5": 2,
+      "6": 10
+    },
+    {
+      "1": 1,
+      "2": 0,
+      "5": 0,
+      "6": 0
+    },
+    {
+      "1": 42,
+      "2": 26,
+      "5": 0,
+      "6": 13
+    },
+    {
+      "1": 0,
+      "2": 3,
+      "5": 3,
+      "6": 3
+    },
+    {
+      "1": 0,
+      "2": 11,
+      "5": 7,
+      "6": 9
+    },
+    {
+      "1": 25,
+      "2": 13,
+      "5": 0,
+      "6": 21
+    },
+    {
+      "1": 5,
+      "2": 7,
+      "5": 15,
+      "6": 0
+    },
+    {
+      "1": 0,
+      "2": 0,
+      "5": 40,
+      "6": 0
+    },
+    {
+      "1": 24,
+      "2": 24,
+      "5": 0,
+      "6": 14
+    },
+    {
+      "1": 10,
+      "2": 6,
+      "5": 11,
+      "6": 0
+    },
+    {
+      "2": 0,
+      "5": 40,
+      "6": 0
+    },
+    {
+      "2": 0,
+      "6": 13
+    },
+    {
+      "2": 14,
+      "6": 0
+    },
+    {
+      "2": 10,
+      "6": 0
+    },
+    {
+      "2": 0,
+      "6": 9
+    }
+  ],
+  "status": "completed",
+  "date": {
+    "$date": "2026-11-01T03:04:55.940Z"
+  },
+  "dhumbles": [
+    {
+      "round": 3,
+      "victim": 4,
+      "causedBy": [
+        2
+      ]
+    },
+    {
+      "round": 18,
+      "victim": 5,
+      "causedBy": [
+        2
+      ]
+    },
+    {
+      "round": 21,
+      "victim": 5,
+      "causedBy": [
+        2
+      ]
+    }
+  ],
+  "id": 492,
+  "__v": 25
 }]
