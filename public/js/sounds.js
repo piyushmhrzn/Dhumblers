@@ -94,7 +94,7 @@ function showGif(type, playerName = "", customDuration = null) {
             break;
         case "midHigh":
             activeGif = midHighGif;
-            duration = duration || 6000;
+            duration = duration || 7000;
             break;
         case "nearElim":
             activeGif = nearElimGif;
@@ -102,7 +102,7 @@ function showGif(type, playerName = "", customDuration = null) {
             break;
         case "criticalElim":
             activeGif = criticalElimGif;
-            duration = duration || 8000;
+            duration = duration || 7000;
             break;
         case "winner":
             activeGif = winnerGif;
