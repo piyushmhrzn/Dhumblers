@@ -17,7 +17,7 @@
 </head>
 <body>
 
-<div class="container">
+<div class="container" id="adminPanel" style="display: none;">
     <h3 class="mb-4 text-center">Admin</h3>
 
     <div class="card">
@@ -52,15 +52,42 @@
 // PAGE LOAD
 // ========================
 document.addEventListener("DOMContentLoaded", async function() {
-  // PASSWORD CHECK (client prompt, but backend verifies)
+
+  // Verify admin password with backend before showing the panel
   const pw = prompt("Enter admin password:");
+
   if (!pw) {
-    window.location.href = "index.html";
-    return;
+      window.location.replace("/");
+      return;
   }
 
-  await fetchUsers();
-  renderUsers();
+  try {
+      const response = await fetch("/api/admin/verify", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ password: pw })
+      });
+
+      if (!response.ok) {
+          alert("Incorrect admin password. Access denied.");
+          window.location.replace("/");
+          return;
+      }
+
+      // Password verified successfully
+      document.getElementById("adminPanel").style.display = "block";
+
+      await fetchUsers();
+      renderUsers();
+
+  } catch (error) {
+      console.error("Admin verification failed:", error);
+      alert("Unable to verify admin password.");
+      window.location.replace("/");
+      return;
+  }
 
   // BUTTON CLICK
   document.getElementById("addBtn").addEventListener("click", async function() {

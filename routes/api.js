@@ -55,6 +55,16 @@ const checkGamePasscode = (req, res, next) => {
 // 2. USER ENDPOINTS
 // ────────────────────────────────────────────────
 
+// ================================================
+// ADMIN PASSWORD VERIFICATION
+// ================================================
+router.post('/admin/verify', checkAdminPassword, (req, res) => {
+    res.json({
+        success: true,
+        message: 'Admin password verified'
+    });
+});
+
 /**
  * GET /api/users
  * Returns all users sorted by id

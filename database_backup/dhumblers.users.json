@@ -3,77 +3,84 @@
     "$oid": "69a8c0d5e314e164061713af"
   },
   "name": "Piyush",
-  "totalPoints": 871,
-  "gamesPlayed": 247,
-  "maxPossible": 1506,
+  "totalPoints": 1433,
+  "gamesPlayed": 382,
+  "maxPossible": 2414,
   "id": 1,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8c13aa896629e5d9d0da0"
   },
   "name": "Santosh",
-  "totalPoints": 1045,
-  "gamesPlayed": 361,
-  "maxPossible": 2108,
+  "totalPoints": 1444,
+  "gamesPlayed": 492,
+  "maxPossible": 2994,
   "id": 2,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8c6e2739552ede9c2a1f1"
   },
   "name": "Biplab",
-  "totalPoints": 725,
-  "gamesPlayed": 211,
-  "maxPossible": 1274,
+  "totalPoints": 948,
+  "gamesPlayed": 285,
+  "maxPossible": 1799,
   "id": 3,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8e0195407836054225633"
   },
   "name": "Bhima",
-  "totalPoints": 933,
-  "gamesPlayed": 283,
-  "maxPossible": 1707,
+  "totalPoints": 1117,
+  "gamesPlayed": 343,
+  "maxPossible": 2142,
   "id": 4,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8e01e5407836054225638"
   },
   "name": "Januka",
-  "totalPoints": 976,
-  "gamesPlayed": 300,
-  "maxPossible": 1820,
+  "totalPoints": 1325,
+  "gamesPlayed": 398,
+  "maxPossible": 2509,
   "id": 5,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8e02f540783605422563d"
   },
   "name": "Bibek",
-  "totalPoints": 619,
-  "gamesPlayed": 187,
-  "maxPossible": 1126,
+  "totalPoints": 814,
+  "gamesPlayed": 245,
+  "maxPossible": 1512,
   "id": 6,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
     "$oid": "69a8e0ff5407836054225642"
   },
   "name": "Buwa",
-  "totalPoints": 780,
-  "gamesPlayed": 265,
-  "maxPossible": 1578,
+  "totalPoints": 1050,
+  "gamesPlayed": 347,
+  "maxPossible": 2159,
   "id": 7,
-  "__v": 0
+  "__v": 0,
+  "predictionBonus": 0
 },
 {
   "_id": {
@@ -95,5 +102,16 @@
   "gamesPlayed": 3,
   "maxPossible": 20,
   "id": 9,
+  "__v": 0
+},
+{
+  "_id": {
+    "$oid": "6aefc61aeebc90ec909e9451"
+  },
+  "name": "Bimit",
+  "totalPoints": 0,
+  "gamesPlayed": 0,
+  "maxPossible": 0,
+  "id": 10,
   "__v": 0
 }]

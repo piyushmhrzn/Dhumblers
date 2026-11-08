@@ -37,6 +37,11 @@ app.use('/api', apiRoutes);
 // Prediction routes (mounted at /api/predictions)
 app.use('/api/predictions', predictionRoutes);
 
+// Serve the admin page
+app.get('/adminLogin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // Catch-all route: serve index.html for any non-API path
 // This makes client-side routing / direct links to game.html, admin.html work
 app.get('/*path', (req, res) => {
